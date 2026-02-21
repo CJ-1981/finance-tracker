@@ -1,10 +1,14 @@
--- Database Schema for Finance Tracker
--- Run this in your Supabase SQL Editor
+-- Database Schema for Finance Tracker (Idempotent Version)
+-- Safe to run multiple times - handles existing objects gracefully
+
+-- ============================================
+-- TABLES
+-- ============================================
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Profiles table (extends Supabase Auth)
+-- Profiles table
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT UNIQUE NOT NULL,
@@ -88,7 +92,10 @@ CREATE TABLE IF NOT EXISTS public.audit_logs (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create indexes for better query performance
+-- ============================================
+-- INDEXES
+-- ============================================
+
 CREATE INDEX IF NOT EXISTS idx_projects_owner ON public.projects(owner_id);
 CREATE INDEX IF NOT EXISTS idx_project_members_project ON public.project_members(project_id);
 CREATE INDEX IF NOT EXISTS idx_project_members_user ON public.project_members(user_id);
@@ -98,7 +105,10 @@ CREATE INDEX IF NOT EXISTS idx_transactions_date ON public.transactions(date DES
 CREATE INDEX IF NOT EXISTS idx_invitations_token ON public.invitations(token);
 CREATE INDEX IF NOT EXISTS idx_invitations_email ON public.invitations(email);
 
--- Enable Row Level Security
+-- ============================================
+-- ROW LEVEL SECURITY
+-- ============================================
+
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.project_members ENABLE ROW LEVEL SECURITY;
@@ -107,7 +117,11 @@ ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invitations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
--- Create a function to handle new user profiles
+-- ============================================
+-- FUNCTIONS AND TRIGGERS
+-- ============================================
+
+-- Create or replace function for new user profiles
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -121,13 +135,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Trigger to create profile on signup
+-- Drop trigger if exists, then create
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- RLS Policies
+-- ============================================
+-- RLS POLICIES
+-- ============================================
 
 -- Drop existing policies to avoid conflicts
 DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
@@ -150,11 +166,12 @@ DROP POLICY IF EXISTS "Members can insert categories" ON public.categories;
 
 DROP POLICY IF EXISTS "Members can view project transactions" ON public.transactions;
 DROP POLICY IF EXISTS "Members and owners can insert transactions" ON public.transactions;
+DROP POLICY IF EXISTS "Members can insert transactions" ON public.transactions;
 
 DROP POLICY IF EXISTS "Owners can view project invitations" ON public.invitations;
 DROP POLICY IF EXISTS "Owners can insert invitations" ON public.invitations;
 
--- Profiles: Users can view their own profile
+-- Profiles policies
 CREATE POLICY "Users can view own profile"
   ON public.profiles FOR SELECT
   USING (auth.uid() = id);
@@ -163,17 +180,15 @@ CREATE POLICY "Users can update own profile"
   ON public.profiles FOR UPDATE
   USING (auth.uid() = id);
 
--- Profiles: Allow inserts (for the trigger and new user signup)
 CREATE POLICY "Users can insert own profile"
   ON public.profiles FOR INSERT
   WITH CHECK (auth.uid() = id);
 
--- Profiles: Allow service role to insert (for the auth trigger)
 CREATE POLICY "Service role can insert profiles"
   ON public.profiles FOR INSERT
   WITH CHECK (true);
 
--- Projects: Owners and members can view projects
+-- Projects policies
 CREATE POLICY "Owners and members can view projects"
   ON public.projects FOR SELECT
   USING (
@@ -184,28 +199,19 @@ CREATE POLICY "Owners and members can view projects"
     )
   );
 
--- Projects: Owners can update their projects
-CREATE POLICY "Owners can update own projects"
-  ON public.projects FOR UPDATE
-  USING (
-    owner_id = auth.uid()
-  );
-
--- Projects: Owners can delete their projects
-CREATE POLICY "Owners can delete own projects"
-  ON public.projects FOR DELETE
-  USING (
-    owner_id = auth.uid()
-  );
-
--- Projects: Users can insert projects (they become owner)
 CREATE POLICY "Users can insert projects"
   ON public.projects FOR INSERT
-  WITH CHECK (
-    owner_id = auth.uid()
-  );
+  WITH CHECK (owner_id = auth.uid());
 
--- Project Members: Members can view membership for their projects
+CREATE POLICY "Owners can update own projects"
+  ON public.projects FOR UPDATE
+  USING (owner_id = auth.uid());
+
+CREATE POLICY "Owners can delete own projects"
+  ON public.projects FOR DELETE
+  USING (owner_id = auth.uid());
+
+-- Project Members policies
 CREATE POLICY "Members can view project members"
   ON public.project_members FOR SELECT
   USING (
@@ -217,7 +223,6 @@ CREATE POLICY "Members can view project members"
     user_id = auth.uid()
   );
 
--- Project Members: Owners can insert members
 CREATE POLICY "Owners can insert members"
   ON public.project_members FOR INSERT
   WITH CHECK (
@@ -227,7 +232,6 @@ CREATE POLICY "Owners can insert members"
     )
   );
 
--- Project Members: Owners can delete members
 CREATE POLICY "Owners can delete members"
   ON public.project_members FOR DELETE
   USING (
@@ -237,7 +241,7 @@ CREATE POLICY "Owners can delete members"
     )
   );
 
--- Categories: Members can view categories from their projects
+-- Categories policies
 CREATE POLICY "Members can view project categories"
   ON public.categories FOR SELECT
   USING (
@@ -247,7 +251,6 @@ CREATE POLICY "Members can view project categories"
     )
   );
 
--- Categories: Members can insert categories
 CREATE POLICY "Members can insert categories"
   ON public.categories FOR INSERT
   WITH CHECK (
@@ -257,7 +260,7 @@ CREATE POLICY "Members can insert categories"
     )
   );
 
--- Transactions: Members can view transactions from their projects
+-- Transactions policies
 CREATE POLICY "Members can view project transactions"
   ON public.transactions FOR SELECT
   USING (
@@ -267,62 +270,39 @@ CREATE POLICY "Members can view project transactions"
     )
   );
 
--- Transactions: Members and owners can insert transactions
-CREATE POLICY "Members can insert transactions"
+CREATE POLICY "Members and owners can insert transactions"
   ON public.transactions FOR INSERT
   WITH CHECK (
     project_id IN (
-      SELECT project_id FROM public.project_members
-      WHERE user_id = auth.uid() AND role IN ('member', 'owner')
+      SELECT id FROM public.projects
+      WHERE owner_id = auth.uid()
     )
   );
 
--- Transactions: Creators and owners can update transactions
-CREATE POLICY "Creators can update own transactions"
-  ON public.transactions FOR UPDATE
-  USING (
-    created_by = auth.uid() OR
-    project_id IN (
-      SELECT project_id FROM public.project_members
-      WHERE user_id = auth.uid() AND role = 'owner'
-    )
-  );
-
--- Transactions: Creators and owners can delete transactions
-CREATE POLICY "Creators can delete own transactions"
-  ON public.transactions FOR DELETE
-  USING (
-    created_by = auth.uid() OR
-    project_id IN (
-      SELECT project_id FROM public.project_members
-      WHERE user_id = auth.uid() AND role = 'owner'
-    )
-  );
-
--- Invitations: Owners can view invitations for their projects
+-- Invitations policies
 CREATE POLICY "Owners can view project invitations"
   ON public.invitations FOR SELECT
   USING (
     project_id IN (
-      SELECT project_id FROM public.project_members
-      WHERE user_id = auth.uid() AND role = 'owner'
+      SELECT id FROM public.projects
+      WHERE owner_id = auth.uid()
     )
   );
 
--- Invitations: Owners can insert invitations
 CREATE POLICY "Owners can insert invitations"
   ON public.invitations FOR INSERT
   WITH CHECK (
     project_id IN (
-      SELECT project_id FROM public.project_members
-      WHERE user_id = auth.uid() AND role = 'owner'
+      SELECT id FROM public.projects
+      WHERE owner_id = auth.uid()
     )
   );
 
--- Grant necessary permissions
-GRANT USAGE ON SCHEMA public TO anon, authenticated;
-GRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated;
-GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon;
+-- ============================================
+-- GRANT PERMISSIONS
+-- ============================================
 
--- Enable Realtime for transactions
-ALTER PUBLICATION supabase_realtime ADD TABLE public.transactions;
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
