@@ -18,6 +18,8 @@ export default function DashboardPage() {
     try {
       const supabase = getSupabaseClient()
 
+      console.log('Fetching projects for user:', user?.id)
+
       // First try to get projects where user is the owner
       // This bypasses the project_members circular dependency
       const { data: ownedProjects, error: ownerError } = await supabase
@@ -25,8 +27,14 @@ export default function DashboardPage() {
         .select('*')
         .eq('owner_id', user?.id || '')
 
+      console.log('Owner projects query result:', { ownedProjects, ownerError })
+
       if (ownerError) {
         console.log('Owner query error:', ownerError)
+        console.log('Error code:', ownerError.code)
+        console.log('Error message:', ownerError.message)
+        console.log('Error hint:', ownerError.hint)
+
         // Check for database not set up errors
         const isDbError =
           ownerError.code === 'PGRST116' ||
@@ -35,7 +43,10 @@ export default function DashboardPage() {
           ownerError.message?.includes('does not exist') ||
           ownerError.hint?.includes('table')
 
+        console.log('Is DB error?', isDbError)
+
         if (isDbError) {
+          console.log('Setting DB error to true')
           setDbError(true)
           setLoading(false)
           return
