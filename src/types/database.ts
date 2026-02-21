@@ -84,7 +84,7 @@ export interface Database {
           id: string
           project_id: string
           amount: number
-          currency: string
+          currency_code: string
           category_id: string
           description: string | null
           date: string
@@ -98,7 +98,7 @@ export interface Database {
           id?: string
           project_id: string
           amount: number
-          currency: string
+          currency_code: string
           category_id: string
           description?: string | null
           date: string
@@ -112,7 +112,7 @@ export interface Database {
           id?: string
           project_id?: string
           amount?: number
-          currency?: string
+          currency_code?: string
           category_id?: string
           description?: string | null
           date?: string
@@ -130,6 +130,7 @@ export interface Database {
           name: string
           color: string
           parent_id: string | null
+          order: number
           created_at: string
         }
         Insert: {
@@ -138,6 +139,7 @@ export interface Database {
           name: string
           color: string
           parent_id?: string | null
+          order?: number
           created_at?: string
         }
         Update: {
@@ -146,6 +148,7 @@ export interface Database {
           name?: string
           color?: string
           parent_id?: string | null
+          order?: number
           created_at?: string
         }
       }

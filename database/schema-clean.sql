@@ -141,6 +141,31 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
+-- Create or replace function for new project owners
+CREATE OR REPLACE FUNCTION public.handle_new_project_owner()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.project_members (project_id, user_id, role)
+  VALUES (NEW.id, NEW.owner_id, 'owner');
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger to create project owner membership on project creation
+DROP TRIGGER IF EXISTS on_project_created ON public.projects;
+CREATE TRIGGER on_project_created
+  AFTER INSERT ON public.projects
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_project_owner();
+
+-- Security definer function to check project membership without recursion
+CREATE OR REPLACE FUNCTION public.is_project_member(p_id UUID)
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.project_members
+    WHERE project_id = p_id AND user_id = auth.uid()
+  );
+$$ LANGUAGE sql SECURITY DEFINER;
+
 -- ============================================
 -- RLS POLICIES
 -- ============================================
@@ -184,9 +209,6 @@ CREATE POLICY "Users can insert own profile"
   ON public.profiles FOR INSERT
   WITH CHECK (auth.uid() = id);
 
-CREATE POLICY "Service role can insert profiles"
-  ON public.profiles FOR INSERT
-  WITH CHECK (true);
 
 -- Projects policies
 CREATE POLICY "Owners and members can view projects"
@@ -214,14 +236,7 @@ CREATE POLICY "Owners can delete own projects"
 -- Project Members policies
 CREATE POLICY "Members can view project members"
   ON public.project_members FOR SELECT
-  USING (
-    project_id IN (
-      SELECT id FROM public.projects
-      WHERE owner_id = auth.uid()
-    )
-    OR
-    user_id = auth.uid()
-  );
+  USING ( public.is_project_member(project_id) );
 
 CREATE POLICY "Owners can insert members"
   ON public.project_members FOR INSERT

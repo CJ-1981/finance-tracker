@@ -7,6 +7,7 @@ import DashboardPage from './pages/DashboardPage'
 import ProjectsPage from './pages/ProjectsPage'
 import TransactionsPage from './pages/TransactionsPage'
 import ProjectDetailPage from './pages/ProjectDetailPage'
+import InvitePage from './pages/InvitePage'
 
 function App() {
   const { user, loading: authLoading } = useAuth()
@@ -27,7 +28,12 @@ function App() {
 
   // Redirect to login if not authenticated
   if (!user) {
-    return <LoginPage />
+    return (
+      <Routes>
+        <Route path="/invite" element={<InvitePage />} />
+        <Route path="*" element={<LoginPage />} />
+      </Routes>
+    )
   }
 
   return (
@@ -37,6 +43,7 @@ function App() {
       <Route path="/projects" element={<ProjectsPage />} />
       <Route path="/projects/:id" element={<ProjectDetailPage />} />
       <Route path="/transactions/:projectId" element={<TransactionsPage />} />
+      <Route path="/invite" element={<InvitePage />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   )

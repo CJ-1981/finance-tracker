@@ -2,6 +2,7 @@
 // This must be imported before any component that uses Supabase
 
 import { getConfig, validateConfig } from './config'
+import { createSupabaseClient } from './supabase'
 
 export function initializeSupabase() {
   try {
@@ -9,7 +10,6 @@ export function initializeSupabase() {
     if (config) {
       const validation = validateConfig(config)
       if (validation.valid) {
-        const { createSupabaseClient } = require('./supabase')
         createSupabaseClient(config)
         return true
       }

@@ -1,14 +1,44 @@
 import Papa from 'papaparse'
-import type { Transaction } from '../types'
+import type { Transaction, Project, Category } from '../types'
 
-export function exportToCSV(transactions: Transaction[], projectName: string) {
-  const csvData = transactions.map((t) => ({
-    Date: t.date,
-    Description: t.description || '',
-    Amount: t.amount.toFixed(2),
-    Currency: t.currency,
-    Status: t.status,
-  }))
+interface ExportOptions {
+  transactions: Transaction[]
+  project: Project
+  categories: Category[]
+}
+
+export function exportToCSV({ transactions, project, categories }: ExportOptions) {
+  // Build headers dynamically based on project settings
+  const headers: string[] = ['Date', 'Description', 'Category']
+
+  // Add custom field headers
+  const customFields = project.settings?.custom_fields || []
+  customFields.forEach(field => {
+    headers.push(field.name)
+  })
+
+  // Add currency and amount columns
+  headers.push('Currency', 'Amount')
+
+  // Build CSV rows matching the table structure
+  const csvData = transactions.map((t) => {
+    const row: Record<string, string> = {
+      Date: t.date,
+      Description: t.description || '',
+      Category: categories.find(c => c.id === t.category_id)?.name || 'Uncategorized',
+    }
+
+    // Add custom field values
+    customFields.forEach(field => {
+      row[field.name] = t.custom_data?.[field.name] || '-'
+    })
+
+    // Add currency and amount as separate columns
+    row['Currency'] = t.currency_code || 'USD'
+    row['Amount'] = t.amount.toFixed(2)
+
+    return row
+  })
 
   const csv = Papa.unparse(csvData, {
     quotes: true,
@@ -23,7 +53,7 @@ export function exportToCSV(transactions: Transaction[], projectName: string) {
 
   const date = new Date().toISOString().split('T')[0]
   link.setAttribute('href', url)
-  link.setAttribute('download', `${projectName}_transactions_${date}.csv`)
+  link.setAttribute('download', `${project.name}_transactions_${date}.csv`)
   link.style.visibility = 'hidden'
 
   document.body.appendChild(link)

@@ -5,7 +5,7 @@ import { getSupabaseClient } from '../lib/supabase'
 import type { Project } from '../types'
 
 export default function DashboardPage() {
-  const { user } = useAuth()
+  const { user, signOut } = useAuth()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [dbError, setDbError] = useState(false)
@@ -80,8 +80,8 @@ export default function DashboardPage() {
       // Check error object more thoroughly
       const err = error as any
       if (err?.message?.includes('relation') ||
-          err?.message?.includes('does not exist') ||
-          err?.code === 'PGRST116') {
+        err?.message?.includes('does not exist') ||
+        err?.code === 'PGRST116') {
         setDbError(true)
       }
     } finally {
@@ -141,7 +141,12 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-            <span className="text-sm text-gray-600">{user?.email}</span>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600">{user?.email}</span>
+              <button onClick={() => { signOut(); window.location.reload() }} className="btn btn-secondary">
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </header>

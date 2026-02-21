@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS public.categories (
   name TEXT NOT NULL,
   color TEXT DEFAULT '#6B7280',
   parent_id UUID REFERENCES public.categories(id) ON DELETE CASCADE,
+  "order" INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -51,13 +52,14 @@ CREATE TABLE IF NOT EXISTS public.transactions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID REFERENCES public.projects(id) ON DELETE CASCADE,
   amount DECIMAL(15,2) NOT NULL,
-  currency TEXT DEFAULT 'USD',
+  currency_code TEXT DEFAULT 'USD',
   category_id UUID REFERENCES public.categories(id) ON DELETE SET NULL,
   description TEXT,
   date DATE NOT NULL,
   receipt_url TEXT,
   created_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  custom_data JSONB,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -71,7 +73,8 @@ CREATE TABLE IF NOT EXISTS public.invitations (
   invited_by UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
   token TEXT UNIQUE NOT NULL,
   expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-  accepted BOOLEAN DEFAULT false,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'expired')),
+  accepted_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -93,10 +96,13 @@ CREATE INDEX IF NOT EXISTS idx_projects_owner ON public.projects(owner_id);
 CREATE INDEX IF NOT EXISTS idx_project_members_project ON public.project_members(project_id);
 CREATE INDEX IF NOT EXISTS idx_project_members_user ON public.project_members(user_id);
 CREATE INDEX IF NOT EXISTS idx_categories_project ON public.categories(project_id);
+CREATE INDEX IF NOT EXISTS idx_categories_order ON public.categories(project_id, "order");
 CREATE INDEX IF NOT EXISTS idx_transactions_project ON public.transactions(project_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_date ON public.transactions(date DESC);
+CREATE INDEX IF NOT EXISTS idx_transactions_currency ON public.transactions(project_id, currency_code);
 CREATE INDEX IF NOT EXISTS idx_invitations_token ON public.invitations(token);
 CREATE INDEX IF NOT EXISTS idx_invitations_email ON public.invitations(email);
+CREATE INDEX IF NOT EXISTS idx_invitations_status ON public.invitations(status);
 
 -- Enable Row Level Security
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
@@ -126,6 +132,31 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Create or replace function for new project owners
+CREATE OR REPLACE FUNCTION public.handle_new_project_owner()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.project_members (project_id, user_id, role)
+  VALUES (NEW.id, NEW.owner_id, 'owner');
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger to create project owner membership on project creation
+DROP TRIGGER IF EXISTS on_project_created ON public.projects;
+CREATE TRIGGER on_project_created
+  AFTER INSERT ON public.projects
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_project_owner();
+
+-- Security definer function to check project membership without recursion
+CREATE OR REPLACE FUNCTION public.is_project_member(p_id UUID)
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.project_members
+    WHERE project_id = p_id AND user_id = auth.uid()
+  );
+$$ LANGUAGE sql SECURITY DEFINER;
 
 -- RLS Policies
 
@@ -168,10 +199,6 @@ CREATE POLICY "Users can insert own profile"
   ON public.profiles FOR INSERT
   WITH CHECK (auth.uid() = id);
 
--- Profiles: Allow service role to insert (for the auth trigger)
-CREATE POLICY "Service role can insert profiles"
-  ON public.profiles FOR INSERT
-  WITH CHECK (true);
 
 -- Projects: Owners and members can view projects
 CREATE POLICY "Owners and members can view projects"
@@ -208,14 +235,7 @@ CREATE POLICY "Users can insert projects"
 -- Project Members: Members can view membership for their projects
 CREATE POLICY "Members can view project members"
   ON public.project_members FOR SELECT
-  USING (
-    project_id IN (
-      SELECT id FROM public.projects
-      WHERE owner_id = auth.uid()
-    )
-    OR
-    user_id = auth.uid()
-  );
+  USING ( public.is_project_member(project_id) );
 
 -- Project Members: Owners can insert members
 CREATE POLICY "Owners can insert members"

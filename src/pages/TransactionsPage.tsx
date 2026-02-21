@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { getSupabaseClient } from '../lib/supabase'
+import { exportToCSV } from '../utils/csvExport'
 import type { Project, Transaction, Category } from '../types'
 
 export default function TransactionsPage() {
   const { user } = useAuth()
-  const { id: projectId } = useParams<{ id: string }>()
+  const { projectId } = useParams<{ projectId: string }>()
   const [project, setProject] = useState<Project | null>(null)
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -14,10 +15,26 @@ export default function TransactionsPage() {
   const [loading, setLoading] = useState(true)
   const [formData, setFormData] = useState({
     amount: '',
+    currency_code: 'USD',
     category_id: '',
     description: '',
     date: new Date().toISOString().split('T')[0],
   })
+
+  const [customData, setCustomData] = useState<Record<string, string>>({})
+  const [showSettings, setShowSettings] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null)
+  const [editingCategoryName, setEditingCategoryName] = useState('')
+  const [newFieldName, setNewFieldName] = useState('')
+  const [newFieldType, setNewFieldType] = useState<'text' | 'number' | 'date'>('text')
+  const [editingFieldOriginalName, setEditingFieldOriginalName] = useState<string | null>(null)
+  const [editingFieldName, setEditingFieldName] = useState('')
+  const [editingTransactionId, setEditingTransactionId] = useState<string | null>(null)
+  const [showImportModal, setShowImportModal] = useState(false)
+  const [importFieldName, setImportFieldName] = useState('')
+  const [importValues, setImportValues] = useState('')
+  const [importedFieldValues, setImportedFieldValues] = useState<Record<string, string[]>>({})
 
   useEffect(() => {
     if (projectId) {
@@ -71,6 +88,7 @@ export default function TransactionsPage() {
         .from('categories')
         .select('*')
         .eq('project_id', projectId)
+        .order('order', { ascending: true })
 
       if (error) throw error
       setCategories(data || [])
@@ -95,8 +113,9 @@ export default function TransactionsPage() {
           project_id: projectId,
           name: 'General',
           color: '#6B7280',
+          order: 0,
         } as any)
-        .select('id, name, color')
+        .select('id, name, color, order')
         .single()
 
       if (data) {
@@ -119,30 +138,65 @@ export default function TransactionsPage() {
 
     try {
       const supabase = getSupabaseClient()
-      // Type assertion needed: Supabase insert types require generated types from Supabase CLI
-      const { error } = await supabase.from('transactions').insert({
-        project_id: projectId,
-        amount: parseFloat(formData.amount),
-        category_id: formData.category_id,
-        description: formData.description,
-        date: formData.date,
-        currency: project?.settings?.currency || 'USD',
-        created_by: user.id,
-      } as any)
+      if (editingTransactionId) {
+        const { error } = await (supabase
+          .from('transactions') as any)
+          .update({
+            amount: parseFloat(formData.amount),
+            currency_code: formData.currency_code,
+            category_id: formData.category_id,
+            description: formData.description,
+            date: formData.date,
+            custom_data: customData,
+          })
+          .eq('id', editingTransactionId)
 
-      if (error) throw error
+        if (error) throw error
+      } else {
+        const { error } = await (supabase
+          .from('transactions') as any)
+          .insert({
+            project_id: projectId,
+            amount: parseFloat(formData.amount),
+            currency_code: formData.currency_code,
+            category_id: formData.category_id,
+            description: formData.description,
+            date: formData.date,
+            created_by: user.id,
+            custom_data: customData,
+          })
+
+        if (error) throw error
+      }
 
       setFormData({
         amount: '',
+        currency_code: 'USD',
         category_id: '',
         description: '',
         date: new Date().toISOString().split('T')[0],
       })
+      setCustomData({})
+      setEditingTransactionId(null)
       setShowAddForm(false)
       fetchTransactions()
     } catch (error) {
       console.error('Error creating transaction:', error)
     }
+  }
+
+  const handleEdit = (transaction: Transaction) => {
+    setEditingTransactionId(transaction.id)
+    setFormData({
+      amount: transaction.amount.toString(),
+      currency_code: transaction.currency_code || 'USD',
+      category_id: transaction.category_id || '',
+      description: transaction.description || '',
+      date: transaction.date || new Date().toISOString().split('T')[0],
+    })
+    setCustomData(transaction.custom_data || {})
+    setShowAddForm(true)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleDelete = async (transactionId: string) => {
@@ -161,6 +215,220 @@ export default function TransactionsPage() {
       fetchTransactions()
     } catch (error) {
       console.error('Error deleting transaction:', error)
+    }
+  }
+
+  const handleAddCategory = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newCategoryName || !projectId) return
+    try {
+      const supabase = getSupabaseClient()
+      const order = categories.length // New category goes at the end
+      const { data, error } = await (supabase
+        .from('categories') as any)
+        .insert([{ project_id: projectId, name: newCategoryName, color: '#' + Math.floor(Math.random() * 16777215).toString(16).padEnd(6, '0'), order }])
+        .select()
+        .single()
+      if (error) throw error
+      setCategories([...categories, data as Category])
+      setNewCategoryName('')
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleAddField = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newFieldName || !project) return
+    const currentFields = project.settings?.custom_fields || []
+    const updatedSettings = {
+      ...project.settings,
+      currency: project.settings?.currency || 'USD',
+      date_format: project.settings?.date_format || 'YYYY-MM-DD',
+      notifications_enabled: project.settings?.notifications_enabled ?? true,
+      custom_fields: [...currentFields, { name: newFieldName, type: newFieldType }]
+    }
+    await updateProjectSettings(updatedSettings)
+    setNewFieldName('')
+  }
+
+  const handleDeleteField = async (fieldName: string) => {
+    if (!project) return
+    const currentFields = project.settings?.custom_fields || []
+    const updatedSettings = {
+      ...project.settings,
+      custom_fields: currentFields.filter(f => f.name !== fieldName)
+    }
+    await updateProjectSettings(updatedSettings)
+  }
+
+  const handleMoveField = async (index: number, direction: 'up' | 'down') => {
+    if (!project) return
+    const currentFields = [...(project.settings?.custom_fields || [])]
+    if (direction === 'up' && index > 0) {
+      const temp = currentFields[index];
+      currentFields[index] = currentFields[index - 1];
+      currentFields[index - 1] = temp;
+    } else if (direction === 'down' && index < currentFields.length - 1) {
+      const temp = currentFields[index];
+      currentFields[index] = currentFields[index + 1];
+      currentFields[index + 1] = temp;
+    } else {
+      return
+    }
+    const updatedSettings = {
+      ...project.settings,
+      custom_fields: currentFields
+    }
+    await updateProjectSettings(updatedSettings)
+  }
+
+  const updateProjectSettings = async (updatedSettings: any) => {
+    try {
+      const supabase = getSupabaseClient()
+      const { error } = await (supabase
+        .from('projects') as any)
+        .update({ settings: updatedSettings })
+        .eq('id', projectId as string)
+
+      if (error) throw error
+      setProject({ ...project!, settings: updatedSettings as any })
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleDeleteCategory = async (categoryId: string) => {
+    if (!confirm('Are you sure you want to delete this category? Transactions using it will become Uncategorized.')) return;
+    try {
+      const supabase = getSupabaseClient()
+      const { error } = await supabase.from('categories').delete().eq('id', categoryId)
+      if (error) throw error
+      setCategories(categories.filter(c => c.id !== categoryId))
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleRenameCategory = async (categoryId: string, newName: string) => {
+    if (!newName.trim()) return
+    try {
+      const supabase = getSupabaseClient()
+      const { error } = await (supabase.from('categories') as any).update({ name: newName }).eq('id', categoryId)
+      if (error) throw error
+      setCategories(categories.map(c => c.id === categoryId ? { ...c, name: newName } : c))
+      setEditingCategoryId(null)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleMoveCategory = async (index: number, direction: 'up' | 'down') => {
+    if (index < 0 || index >= categories.length) return
+    if (direction === 'up' && index === 0) return
+    if (direction === 'down' && index === categories.length - 1) return
+
+    try {
+      const supabase = getSupabaseClient()
+      const currentCategory = categories[index]
+      const targetIndex = direction === 'up' ? index - 1 : index + 1
+      const targetCategory = categories[targetIndex]
+
+      // Swap the order values in the database
+      const { error: error1 } = await (supabase.from('categories') as any)
+        .update({ order: targetCategory.order })
+        .eq('id', currentCategory.id)
+      if (error1) throw error1
+
+      const { error: error2 } = await (supabase.from('categories') as any)
+        .update({ order: currentCategory.order })
+        .eq('id', targetCategory.id)
+      if (error2) throw error2
+
+      // Update local state
+      const newCategories = [...categories]
+      newCategories[index] = targetCategory
+      newCategories[targetIndex] = currentCategory
+      setCategories(newCategories)
+    } catch (err) {
+      console.error('Error moving category:', err)
+    }
+  }
+
+  const handleRenameField = async (oldName: string, newName: string) => {
+    if (!project || !newName.trim() || oldName === newName) return
+    const currentFields = project.settings?.custom_fields || []
+    if (currentFields.some(f => f.name === newName)) {
+      alert('A field with this name already exists')
+      return
+    }
+
+    const updatedSettings = {
+      ...project.settings,
+      custom_fields: currentFields.map(f => f.name === oldName ? { ...f, name: newName } : f)
+    }
+
+    try {
+      const supabase = getSupabaseClient()
+      const { error: projectError } = await (supabase.from('projects') as any)
+        .update({ settings: updatedSettings })
+        .eq('id', projectId as string)
+      if (projectError) throw projectError
+
+      const { data: txs } = await (supabase.from('transactions') as any)
+        .select('id, custom_data')
+        .eq('project_id', projectId as string)
+      if (txs) {
+        for (const tx of txs as any[]) {
+          if (tx.custom_data && tx.custom_data[oldName] !== undefined) {
+            const newData = { ...tx.custom_data, [newName]: tx.custom_data[oldName] }
+            delete newData[oldName]
+            await (supabase.from('transactions') as any).update({ custom_data: newData }).eq('id', tx.id)
+          }
+        }
+      }
+
+      setProject({ ...project, settings: updatedSettings as any })
+      setEditingFieldOriginalName(null)
+      fetchTransactions()
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleImportFieldValues = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!importFieldName || !importValues.trim() || !project) return
+
+    try {
+      // Parse the import values (one per line)
+      const values = importValues
+        .split('\n')
+        .map(v => v.trim())
+        .filter(v => v.length > 0)
+
+      // Store in project settings for later use
+      const currentFieldValues = project.settings?.custom_field_values || {}
+      const updatedSettings = {
+        ...project.settings,
+        custom_field_values: {
+          ...currentFieldValues,
+          [importFieldName]: values
+        }
+      }
+
+      await updateProjectSettings(updatedSettings)
+      setImportedFieldValues({
+        ...importedFieldValues,
+        [importFieldName]: values
+      })
+      setShowImportModal(false)
+      setImportFieldName('')
+      setImportValues('')
+      alert(`Successfully imported ${values.length} values for field "${importFieldName}"`)
+    } catch (err) {
+      console.error(err)
+      alert('Failed to import values')
     }
   }
 
@@ -201,31 +469,217 @@ export default function TransactionsPage() {
               </Link>
               <h1 className="text-2xl font-bold text-gray-900 mt-1">Transactions</h1>
             </div>
-            <button onClick={() => setShowAddForm(true)} className="btn btn-primary">
-              Add Transaction
-            </button>
+            <div className="flex gap-2">
+              <button onClick={() => setShowSettings(!showSettings)} className="btn btn-secondary">
+                {showSettings ? 'Close Settings' : 'Template Settings'}
+              </button>
+              <button onClick={() => {
+                setEditingTransactionId(null)
+                setFormData({ amount: '', currency_code: 'USD', category_id: '', description: '', date: new Date().toISOString().split('T')[0] })
+                setCustomData({})
+                setShowAddForm(true)
+              }} className="btn btn-primary">
+                Add Transaction
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {showSettings && (
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
+            <div className="card">
+              <h2 className="text-lg font-semibold mb-4">Manage Categories</h2>
+              <form onSubmit={handleAddCategory} className="flex gap-2 mb-4">
+                <input type="text" className="input" placeholder="New Category Name" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} required />
+                <button type="submit" className="btn btn-primary whitespace-nowrap">Add</button>
+              </form>
+              <ul className="space-y-2">
+                {categories.map((c, index) => (
+                  <li key={c.id} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded">
+                    {editingCategoryId === c.id ? (
+                      <div className="flex-1 flex gap-2">
+                        <input
+                          type="text"
+                          className="input py-1 px-2 text-sm"
+                          value={editingCategoryName}
+                          onChange={(e) => setEditingCategoryName(e.target.value)}
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleRenameCategory(c.id, editingCategoryName)
+                            if (e.key === 'Escape') setEditingCategoryId(null)
+                          }}
+                        />
+                        <button onClick={() => handleRenameCategory(c.id, editingCategoryName)} className="text-blue-600 hover:text-blue-800 font-semibold">Save</button>
+                        <button onClick={() => setEditingCategoryId(null)} className="text-gray-500 hover:text-gray-700">Cancel</button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <span className="w-3 h-3 rounded-full" style={{ backgroundColor: c.color }}></span>
+                          {c.name}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs">
+                          <button disabled={index === 0} onClick={() => handleMoveCategory(index, 'up')} className="text-gray-500 hover:text-blue-600 disabled:opacity-30">↑</button>
+                          <button disabled={index === categories.length - 1} onClick={() => handleMoveCategory(index, 'down')} className="text-gray-500 hover:text-blue-600 disabled:opacity-30">↓</button>
+                          <button onClick={() => {
+                            setEditingCategoryId(c.id)
+                            setEditingCategoryName(c.name)
+                          }} className="text-blue-500 hover:text-blue-700">Rename</button>
+                          <button onClick={() => handleDeleteCategory(c.id)} className="text-red-500 hover:text-red-700">Delete</button>
+                        </div>
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="card">
+              <h2 className="text-lg font-semibold mb-4">Manage Custom Fields</h2>
+              <form onSubmit={handleAddField} className="flex gap-2 mb-4">
+                <input type="text" className="input flex-1" placeholder="Field Name" value={newFieldName} onChange={e => setNewFieldName(e.target.value)} required />
+                <select className="input w-32" value={newFieldType} onChange={e => setNewFieldType(e.target.value as any)}>
+                  <option value="text">Text</option>
+                  <option value="number">Number</option>
+                  <option value="date">Date</option>
+                </select>
+                <button type="submit" className="btn btn-primary whitespace-nowrap">Add</button>
+              </form>
+              <div className="space-y-2">
+                {project?.settings?.custom_fields?.map((f, index) => (
+                  <div key={f.name} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded">
+                    {editingFieldOriginalName === f.name ? (
+                      <div className="flex-1 flex gap-2">
+                        <input
+                          type="text"
+                          className="input py-1 px-2 text-sm"
+                          value={editingFieldName}
+                          onChange={(e) => setEditingFieldName(e.target.value)}
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleRenameField(f.name, editingFieldName)
+                            if (e.key === 'Escape') setEditingFieldOriginalName(null)
+                          }}
+                        />
+                        <button onClick={() => handleRenameField(f.name, editingFieldName)} className="text-blue-600 hover:text-blue-800 font-semibold text-xs">Save</button>
+                        <button onClick={() => setEditingFieldOriginalName(null)} className="text-gray-500 hover:text-gray-700 text-xs">Cancel</button>
+                      </div>
+                    ) : (
+                      <>
+                        <div>
+                          <span className="font-semibold">{f.name}</span> <span className="text-gray-500 text-xs">({f.type})</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs">
+                          <button disabled={index === 0} onClick={() => handleMoveField(index, 'up')} className="text-gray-500 hover:text-blue-600 disabled:opacity-30">↑</button>
+                          <button disabled={index === (project.settings?.custom_fields?.length || 0) - 1} onClick={() => handleMoveField(index, 'down')} className="text-gray-500 hover:text-blue-600 disabled:opacity-30">↓</button>
+                          {f.type === 'text' && (
+                            <button onClick={() => {
+                              setImportFieldName(f.name)
+                              setShowImportModal(true)
+                              // Load existing values
+                              const existingValues = Array.from(new Set(
+                                transactions
+                                  .map(t => t.custom_data?.[f.name])
+                                  .filter(Boolean)
+                              ))
+                              setImportValues(existingValues.join('\n'))
+                            }} className="text-green-600 hover:text-green-700">Import</button>
+                          )}
+                          <button onClick={() => {
+                            setEditingFieldOriginalName(f.name)
+                            setEditingFieldName(f.name)
+                          }} className="text-blue-500 hover:text-blue-700">Rename</button>
+                          <button onClick={() => handleDeleteField(f.name)} className="text-red-500 hover:text-red-700 ml-2">Delete</button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+                {(!project?.settings?.custom_fields || project.settings.custom_fields.length === 0) && (
+                  <p className="text-sm text-gray-500">No custom fields defined yet.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showImportModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full">
+              <h2 className="text-xl font-bold mb-4">Import Values for "{importFieldName}"</h2>
+              <form onSubmit={handleImportFieldValues} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Values (one per line)
+                  </label>
+                  <textarea
+                    className="input min-h-40 font-mono text-sm"
+                    placeholder="Value 1&#10;Value 2&#10;Value 3&#10;..."
+                    value={importValues}
+                    onChange={(e) => setImportValues(e.target.value)}
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Enter one value per line. These will be available for autocomplete.
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button type="submit" className="btn btn-primary w-full">
+                    Import Values
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowImportModal(false)
+                      setImportFieldName('')
+                      setImportValues('')
+                    }}
+                    className="btn btn-secondary w-full"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         {showAddForm && (
           <div className="card mb-6">
-            <h2 className="text-lg font-semibold mb-4">Add New Transaction</h2>
+            <h2 className="text-lg font-semibold mb-4">{editingTransactionId ? 'Edit Transaction' : 'Add New Transaction'}</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-1">
                   Amount
                 </label>
-                <input
-                  id="amount"
-                  type="number"
-                  step="0.01"
-                  className="input"
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  required
-                />
+                <div className="flex gap-2">
+                  <input
+                    id="amount"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    className="input flex-1"
+                    value={formData.amount}
+                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                    required
+                  />
+                  <select
+                    id="currency_code"
+                    className="input w-24"
+                    value={formData.currency_code}
+                    onChange={(e) => setFormData({ ...formData, currency_code: e.target.value })}
+                  >
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                    <option value="JPY">JPY</option>
+                    <option value="KRW">KRW</option>
+                    <option value="CNY">CNY</option>
+                    <option value="INR">INR</option>
+                  </select>
+                </div>
               </div>
               <div>
                 <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
@@ -253,11 +707,16 @@ export default function TransactionsPage() {
                 <input
                   id="description"
                   type="text"
+                  list="description-options"
                   className="input"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  required
                 />
+                <datalist id="description-options">
+                  {Array.from(new Set(transactions.map(t => t.description))).filter(Boolean).map((desc, i) => (
+                    <option key={i} value={desc} />
+                  ))}
+                </datalist>
               </div>
               <div>
                 <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
@@ -272,13 +731,50 @@ export default function TransactionsPage() {
                   required
                 />
               </div>
+
+              {project?.settings?.custom_fields?.map((field) => (
+                <div key={field.name}>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{field.name}</label>
+                  {field.type === 'text' ? (
+                    <>
+                      <input
+                        type="text"
+                        list={`custom-field-${field.name}`}
+                        className="input"
+                        value={customData[field.name] || ''}
+                        onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
+                      />
+                      <datalist id={`custom-field-${field.name}`}>
+                        {/* Combine imported values with existing transaction values */}
+                        {Array.from(new Set([
+                          ...(project?.settings?.custom_field_values?.[field.name] || []),
+                          ...transactions.map(t => t.custom_data?.[field.name]).filter(Boolean)
+                        ])).map((value, i) => (
+                          <option key={i} value={value as string} />
+                        ))}
+                      </datalist>
+                    </>
+                  ) : (
+                    <input
+                      type={field.type}
+                      className="input"
+                      value={customData[field.name] || ''}
+                      onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
+                    />
+                  )}
+                </div>
+              ))}
+
               <div className="flex gap-2">
                 <button type="submit" className="btn btn-primary">
-                  Save Transaction
+                  {editingTransactionId ? 'Update Transaction' : 'Save Transaction'}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowAddForm(false)}
+                  onClick={() => {
+                    setShowAddForm(false)
+                    setEditingTransactionId(null)
+                  }}
                   className="btn btn-secondary"
                 >
                   Cancel
@@ -298,6 +794,19 @@ export default function TransactionsPage() {
           </div>
         ) : (
           <div className="card">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold">Transactions ({transactions.length})</h2>
+              <button
+                onClick={() => {
+                  if (project) {
+                    exportToCSV({ transactions, project, categories })
+                  }
+                }}
+                className="btn btn-secondary"
+              >
+                Export CSV
+              </button>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -305,6 +814,10 @@ export default function TransactionsPage() {
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Date</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Description</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Category</th>
+                    {project?.settings?.custom_fields?.map((field: any) => (
+                      <th key={field.name} className="text-left py-3 px-4 text-sm font-semibold text-gray-900">{field.name}</th>
+                    ))}
+                    <th className="text-right py-3 px-4 text-sm font-semibold text-gray-900">Currency</th>
                     <th className="text-right py-3 px-4 text-sm font-semibold text-gray-900">Amount</th>
                     <th className="text-right py-3 px-4 text-sm font-semibold text-gray-900">Actions</th>
                   </tr>
@@ -317,10 +830,24 @@ export default function TransactionsPage() {
                       <td className="py-3 px-4 text-sm text-gray-600">
                         {getCategoryName(transaction.category_id)}
                       </td>
+                      {project?.settings?.custom_fields?.map((field: any) => (
+                        <td key={field.name} className="py-3 px-4 text-sm text-gray-900">
+                          {transaction.custom_data?.[field.name] || '-'}
+                        </td>
+                      ))}
+                      <td className="py-3 px-4 text-sm text-right text-gray-600">
+                        {transaction.currency_code || 'USD'}
+                      </td>
                       <td className="py-3 px-4 text-sm text-right font-semibold text-gray-900">
-                        {project.settings?.currency || 'USD'} {transaction.amount.toFixed(2)}
+                        {transaction.amount.toFixed(2)}
                       </td>
                       <td className="py-3 px-4 text-right">
+                        <button
+                          onClick={() => handleEdit(transaction)}
+                          className="text-sm text-blue-600 hover:text-blue-800 mr-3"
+                        >
+                          Edit
+                        </button>
                         <button
                           onClick={() => handleDelete(transaction.id)}
                           className="text-sm text-red-600 hover:text-red-800"

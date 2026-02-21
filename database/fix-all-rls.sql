@@ -23,10 +23,6 @@ CREATE POLICY "Users can insert own profile"
   ON public.profiles FOR INSERT
   WITH CHECK (auth.uid() = id);
 
--- Allow service role to insert (for the trigger)
-CREATE POLICY "Service role can insert profiles"
-  ON public.profiles FOR INSERT
-  WITH CHECK (true);
 
 -- ============================================
 -- PROJECTS TABLE - Allow owners to view
@@ -68,17 +64,19 @@ DROP POLICY IF EXISTS "Members can view project members" ON public.project_membe
 DROP POLICY IF EXISTS "Owners can insert members" ON public.project_members;
 DROP POLICY IF EXISTS "Owners can delete members" ON public.project_members;
 
+-- Create security definer function
+CREATE OR REPLACE FUNCTION public.is_project_member(p_id UUID)
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.project_members
+    WHERE project_id = p_id AND user_id = auth.uid()
+  );
+$$ LANGUAGE sql SECURITY DEFINER;
+
 -- Allow viewing project members if you're the owner or a member
 CREATE POLICY "Members can view project members"
   ON public.project_members FOR SELECT
-  USING (
-    project_id IN (
-      SELECT id FROM public.projects
-      WHERE owner_id = auth.uid()
-    )
-    OR
-    user_id = auth.uid()
-  );
+  USING ( public.is_project_member(project_id) );
 
 CREATE POLICY "Owners can insert members"
   ON public.project_members FOR INSERT

@@ -67,17 +67,6 @@ export default function ProjectsPage() {
         throw new Error('Failed to create project')
       }
 
-      // Add owner as project member
-      const { error: memberError } = await supabase
-        .from('project_members')
-        .insert({
-          project_id: newProjectId,
-          user_id: user.id,
-          role: 'owner',
-        } as any)
-
-      if (memberError) throw memberError
-
       setFormData({ name: '', description: '' })
       setShowCreateForm(false)
       fetchProjects()

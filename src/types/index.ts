@@ -17,6 +17,12 @@ export interface Project {
     currency: string
     date_format: string
     notifications_enabled: boolean
+    custom_fields?: Array<{
+      name: string
+      type: 'text' | 'number' | 'date'
+    }>
+    custom_field_values?: Record<string, string[]>
+    default_date_period?: 'today' | 'yesterday' | 'last7days' | 'last30days' | 'thisMonth' | 'lastMonth' | 'thisYear' | 'all'
   }
   created_at: string
   updated_at: string
@@ -36,6 +42,7 @@ export interface Category {
   name: string
   color: string
   parent_id?: string
+  order: number
   created_at: string
 }
 
@@ -43,13 +50,14 @@ export interface Transaction {
   id: string
   project_id: string
   amount: number
-  currency: string
+  currency_code: string
   category_id: string
   description?: string
   date: string
   receipt_url?: string
   created_by: string
   status: 'pending' | 'approved' | 'rejected'
+  custom_data?: Record<string, any>
   created_at: string
   updated_at: string
 }
