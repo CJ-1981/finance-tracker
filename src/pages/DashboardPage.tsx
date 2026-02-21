@@ -8,6 +8,7 @@ export default function DashboardPage() {
   const { user } = useAuth()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
+  const [dbError, setDbError] = useState(false)
 
   useEffect(() => {
     fetchProjects()
@@ -21,12 +22,22 @@ export default function DashboardPage() {
         .select('project_id, projects(*)')
         .eq('user_id', user?.id || '')
 
-      if (error) throw error
+      if (error) {
+        // Check if it's a database not set up error (500 or relation doesn't exist)
+        if (error.code === 'PGRST204' || error.message?.includes('relation') || error.message?.includes('42P01')) {
+          setDbError(true)
+        }
+        throw error
+      }
 
       const projects = data?.map((m: { projects: Project | null }) => m.projects).filter((p): p is Project => p !== null) || []
       setProjects(projects)
     } catch (error) {
       console.error('Error fetching projects:', error)
+      // Set dbError for 500 errors or relation errors
+      if ((error as any).message?.includes('relation') || (error as any).code === 'PGRST116') {
+        setDbError(true)
+      }
     } finally {
       setLoading(false)
     }
@@ -36,6 +47,44 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  // Show database setup message if tables don't exist
+  if (dbError) {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-20 md:pb-0 md:pl-64">
+        <header className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <h1 className="text-2xl font-bold text-gray-900">Database Setup Required</h1>
+          </div>
+        </header>
+        <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="card">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Database Tables Not Found</h2>
+            <p className="text-gray-600 mb-6">
+              Your Supabase project is connected, but the database tables haven't been created yet.
+            </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <h3 className="font-medium text-blue-900 mb-2">To fix this:</h3>
+              <ol className="list-decimal list-inside space-y-2 text-blue-800">
+                <li>Open your Supabase project dashboard</li>
+                <li>Go to <strong>SQL Editor</strong> in the left sidebar</li>
+                <li>Click <strong>New Query</strong></li>
+                <li>Copy the contents of the <code>database/schema.sql</code> file from this project</li>
+                <li>Paste it into the SQL Editor and click <strong>Run</strong></li>
+                <li>Refresh this page when done</li>
+              </ol>
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="btn btn-primary"
+            >
+              Refresh Page
+            </button>
+          </div>
+        </main>
       </div>
     )
   }

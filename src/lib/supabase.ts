@@ -5,10 +5,12 @@ import type { Database } from '../types/database'
 let supabaseInstance: SupabaseClient<Database> | null = null
 
 export function createSupabaseClient(config: SupabaseConfig): SupabaseClient<Database> {
+  // Return existing instance if already created with same config
   if (supabaseInstance) {
     return supabaseInstance
   }
 
+  // Create new instance
   supabaseInstance = createClient<Database>(config.url, config.anonKey, {
     auth: {
       persistSession: true,
