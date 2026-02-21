@@ -137,6 +137,16 @@ CREATE POLICY "Users can update own profile"
   ON public.profiles FOR UPDATE
   USING (auth.uid() = id);
 
+-- Profiles: Allow inserts (for the trigger and new user signup)
+CREATE POLICY "Users can insert own profile"
+  ON public.profiles FOR INSERT
+  WITH CHECK (auth.uid() = id);
+
+-- Profiles: Allow service role to insert (for the auth trigger)
+CREATE POLICY "Service role can insert profiles"
+  ON public.profiles FOR INSERT
+  WITH CHECK (true);
+
 -- Projects: Owners and members can view projects
 CREATE POLICY "Owners and members can view projects"
   ON public.projects FOR SELECT
@@ -174,9 +184,11 @@ CREATE POLICY "Members can view project members"
   ON public.project_members FOR SELECT
   USING (
     project_id IN (
-      SELECT project_id FROM public.project_members
-      WHERE user_id = auth.uid()
+      SELECT id FROM public.projects
+      WHERE owner_id = auth.uid()
     )
+    OR
+    user_id = auth.uid()
   );
 
 -- Project Members: Owners can insert members
