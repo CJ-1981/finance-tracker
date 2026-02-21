@@ -7,9 +7,18 @@ export default defineConfig({
   base: '/finance-tracker/',
   server: {
     port: 3000,
+    // Ensure proper handling of the base path
+    strictPort: true,
   },
   build: {
     outDir: 'dist',
     sourcemap: true,
+    // Ensure proper asset paths
+    rollupOptions: {
+      output: {
+        // Manual chunk splitting for better loading
+        manualChunks: {},
+      },
+    },
   },
 })
