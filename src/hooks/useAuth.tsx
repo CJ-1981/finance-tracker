@@ -1,11 +1,13 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { User } from '@supabase/supabase-js'
 import type { User as AppUser, AuthState } from '../types'
-import { getSupabaseClient } from '../lib/supabase'
+import { getSupabaseClient, resetSupabaseClient, createSupabaseClient } from '../lib/supabase'
+import { getConfig } from '../lib/config'
 
 interface AuthContextType extends AuthState {
   signIn: () => Promise<void>
   signOut: () => Promise<void>
+  reinitialize: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -18,12 +20,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   })
 
   useEffect(() => {
-    const supabase = getSupabaseClient()
+    // Try to get Supabase client - it might not be initialized yet
+    let supabase
+    try {
+      supabase = getSupabaseClient()
+    } catch (error) {
+      // Supabase not configured yet - this is OK on first visit
+      console.log('Supabase not configured yet')
+      setAuthState({ user: null, session: null, loading: false })
+      return
+    }
 
     // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        fetchUserProfile(session.user)
+        fetchUserProfile(session.user, supabase)
       } else {
         setAuthState({ user: null, session: null, loading: false })
       }
@@ -34,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        fetchUserProfile(session.user)
+        fetchUserProfile(session.user, supabase)
       } else {
         setAuthState({ user: null, session: null, loading: false })
       }
@@ -43,9 +54,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  const fetchUserProfile = async (user: User) => {
+  const fetchUserProfile = async (user: User, supabase: ReturnType<typeof getSupabaseClient>) => {
     try {
-      const supabase = getSupabaseClient()
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -81,8 +91,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAuthState({ user: null, session: null, loading: false })
   }
 
+  const reinitialize = () => {
+    const config = getConfig()
+    if (config) {
+      try {
+        resetSupabaseClient()
+        createSupabaseClient(config)
+        setAuthState(prev => ({ ...prev, loading: true }))
+      } catch (error) {
+        console.error('Failed to reinitialize Supabase:', error)
+      }
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ ...authState, signIn, signOut }}>
+    <AuthContext.Provider value={{ ...authState, signIn, signOut, reinitialize }}>
       {children}
     </AuthContext.Provider>
   )
