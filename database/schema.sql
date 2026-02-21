@@ -137,10 +137,11 @@ CREATE POLICY "Users can update own profile"
   ON public.profiles FOR UPDATE
   USING (auth.uid() = id);
 
--- Projects: Members can view projects they belong to
-CREATE POLICY "Members can view own projects"
+-- Projects: Owners and members can view projects
+CREATE POLICY "Owners and members can view projects"
   ON public.projects FOR SELECT
   USING (
+    owner_id = auth.uid() OR
     id IN (
       SELECT project_id FROM public.project_members
       WHERE user_id = auth.uid()

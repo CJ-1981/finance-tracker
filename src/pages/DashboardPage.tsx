@@ -17,25 +17,60 @@ export default function DashboardPage() {
   const fetchProjects = async () => {
     try {
       const supabase = getSupabaseClient()
-      const { data, error } = await supabase
+
+      // First try to get projects where user is the owner
+      // This bypasses the project_members circular dependency
+      const { data: ownedProjects, error: ownerError } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('owner_id', user?.id || '')
+
+      if (ownerError) {
+        console.log('Owner query error:', ownerError)
+        // Check for database not set up errors
+        const isDbError =
+          ownerError.code === 'PGRST116' ||
+          ownerError.code === 'PGRST204' ||
+          ownerError.message?.includes('relation') ||
+          ownerError.message?.includes('does not exist') ||
+          ownerError.hint?.includes('table')
+
+        if (isDbError) {
+          setDbError(true)
+          setLoading(false)
+          return
+        }
+        // For other errors, continue with empty result
+        console.log('Continuing with empty projects due to:', ownerError.message)
+      }
+
+      // Then try to get projects where user is a member
+      const { data: memberData, error: memberError } = await supabase
         .from('project_members')
         .select('project_id, projects(*)')
         .eq('user_id', user?.id || '')
 
-      if (error) {
-        // Check if it's a database not set up error (500 or relation doesn't exist)
-        if (error.code === 'PGRST204' || error.message?.includes('relation') || error.message?.includes('42P01')) {
-          setDbError(true)
-        }
-        throw error
+      let memberProjects: Project[] = []
+      if (!memberError && memberData) {
+        memberProjects = memberData
+          .map((m: { projects: Project | null }) => m.projects)
+          .filter((p): p is Project => p !== null)
       }
 
-      const projects = data?.map((m: { projects: Project | null }) => m.projects).filter((p): p is Project => p !== null) || []
-      setProjects(projects)
+      // Combine both lists (avoiding duplicates)
+      const allProjects = [...(ownedProjects || []), ...memberProjects]
+      const uniqueProjects = Array.from(
+        new Map(allProjects.map(p => [p.id, p])).values()
+      )
+
+      setProjects(uniqueProjects)
     } catch (error) {
       console.error('Error fetching projects:', error)
-      // Set dbError for 500 errors or relation errors
-      if ((error as any).message?.includes('relation') || (error as any).code === 'PGRST116') {
+      // Check error object more thoroughly
+      const err = error as any
+      if (err?.message?.includes('relation') ||
+          err?.message?.includes('does not exist') ||
+          err?.code === 'PGRST116') {
         setDbError(true)
       }
     } finally {
