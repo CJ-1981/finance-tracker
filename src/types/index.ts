@@ -1,0 +1,97 @@
+// Database Types
+export interface User {
+  id: string
+  email: string
+  name: string
+  avatar_url?: string
+  created_at: string
+}
+
+export interface Project {
+  id: string
+  name: string
+  description?: string
+  owner_id: string
+  template_id?: string
+  settings?: {
+    currency: string
+    date_format: string
+    notifications_enabled: boolean
+  }
+  created_at: string
+  updated_at: string
+}
+
+export interface ProjectMember {
+  id: string
+  project_id: string
+  user_id: string
+  role: 'owner' | 'member' | 'viewer'
+  joined_at: string
+}
+
+export interface Category {
+  id: string
+  project_id: string
+  name: string
+  color: string
+  parent_id?: string
+  created_at: string
+}
+
+export interface Transaction {
+  id: string
+  project_id: string
+  amount: number
+  currency: string
+  category_id: string
+  description?: string
+  date: string
+  receipt_url?: string
+  created_by: string
+  status: 'pending' | 'approved' | 'rejected'
+  created_at: string
+  updated_at: string
+}
+
+export interface Invitation {
+  id: string
+  project_id: string
+  email: string
+  role: 'member' | 'viewer'
+  invited_by: string
+  token: string
+  expires_at: string
+  accepted: boolean
+  created_at: string
+}
+
+export interface Template {
+  id: string
+  name: string
+  description?: string
+  schema: Category[]
+  is_public: boolean
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
+// App Types
+export interface SupabaseConfig {
+  url: string
+  anonKey: string
+}
+
+export type AuthState = {
+  user: User | null
+  session: any | null
+  loading: boolean
+}
+
+export type Role = 'owner' | 'member' | 'viewer'
+
+export interface ProjectWithMemberInfo extends Project {
+  member_count?: number
+  user_role?: Role
+}

@@ -1,0 +1,118 @@
+name: Documentation Validation
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths: ['docs/**']
+  pull_request:
+    branches: [ main ]
+    paths: ['docs/**']
+  workflow_dispatch:
+
+jobs:
+  validate-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate markdown files
+        run: |
+          # Check for broken links
+          npm install -g markdown-link-check
+          markdown-link-check docs/
+
+          # Check for syntax issues
+          npm install -g remark-cli
+          remark docs/ --quiet
+
+      - name: Check documentation structure
+        run: |
+          # Verify all documentation files exist
+          if [ ! -f "docs/api.md" ]; then
+            echo "❌ API documentation missing"
+            exit 1
+          fi
+
+          if [ ! -f "docs/user-guide.md" ]; then
+            echo "❌ User guide missing"
+            exit 1
+          fi
+
+          if [ ! -f "docs/developer-guide.md" ]; then
+            echo "❌ Developer guide missing"
+            exit 1
+          fi
+
+          if [ ! -f "docs/deployment-guide.md" ]; then
+            echo "❌ Deployment guide missing"
+            exit 1
+          fi
+
+          if [ ! -f "CHANGELOG.md" ]; then
+            echo "❌ CHANGELOG missing"
+            exit 1
+          fi
+
+          echo "✅ All documentation files present"
+
+      - name: Check README references
+        run: |
+          # Verify README references documentation
+          if grep -q "docs/" README.md; then
+            echo "✅ README references documentation"
+          else
+            echo "❌ README does not reference documentation"
+            exit 1
+          fi
+
+      - name: Generate documentation index (if needed)
+        run: |
+          # Optional: Create an index file
+          cat > docs/README.md << 'EOF'
+          # Finance Tracker Documentation
+
+          Welcome to the Finance Tracker application documentation. This directory contains comprehensive guides and references for users, developers, and administrators.
+
+          ## Documentation Structure
+
+          ### User Documentation
+          - [User Guide](user-guide.md) - Step-by-step instructions for end users
+          - [API Documentation](api.md) - Complete API reference and database schema
+          - [Deployment Guide](deployment-guide.md) - Production deployment instructions
+
+          ### Developer Documentation
+          - [Developer Guide](developer-guide.md) - Development setup, architecture, and contributing
+          - [Changelog](../CHANGELOG.md) - Version history and release notes
+
+          ## Quick Links
+
+          - [Getting Started](user-guide.md#getting-started)
+          - [API Reference](api.md#overview)
+          - [Development Setup](developer-guide.md#development-environment-setup)
+          - [Deployment](deployment-guide.md#prerequisites)
+
+          ## Documentation Updates
+
+          All documentation updates should be submitted via pull requests. Please see the [Developer Guide](developer-guide.md#contributing-guidelines) for contribution guidelines.
+
+          ## Support
+
+          For questions about the documentation, please create an issue in the GitHub repository.
+          EOF
+
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation
+          path: docs/
+          retention-days: 30
