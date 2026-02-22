@@ -855,13 +855,13 @@ export default function TransactionsPage() {
                             <button onClick={() => {
                               setImportFieldName(f.name)
                               setShowImportModal(true)
-                              // Load existing values
-                              const existingValues = Array.from(new Set(
-                                transactions
-                                  .map(t => t.custom_data?.[f.name])
-                                  .filter(Boolean)
-                              ))
-                              setImportValues(existingValues.join('\n'))
+                              // Load existing values from both stored imports and transactions
+                              const storedValues = project?.settings?.custom_field_values?.[f.name] || []
+                              const transactionValues = transactions
+                                .map(t => t.custom_data?.[f.name])
+                                .filter(Boolean)
+                              const allValues = Array.from(new Set([...storedValues, ...transactionValues]))
+                              setImportValues(allValues.join('\n'))
                             }} className="text-green-600 hover:text-green-700">Import</button>
                           )}
                           {f.type === 'select' && (
