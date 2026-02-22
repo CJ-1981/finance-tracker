@@ -5,7 +5,7 @@ import { getSupabaseClient, resetSupabaseClient, createSupabaseClient } from '..
 import { getConfig } from '../lib/config'
 
 interface AuthContextType extends AuthState {
-  signIn: () => Promise<void>
+  signIn: (email?: string, password?: string) => Promise<{ error: Error | null }>
   signOut: () => Promise<void>
   reinitialize: () => void
 }
@@ -75,14 +75,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const signIn = async () => {
+  const signIn = async (email?: string, password?: string) => {
     const supabase = getSupabaseClient()
+
+    // If email and password provided, use email/password sign in
+    if (email && password) {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        return { error }
+      }
+
+      // Fetch user profile after successful sign in
+      if (data.user) {
+        await fetchUserProfile(data.user, supabase)
+      }
+
+      return { error: null }
+    }
+
+    // Otherwise, use OAuth (for backward compatibility, though not used anymore)
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/finance-tracker/`,
       },
     })
+
+    return { error: null }
   }
 
   const signOut = async () => {
