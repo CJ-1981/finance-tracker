@@ -25,6 +25,18 @@ export default function ProjectDetailPage() {
   const [showInviteLink, setShowInviteLink] = useState(false)
   const [inviteRecipientEmail, setInviteRecipientEmail] = useState('') // Store for mailto link
 
+  // Quick add transaction modal states
+  const [showAddTransactionModal, setShowAddTransactionModal] = useState(false)
+  const [transactionFormData, setTransactionFormData] = useState({
+    amount: '',
+    currency_code: 'USD',
+    category_id: '',
+    description: '',
+    date: new Date().toISOString().split('T')[0],
+  })
+  const [transactionCustomData, setTransactionCustomData] = useState<Record<string, string>>({})
+  const [savingTransaction, setSavingTransaction] = useState(false)
+
   // Date filter states
   const [datePeriod, setDatePeriod] = useState<'today' | 'yesterday' | 'last7days' | 'last30days' | 'thisMonth' | 'lastMonth' | 'thisYear' | 'all'>('today')
 
@@ -226,6 +238,59 @@ export default function ProjectDetailPage() {
     return category?.color || '#6B7280'
   }
 
+  const handleAddTransaction = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!id) return
+
+    setSavingTransaction(true)
+    try {
+      const supabase = getSupabaseClient()
+      const { error } = await supabase.from('transactions').insert({
+        project_id: id,
+        amount: parseFloat(transactionFormData.amount),
+        currency_code: transactionFormData.currency_code,
+        category_id: transactionFormData.category_id || null,
+        description: transactionFormData.description,
+        date: transactionFormData.date,
+        custom_data: transactionCustomData,
+        created_by: user?.id,
+      })
+
+      if (error) throw error
+
+      // Reset form and close modal
+      setTransactionFormData({
+        amount: '',
+        currency_code: 'USD',
+        category_id: '',
+        description: '',
+        date: new Date().toISOString().split('T')[0],
+      })
+      setTransactionCustomData({})
+      setShowAddTransactionModal(false)
+
+      // Refresh transactions
+      fetchTransactions()
+    } catch (error) {
+      console.error('Error adding transaction:', error)
+      alert('Failed to add transaction. Please try again.')
+    } finally {
+      setSavingTransaction(false)
+    }
+  }
+
+  const openAddTransactionModal = () => {
+    setTransactionFormData({
+      amount: '',
+      currency_code: project?.settings?.currency || 'USD',
+      category_id: '',
+      description: '',
+      date: new Date().toISOString().split('T')[0],
+    })
+    setTransactionCustomData({})
+    setShowAddTransactionModal(true)
+  }
+
   // Filter transactions based on selected date period
   const getFilteredTransactions = () => {
     const now = new Date()
@@ -393,9 +458,9 @@ export default function ProjectDetailPage() {
               <button onClick={() => setShowInviteModal(true)} className="btn btn-secondary border border-blue-600 text-blue-600 hover:bg-blue-50 text-sm whitespace-nowrap">
                 Invite
               </button>
-              <Link to={`/transactions/${id}`} className="btn btn-primary text-sm whitespace-nowrap">
+              <button onClick={openAddTransactionModal} className="btn btn-primary text-sm whitespace-nowrap">
                 Add Transaction
-              </Link>
+              </button>
             </div>
           </div>
         </div>
@@ -554,6 +619,150 @@ export default function ProjectDetailPage() {
           </div>
         </div>
       </main>
+
+      {/* Quick Add Transaction Modal */}
+      {showAddTransactionModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4">Add Transaction</h2>
+            <form onSubmit={handleAddTransaction} className="space-y-4">
+              <div>
+                <label htmlFor="t-amount" className="block text-sm font-medium text-gray-700 mb-1">
+                  Amount *
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    id="t-amount"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    className="input flex-1"
+                    value={transactionFormData.amount}
+                    onChange={(e) => setTransactionFormData({ ...transactionFormData, amount: e.target.value })}
+                    required
+                  />
+                  <select
+                    id="t-currency"
+                    className="input w-24"
+                    value={transactionFormData.currency_code}
+                    onChange={(e) => setTransactionFormData({ ...transactionFormData, currency_code: e.target.value })}
+                  >
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                    <option value="JPY">JPY</option>
+                    <option value="KRW">KRW</option>
+                    <option value="CNY">CNY</option>
+                    <option value="INR">INR</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="t-date" className="block text-sm font-medium text-gray-700 mb-1">
+                  Date *
+                </label>
+                <input
+                  id="t-date"
+                  type="date"
+                  className="input"
+                  value={transactionFormData.date}
+                  onChange={(e) => setTransactionFormData({ ...transactionFormData, date: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="t-description" className="block text-sm font-medium text-gray-700 mb-1">
+                  Description *
+                </label>
+                <input
+                  id="t-description"
+                  type="text"
+                  className="input"
+                  placeholder="Enter description"
+                  value={transactionFormData.description}
+                  onChange={(e) => setTransactionFormData({ ...transactionFormData, description: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="t-category" className="block text-sm font-medium text-gray-700 mb-1">
+                  Category
+                </label>
+                <select
+                  id="t-category"
+                  className="input"
+                  value={transactionFormData.category_id}
+                  onChange={(e) => setTransactionFormData({ ...transactionFormData, category_id: e.target.value })}
+                >
+                  <option value="">Uncategorized</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Custom Fields */}
+              {project?.settings?.custom_fields?.map((field: any) => (
+                <div key={field.name}>
+                  <label htmlFor={`t-${field.name}`} className="block text-sm font-medium text-gray-700 mb-1">
+                    {field.name}
+                  </label>
+                  {field.type === 'text' ? (
+                    <input
+                      id={`t-${field.name}`}
+                      type="text"
+                      className="input"
+                      value={transactionCustomData[field.name] || ''}
+                      onChange={(e) => setTransactionCustomData({ ...transactionCustomData, [field.name]: e.target.value })}
+                    />
+                  ) : field.type === 'number' ? (
+                    <input
+                      id={`t-${field.name}`}
+                      type="number"
+                      step="0.01"
+                      className="input"
+                      value={transactionCustomData[field.name] || ''}
+                      onChange={(e) => setTransactionCustomData({ ...transactionCustomData, [field.name]: e.target.value })}
+                    />
+                  ) : (
+                    <input
+                      id={`t-${field.name}`}
+                      type="date"
+                      className="input"
+                      value={transactionCustomData[field.name] || ''}
+                      onChange={(e) => setTransactionCustomData({ ...transactionCustomData, [field.name]: e.target.value })}
+                    />
+                  )}
+                </div>
+              ))}
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowAddTransactionModal(false)}
+                  className="btn btn-secondary flex-1"
+                  disabled={savingTransaction}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary flex-1"
+                  disabled={savingTransaction}
+                >
+                  {savingTransaction ? 'Adding...' : 'Add Transaction'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
