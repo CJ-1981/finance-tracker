@@ -16,12 +16,16 @@ export default function InvitePage() {
   }, [])
 
   const validateInvite = async () => {
-    const token = searchParams.get('token')
-    if (!token) {
+    const tokenParam = searchParams.get('token')
+    const tokensParam = searchParams.get('tokens')
+
+    if (!tokenParam && !tokensParam) {
       setStatus('invalid')
       setError('Invalid invitation link')
       return
     }
+
+    const tokens = tokensParam ? tokensParam.split(',') : [tokenParam!]
 
     try {
       const supabase = getSupabaseClient()
@@ -31,47 +35,49 @@ export default function InvitePage() {
           *,
           projects:project_id (id, name)
         `)
-        .eq('token', token)
-        .maybeSingle()
+        .in('token', tokens)
 
       if (error) throw error
 
-      if (!data) {
+      if (!data || data.length === 0) {
         setStatus('invalid')
         setError('Invitation not found')
         return
       }
 
-      // Check if expired
-      if (new Date(data.expires_at) < new Date()) {
-        // Auto-mark as expired in database if still pending
-        if (data.status === 'pending') {
-          await (supabase.from('invitations') as any)
-            .update({ status: 'expired' })
-            .eq('id', data.id)
-        }
-        setStatus('expired')
-        setError('This invitation has expired')
-        return
+      // Check if any expired
+      const now = new Date()
+      const validInvites = data.filter((invite: any) => new Date(invite.expires_at) >= now && invite.status === 'pending')
+      const expiredInvites = data.filter((invite: any) => new Date(invite.expires_at) < now && invite.status === 'pending')
+      const acceptedInvites = data.filter((invite: any) => invite.status === 'accepted')
+
+      // Auto-mark expired in DB
+      if (expiredInvites.length > 0) {
+        await (supabase.from('invitations') as any)
+          .update({ status: 'expired' })
+          .in('id', expiredInvites.map((i: any) => i.id))
       }
 
-      // Check if already accepted
-      if (data.status === 'accepted') {
-        setStatus('accepted')
-        setInviteData(data)
+      if (validInvites.length === 0) {
+        if (acceptedInvites.length > 0) {
+          setStatus('accepted')
+          setInviteData(acceptedInvites[0]) // Show the first one as context
+          return
+        }
+        setStatus('expired')
+        setError('These invitations have expired')
         return
       }
 
       // Verify email matches (if user is logged in)
-      if (user && user.email !== data.email) {
-        // Show a helpful message with options
+      if (user && validInvites.some((invite: any) => user.email !== invite.email)) {
         setStatus('wrong-email')
-        setError(`This invitation is for ${data.email}, but you're signed in as ${user.email}`)
+        setError(`This invitation is for ${validInvites[0].email}, but you're signed in as ${user.email}`)
         return
       }
 
       setStatus('valid')
-      setInviteData(data)
+      setInviteData(validInvites) // Store array of valid invites
     } catch (err: any) {
       console.error('Error validating invite:', err)
       setStatus('invalid')
@@ -81,35 +87,44 @@ export default function InvitePage() {
 
   const handleAcceptInvite = async () => {
     if (!inviteData || !user) {
-      // Redirect to login if not authenticated
-      navigate('/login', { state: { inviteToken: searchParams.get('token') } })
+      const tokenString = searchParams.get('tokens') || searchParams.get('token')
+      navigate('/login', { state: { inviteToken: tokenString } })
       return
     }
 
     try {
+      const invites = Array.isArray(inviteData) ? inviteData : [inviteData]
       const supabase = getSupabaseClient()
 
-      // Add user to project
-      const { error: memberError } = await (supabase
-        .from('project_members') as any)
-        .insert({
-          project_id: inviteData.project_id,
-          user_id: user.id,
-          role: inviteData.role
-        })
+      for (const invite of invites) {
+        // Add user to project
+        const { error: memberError } = await (supabase
+          .from('project_members') as any)
+          .insert({
+            project_id: invite.project_id,
+            user_id: user.id,
+            role: invite.role
+          })
 
-      if (memberError) throw memberError
+        if (memberError && memberError.code !== '23505') { // Ignore unique constraint error if already a member
+          throw memberError
+        }
 
-      // Mark invitation as accepted
-      const { error: updateError } = await (supabase
-        .from('invitations') as any)
-        .update({ status: 'accepted', accepted_at: new Date().toISOString() })
-        .eq('id', inviteData.id)
+        // Mark invitation as accepted
+        const { error: updateError } = await (supabase
+          .from('invitations') as any)
+          .update({ status: 'accepted', accepted_at: new Date().toISOString() })
+          .eq('id', invite.id)
 
-      if (updateError) throw updateError
+        if (updateError) throw updateError
+      }
 
-      // Redirect to project
-      navigate(`/projects/${inviteData.project_id}`)
+      // Redirect to the first project or projects list
+      if (invites.length === 1) {
+        navigate(`/projects/${invites[0].project_id}`)
+      } else {
+        navigate('/projects')
+      }
     } catch (err: any) {
       console.error('Error accepting invite:', err)
       setError(err.message || 'Failed to accept invitation')
@@ -135,19 +150,35 @@ export default function InvitePage() {
                 </svg>
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                You're Invited!
+                {Array.isArray(inviteData) && inviteData.length > 1 ? "You're Invited to Multiple Projects!" : "You're Invited!"}
               </h2>
               <p className="text-gray-600 mb-6">
-                You've been invited to join <strong>{inviteData?.projects?.name}</strong> as a <strong>{inviteData?.role}</strong>
+                {Array.isArray(inviteData) ? (
+                  inviteData.length === 1 ? (
+                    <>You've been invited to join <strong>{inviteData[0].projects?.name}</strong> as a <strong>{inviteData[0].role}</strong></>
+                  ) : (
+                    <div className="text-left bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-2 mt-4 max-h-48 overflow-y-auto">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Projects you'll join:</p>
+                      {inviteData.map((invite: any) => (
+                        <div key={invite.id} className="flex justify-between items-center text-sm">
+                          <span className="font-semibold text-slate-700">{invite.projects?.name}</span>
+                          <span className="text-[10px] bg-white px-2 py-0.5 rounded-full border border-slate-200 text-slate-500 font-bold uppercase">{invite.role}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                ) : (
+                  <>You've been invited to join <strong>{inviteData?.projects?.name}</strong> as a <strong>{inviteData?.role}</strong></>
+                )}
               </p>
 
               {!user ? (
                 <div className="space-y-3">
                   <p className="text-sm text-gray-500 mb-4">
-                    Please sign in to accept this invitation
+                    Please sign in to accept {Array.isArray(inviteData) && inviteData.length > 1 ? 'these invitations' : 'this invitation'}
                   </p>
                   <button
-                    onClick={() => navigate('/login', { state: { inviteToken: searchParams.get('token') } })}
+                    onClick={() => navigate('/login', { state: { inviteToken: searchParams.get('tokens') || searchParams.get('token') } })}
                     className="btn btn-primary w-full"
                   >
                     Sign In to Accept
@@ -158,7 +189,7 @@ export default function InvitePage() {
                   onClick={handleAcceptInvite}
                   className="btn btn-primary w-full"
                 >
-                  Accept Invitation
+                  Accept {Array.isArray(inviteData) && inviteData.length > 1 ? 'All Invitations' : 'Invitation'}
                 </button>
               )}
             </div>
@@ -181,7 +212,7 @@ export default function InvitePage() {
                   onClick={async () => {
                     const supabase = getSupabaseClient()
                     await supabase.auth.signOut()
-                    navigate('/login', { state: { inviteToken: searchParams.get('token') } })
+                    navigate('/login', { state: { inviteToken: searchParams.get('tokens') || searchParams.get('token') } })
                   }}
                   className="btn btn-primary w-full"
                 >
@@ -239,7 +270,7 @@ export default function InvitePage() {
                 You've already accepted this invitation
               </p>
               <button
-                onClick={() => navigate(`/projects/${inviteData?.project_id}`)}
+                onClick={() => navigate(`/projects/${Array.isArray(inviteData) ? inviteData[0].project_id : inviteData?.project_id}`)}
                 className="btn btn-primary"
               >
                 Go to Project

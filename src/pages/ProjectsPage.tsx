@@ -7,13 +7,23 @@ import type { Project } from '../types'
 export default function ProjectsPage() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
-  const [projects, setProjects] = useState<Project[]>([])
+  const [projects, setProjects] = useState<(Project & { userRole: string })[]>([])
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [loading, setLoading] = useState(true)
   const [formData, setFormData] = useState({
     name: '',
     description: '',
   })
+
+  // Multi-invite states
+  const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([])
+  const [isSelectionMode, setIsSelectionMode] = useState(false)
+  const [showInviteModal, setShowInviteModal] = useState(false)
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteRole, setInviteRole] = useState<'member' | 'viewer'>('member')
+  const [inviteLink, setInviteLink] = useState('')
+  const [showInviteLink, setShowInviteLink] = useState(false)
+  const [inviteRecipientEmail, setInviteRecipientEmail] = useState('')
 
   useEffect(() => {
     fetchProjects()
@@ -24,13 +34,17 @@ export default function ProjectsPage() {
       const supabase = getSupabaseClient()
       const { data, error } = await supabase
         .from('project_members')
-        .select('project_id, projects(*)')
+        .select('role, project_id, projects(*)')
         .eq('user_id', user?.id || '')
 
       if (error) throw error
 
-      const projects = data?.map((m: { projects: Project | null }) => m.projects).filter((p): p is Project => p !== null) || []
-      setProjects(projects)
+      const projectsWithRoles = data?.map((m: any) => ({
+        ...m.projects,
+        userRole: m.role
+      })).filter((p: any) => p.id !== undefined) || []
+
+      setProjects(projectsWithRoles)
     } catch (error) {
       console.error('Error fetching projects:', error)
     } finally {
@@ -76,9 +90,54 @@ export default function ProjectsPage() {
     }
   }
 
+  const handleMultiInvite = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user || selectedProjectIds.length === 0 || !inviteEmail) return
+
+    try {
+      const supabase = getSupabaseClient()
+      const tokens: string[] = []
+
+      for (const projectId of selectedProjectIds) {
+        const token = Math.random().toString(36).substring(2) + Date.now().toString(36)
+        const { error } = await (supabase.from('invitations') as any).insert({
+          project_id: projectId,
+          email: inviteEmail,
+          role: inviteRole,
+          invited_by: user.id,
+          token: token,
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        })
+        if (error) throw error
+        tokens.push(token)
+      }
+
+      // Generate combined invitation link
+      const link = `${window.location.origin}/finance-tracker/invite?tokens=${tokens.join(',')}`
+      setInviteLink(link)
+      setInviteRecipientEmail(inviteEmail)
+      setShowInviteLink(true)
+      setShowInviteModal(false)
+      setInviteEmail('')
+      setSelectedProjectIds([])
+      setIsSelectionMode(false)
+    } catch (err) {
+      console.error(err)
+      alert('Failed to send invitations')
+    }
+  }
+
   const handleLogout = async () => {
     await signOut()
     window.location.reload()
+  }
+
+  const toggleProjectSelection = (projectId: string) => {
+    setSelectedProjectIds(prev =>
+      prev.includes(projectId)
+        ? prev.filter(id => id !== projectId)
+        : [...prev, projectId]
+    )
   }
 
   if (loading) {
@@ -100,9 +159,40 @@ export default function ProjectsPage() {
               <p className="text-slate-500 text-sm mt-1">Manage your projects and transactions</p>
             </div>
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-              <button onClick={() => setShowCreateForm(true)} className="btn btn-primary text-sm whitespace-nowrap">
-                + New Project
-              </button>
+              {!isSelectionMode ? (
+                <>
+                  <button onClick={() => setShowCreateForm(true)} className="btn btn-primary text-sm whitespace-nowrap">
+                    + New Project
+                  </button>
+                  {projects.some(p => p.userRole === 'owner') && (
+                    <button
+                      onClick={() => setIsSelectionMode(true)}
+                      className="btn btn-secondary text-sm whitespace-nowrap"
+                    >
+                      Invite to Multi
+                    </button>
+                  )}
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setShowInviteModal(true)}
+                    disabled={selectedProjectIds.length === 0}
+                    className="btn btn-primary text-sm whitespace-nowrap disabled:opacity-50"
+                  >
+                    Invite ({selectedProjectIds.length})
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsSelectionMode(false)
+                      setSelectedProjectIds([])
+                    }}
+                    className="btn btn-secondary text-sm whitespace-nowrap"
+                  >
+                    Cancel
+                  </button>
+                </>
+              )}
               <button onClick={() => { navigate('/config') }} className="btn btn-secondary text-sm whitespace-nowrap" title="Reconfigure Supabase connection">
                 ⚙️ Settings
               </button>
@@ -173,13 +263,36 @@ export default function ProjectsPage() {
             {projects.map((project) => (
               <Link
                 key={project.id}
-                to={`/projects/${project.id}`}
-                className="card card-accent hover:border-primary-300 hover:-translate-y-1 block"
+                to={isSelectionMode ? '#' : `/projects/${project.id}`}
+                onClick={(e) => {
+                  if (isSelectionMode) {
+                    e.preventDefault()
+                    if (project.userRole === 'owner') {
+                      toggleProjectSelection(project.id)
+                    }
+                  }
+                }}
+                className={`card card-accent hover:-translate-y-1 block relative ${isSelectionMode && project.userRole !== 'owner' ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:border-primary-300'
+                  } ${selectedProjectIds.includes(project.id) ? 'ring-2 ring-primary-500 border-primary-500 bg-primary-50/30' : ''}`}
               >
+                {isSelectionMode && project.userRole === 'owner' && (
+                  <div className="absolute top-4 right-4 z-10">
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${selectedProjectIds.includes(project.id)
+                      ? 'bg-primary-500 border-primary-500 text-white'
+                      : 'bg-white border-slate-300'
+                      }`}>
+                      {selectedProjectIds.includes(project.id) && (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                )}
                 <div className="flex justify-between items-start">
                   <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-primary-600 transition-colors">{project.name}</h3>
                   <span className="bg-primary-50 text-primary-700 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border border-primary-100">
-                    Project
+                    {project.userRole}
                   </span>
                 </div>
                 {project.description && (
@@ -190,15 +303,125 @@ export default function ProjectsPage() {
                     <span className="w-2 h-2 rounded-full bg-teal-500"></span>
                     {project.settings?.currency || 'USD'}
                   </span>
-                  <span className="text-primary-600 text-xs font-semibold group-hover:translate-x-1 transition-transform">
-                    View Details →
-                  </span>
+                  {!isSelectionMode && (
+                    <span className="text-primary-600 text-xs font-semibold group-hover:translate-x-1 transition-transform">
+                      View Details →
+                    </span>
+                  )}
                 </div>
               </Link>
             ))}
           </div>
         )}
       </main>
+
+      {/* Multi-Project Invite Modal */}
+      {showInviteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Invite to Projects</h2>
+            <p className="text-slate-500 text-sm mb-6">
+              You are inviting someone to join <strong>{selectedProjectIds.length}</strong> project{selectedProjectIds.length > 1 ? 's' : ''}.
+            </p>
+            <form onSubmit={handleMultiInvite} className="space-y-5">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Email Address</label>
+                <input
+                  type="email"
+                  required
+                  className="input bg-slate-50 focus:bg-white"
+                  value={inviteEmail}
+                  onChange={e => setInviteEmail(e.target.value)}
+                  placeholder="colleague@example.com"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Role</label>
+                <select
+                  className="input bg-slate-50 focus:bg-white"
+                  value={inviteRole}
+                  onChange={e => setInviteRole(e.target.value as any)}
+                >
+                  <option value="member">Member (Can add/edit)</option>
+                  <option value="viewer">Viewer (Read-only)</option>
+                </select>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button type="submit" className="btn btn-primary flex-1 py-3">Send Bundle Invite</button>
+                <button
+                  type="button"
+                  onClick={() => setShowInviteModal(false)}
+                  className="btn btn-secondary flex-1 py-3"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Invite Success Modal */}
+      {showInviteLink && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
+              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Invitations Created!</h2>
+            <p className="text-slate-600 mb-6">
+              A combined invitation link has been generated for {selectedProjectIds.length} projects.
+            </p>
+
+            <a
+              href={`mailto:${inviteRecipientEmail}?subject=${encodeURIComponent(`You're invited to join ${selectedProjectIds.length} projects`)}&body=${encodeURIComponent(`You've been invited to join ${selectedProjectIds.length} projects as a ${inviteRole}.\n\nClick the link below to accept all invitations:\n${inviteLink}\n\nThis invitation expires in 7 days.`)}`}
+              className="block w-full btn btn-primary text-center mb-4 py-3 shadow-lg shadow-primary-200"
+            >
+              📧 Open Email Client
+            </a>
+
+            <div className="bg-slate-50 p-4 rounded-xl mb-6 border border-slate-100">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Combined Invite Link:</p>
+              <p className="text-sm text-primary-600 break-all font-medium">{inviteLink}</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              <button
+                onClick={() => {
+                  const fullMessage =
+                    `Subject: You're invited to join ${selectedProjectIds.length} projects\n\n` +
+                    `You've been invited to join ${selectedProjectIds.length} projects as a ${inviteRole}.\n\n` +
+                    `Click the link below to accept all invitations:\n${inviteLink}\n\n` +
+                    `This invitation expires in 7 days.`
+                  navigator.clipboard.writeText(fullMessage)
+                  alert('Full invitation message copied to clipboard!')
+                }}
+                className="btn btn-secondary py-2.5"
+              >
+                📋 Copy Message
+              </button>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(inviteLink)
+                  alert('Link copied to clipboard!')
+                }}
+                className="btn btn-secondary py-2.5"
+              >
+                🔗 Copy Link Only
+              </button>
+            </div>
+
+            <button
+              onClick={() => setShowInviteLink(false)}
+              className="w-full text-slate-400 font-bold text-sm hover:text-slate-600 transition-colors"
+            >
+              CLOSE
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

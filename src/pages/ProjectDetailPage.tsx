@@ -308,8 +308,14 @@ export default function ProjectDetailPage() {
       categoryColors[categoryName] = getCategoryColor(t.category_id)
     })
 
+    const currency = project?.settings?.currency || 'USD'
+    const labels = Object.keys(categoryTotals).map(name => {
+      const amount = categoryTotals[name].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      return `${name}: ${currency} ${amount}`
+    })
+
     return {
-      labels: Object.keys(categoryTotals),
+      labels: labels,
       datasets: [
         {
           data: Object.values(categoryTotals),
