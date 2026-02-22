@@ -295,14 +295,9 @@ CREATE POLICY "Members and owners can insert transactions"
   );
 
 -- Invitations policies
-CREATE POLICY "Owners can view project invitations"
+CREATE POLICY "Anyone can view invitation by token"
   ON public.invitations FOR SELECT
-  USING (
-    project_id IN (
-      SELECT id FROM public.projects
-      WHERE owner_id = auth.uid()
-    )
-  );
+  USING ( true );
 
 CREATE POLICY "Owners can insert invitations"
   ON public.invitations FOR INSERT

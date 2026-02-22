@@ -8,7 +8,7 @@ interface ProvidersProps {
 
 export function Providers({ children }: ProvidersProps) {
   return (
-    <BrowserRouter basename="/finance-tracker">
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <AuthProvider>
         {children}
       </AuthProvider>

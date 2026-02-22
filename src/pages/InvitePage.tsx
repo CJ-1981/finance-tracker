@@ -32,7 +32,7 @@ export default function InvitePage() {
           projects:project_id (id, name)
         `)
         .eq('token', token)
-        .single()
+        .maybeSingle()
 
       if (error) throw error
 
