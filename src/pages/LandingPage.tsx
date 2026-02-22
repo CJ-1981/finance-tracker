@@ -91,12 +91,12 @@ export default function LandingPage() {
             to="/login"
             className="btn btn-primary px-8 py-3 text-lg"
           >
-            Sign In / Sign Up
+            Get Started
           </Link>
         </div>
 
-        <p className="mt-4 text-sm text-gray-500">
-          New users can create an account directly on the sign-in page
+        <p className="mt-8 text-sm text-gray-500">
+          Your data is secured with Supabase Auth and stored in your own project
         </p>
 
         <p className="mt-8 text-sm text-gray-500">

@@ -70,20 +70,19 @@ npm run dev
 
 4. Open [http://localhost:5173/](http://localhost:5173/) in your browser
 
-5. **Important - Disable email confirmation (recommended for personal use):**
-   - Go to your Supabase project dashboard
-   - Navigate to **Authentication → Providers**
-   - Click on **Email** provider
-   - Under **Email confirmation**, turn off **Enable email confirmation**
-   - Click **Save**
+5. **Create a Supabase account (if you don't have one):**
+   - Go to [supabase.com](https://supabase.com) and sign up
+   - Create a new project
+   - Copy your Project URL and anon key
 
-   Without this, users will need to confirm their email before signing in (which may not work depending on your email provider).
+6. **Configure the app:**
+   - Click "Get Started" on the landing page
+   - Enter your Supabase Project URL and anon key
+   - Click "Save Configuration"
 
-6. Sign up with email and password:
-   - Click **"Don't have an account? Sign Up"** toggle
-   - Enter your email and password
-   - Click **Sign Up**
-   - You'll be automatically signed in
+7. **Sign in with your Supabase credentials:**
+   - Enter the email and password you use for Supabase
+   - Click "Sign In"
 
 ### Building for Production
 
