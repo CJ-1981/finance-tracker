@@ -41,14 +41,14 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="/dashboard" element={<DashboardPage />} />
+      <Route path="/" element={<Navigate to="/projects" replace />} />
+      <Route path="/dashboard" element={<Navigate to="/projects" replace />} />
       <Route path="/projects" element={<ProjectsPage />} />
       <Route path="/projects/:id" element={<ProjectDetailPage />} />
       <Route path="/transactions/:projectId" element={<TransactionsPage />} />
       <Route path="/invite" element={<InvitePage />} />
       <Route path="/config" element={<ConfigPage />} />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/projects" replace />} />
     </Routes>
   )
 }

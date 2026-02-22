@@ -7,7 +7,7 @@ import type { SupabaseConfig } from '../types'
 
 export default function ConfigPage() {
   const { updateConfig } = useSupabase()
-  const { signIn } = useAuth()
+  const { user, signIn, signOut } = useAuth()
   const navigate = useNavigate()
   const [config, setConfig] = useState<SupabaseConfig>({
     url: '',
@@ -15,30 +15,35 @@ export default function ConfigPage() {
   })
   const [errors, setErrors] = useState<string[]>([])
   const [testing, setTesting] = useState(false)
-  const [mode, setMode] = useState<'configure' | 'signin'>('configure')
+  const [mode, setMode] = useState<'configure' | 'signin' | 'authenticated'>('configure')
   const [signInData, setSignInData] = useState({
     email: '',
     password: '',
   })
   const [signingIn, setSigningIn] = useState(false)
 
-  // Check if Supabase is already configured
+  // Check if Supabase is already configured and if user is authenticated
   useEffect(() => {
     const storedConfig = localStorage.getItem('supabase_config')
     if (storedConfig) {
       try {
         const parsed = JSON.parse(storedConfig)
         if (parsed.url && parsed.anonKey) {
-          setMode('signin')
           setConfig(parsed)
+          // If user is already authenticated, show authenticated mode
+          if (user) {
+            setMode('authenticated')
+          } else {
+            setMode('signin')
+          }
         }
       } catch (e) {
         // Invalid config, stay in configure mode
       }
     }
-  }, [])
+  }, [user])
 
-  // Allow reconfiguration when mode is 'signin' and user clicks to edit
+  // Allow reconfiguration when mode is 'signin' or 'authenticated' and user clicks to edit
   const handleReconfigure = () => {
     setMode('configure')
   }
@@ -59,7 +64,11 @@ export default function ConfigPage() {
 
       if (isValid) {
         await updateConfig(config)
-        setMode('signin')
+        if (user) {
+          setMode('authenticated')
+        } else {
+          setMode('signin')
+        }
       } else {
         setErrors(['Failed to connect to Supabase. Please check your credentials.'])
       }
@@ -87,7 +96,7 @@ export default function ConfigPage() {
       if (error) {
         setErrors([error.message])
       } else {
-        navigate('/projects')
+        setMode('authenticated')
       }
     } catch (error) {
       setErrors([error instanceof Error ? error.message : 'Sign in failed'])
@@ -108,12 +117,14 @@ export default function ConfigPage() {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Finance Tracker</h1>
           <p className="text-gray-600 mt-2">
-            {mode === 'configure' ? 'Setup your Supabase configuration' : 'Sign in to your account'}
+            {mode === 'configure' ? 'Setup your Supabase configuration' :
+             mode === 'signin' ? 'Sign in to your account' :
+             'Supabase Configuration'}
           </p>
         </div>
 
         <div className="card">
-          {mode === 'configure' ? (
+          {mode === 'configure' && (
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-2">
@@ -174,7 +185,7 @@ export default function ConfigPage() {
                 </ol>
               </div>
 
-              {config.url && config.anonKey && (
+              {config.url && config.anonKey && !user && (
                 <div className="pt-4 border-t border-gray-200">
                   <button
                     type="button"
@@ -186,7 +197,9 @@ export default function ConfigPage() {
                 </div>
               )}
             </form>
-          ) : (
+          )}
+
+          {mode === 'signin' && (
             <form onSubmit={handleSignIn} className="space-y-6">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -261,6 +274,51 @@ export default function ConfigPage() {
                 </p>
               </div>
             </form>
+          )}
+
+          {mode === 'authenticated' && (
+            <div className="space-y-6">
+              <div className="text-center pb-4 border-b border-gray-200">
+                <p className="text-sm text-gray-600">Signed in as</p>
+                <p className="font-semibold text-gray-900">{user?.email}</p>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  onClick={() => navigate('/projects')}
+                  className="w-full btn btn-primary"
+                >
+                  ← Back to Projects
+                </button>
+                <button
+                  onClick={handleReconfigure}
+                  className="w-full btn btn-secondary"
+                >
+                  Edit Supabase Configuration
+                </button>
+                <button
+                  onClick={async () => {
+                    await signOut()
+                    window.location.reload()
+                  }}
+                  className="w-full btn btn-secondary"
+                >
+                  Sign Out
+                </button>
+                <button
+                  onClick={handleResetConfig}
+                  className="w-full btn btn-secondary text-red-600 hover:text-red-700"
+                >
+                  Reset & Clear Configuration
+                </button>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+                <p className="font-medium mb-2">Current Configuration:</p>
+                <p className="text-xs">URL: {config.url?.substring(0, 30)}{config.url?.length > 30 ? '...' : ''}</p>
+                <p className="text-xs">Key: {config.anonKey?.substring(0, 10)}...{config.anonKey?.slice(-10)}</p>
+              </div>
+            </div>
           )}
         </div>
       </div>
