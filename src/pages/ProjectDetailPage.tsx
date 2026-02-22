@@ -35,6 +35,7 @@ export default function ProjectDetailPage() {
   })
   const [transactionCustomData, setTransactionCustomData] = useState<Record<string, string>>({})
   const [savingTransaction, setSavingTransaction] = useState(false)
+  const [chartMode, setChartMode] = useState<'cumulative' | 'absolute'>('cumulative')
 
   // Date filter states
   const [datePeriod, setDatePeriod] = useState<'today' | 'yesterday' | 'last7days' | 'last30days' | 'thisMonth' | 'lastMonth' | 'thisYear' | 'all'>('today')
@@ -381,14 +382,19 @@ export default function ProjectDetailPage() {
       const category = categories.find(c => c.name === categoryName)
       const color = category?.color || '#6B7280'
 
-      // Calculate cumulative amount for each date
+      // Calculate amount for each date based on chart mode
       let cumulative = 0
       const data = dates.map(date => {
         const dayTotal = filteredTransactions
           .filter(t => t.date === date && getCategoryName(t.category_id) === categoryName)
           .reduce((sum, t) => sum + t.amount, 0)
-        cumulative += dayTotal
-        return cumulative
+
+        if (chartMode === 'cumulative') {
+          cumulative += dayTotal
+          return cumulative
+        } else {
+          return dayTotal
+        }
       })
 
       return {
@@ -606,18 +612,80 @@ export default function ProjectDetailPage() {
             </div>
           </div>
 
-          {/* Charts */}
+          {/* Charts and Recent Transactions */}
           {filteredTransactions.length > 0 && (
             <>
+              {/* Pie Chart and Recent Transactions in same row */}
               <div className="lg:col-span-2 card">
                 <h2 className="text-lg font-semibold mb-4">Amount by Category</h2>
-                <div className="h-64">
-                  <Pie data={getChartData()} />
+                <div className="flex items-center justify-center h-64">
+                  <div className="w-full max-w-xs">
+                    <Pie data={getChartData()} options={{ maintainAspectRatio: true }} />
+                  </div>
                 </div>
               </div>
 
+              {/* Recent Transactions */}
+              <div className="lg:col-span-1 card">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-semibold">Recent Transactions</h2>
+                  <Link to={`/transactions/${id}`} className="text-sm text-blue-600 hover:text-blue-700">
+                    Show All →
+                  </Link>
+                </div>
+                <div className="space-y-1">
+                  {filteredTransactions.slice(0, 5).map((transaction) => (
+                    <Link key={transaction.id} to={`/transactions/${id}`} className="flex justify-between items-start p-2 -mx-2 hover:bg-gray-50 rounded transition-colors group cursor-pointer block">
+                      <div className="flex-1">
+                        <div className="text-sm text-gray-600">{getCategoryName(transaction.category_id)}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold text-gray-900">
+                          {project.settings?.currency || 'USD'} {transaction.amount.toFixed(2)}
+                        </div>
+                        <div className="text-xs text-gray-500">{transaction.date}</div>
+                      </div>
+                    </Link>
+                  ))}
+                  {filteredTransactions.length === 0 && (
+                    <div className="text-center py-8 text-sm text-gray-500">
+                      No transactions for selected period
+                    </div>
+                  )}
+                </div>
+                {filteredTransactions.length > 5 && (
+                  <Link to={`/transactions/${id}`} className="block mt-4 text-center text-sm text-blue-600">
+                    View all transactions →
+                  </Link>
+                )}
+              </div>
+
               <div className="lg:col-span-3 card">
-                <h2 className="text-lg font-semibold mb-4">Amount Over Time by Category</h2>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-semibold">Amount Over Time by Category</h2>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setChartMode('cumulative')}
+                      className={`px-3 py-1 text-sm rounded transition-colors ${
+                        chartMode === 'cumulative'
+                          ? 'bg-blue-100 text-blue-700 font-medium'
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      Cumulative
+                    </button>
+                    <button
+                      onClick={() => setChartMode('absolute')}
+                      className={`px-3 py-1 text-sm rounded transition-colors ${
+                        chartMode === 'absolute'
+                          ? 'bg-blue-100 text-blue-700 font-medium'
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      Absolute
+                    </button>
+                  </div>
+                </div>
                 <div className="h-64">
                   <Line
                     data={getAreaChartData()}
@@ -662,41 +730,6 @@ export default function ProjectDetailPage() {
               </div>
             </>
           )}
-
-          {/* Recent Transactions */}
-          <div className="lg:col-span-1 card">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Recent Transactions</h2>
-              <Link to={`/transactions/${id}`} className="text-sm text-blue-600 hover:text-blue-700">
-                Show All →
-              </Link>
-            </div>
-            <div className="space-y-1">
-              {filteredTransactions.slice(0, 5).map((transaction) => (
-                <Link key={transaction.id} to={`/transactions/${id}`} className="flex justify-between items-start p-2 -mx-2 hover:bg-gray-50 rounded transition-colors group cursor-pointer block">
-                  <div className="flex-1">
-                    <div className="text-sm text-gray-600">{getCategoryName(transaction.category_id)}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-gray-900">
-                      {project.settings?.currency || 'USD'} {transaction.amount.toFixed(2)}
-                    </div>
-                    <div className="text-xs text-gray-500">{transaction.date}</div>
-                  </div>
-                </Link>
-              ))}
-              {filteredTransactions.length === 0 && (
-                <div className="text-center py-8 text-sm text-gray-500">
-                  No transactions for selected period
-                </div>
-              )}
-            </div>
-            {filteredTransactions.length > 5 && (
-              <Link to={`/transactions/${id}`} className="block mt-4 text-center text-sm text-blue-600">
-                View all transactions →
-              </Link>
-            )}
-          </div>
         </div>
       </main>
 
