@@ -505,6 +505,11 @@ export default function TransactionsPage() {
         throw error;
       }
 
+      if (!data || data.length === 0) {
+        console.error('Update failed: No rows affected. Possible RLS denial.');
+        throw new Error('You do not have permission to update categories.');
+      }
+
       console.log('Category update successful. Response data:', data);
 
       if (updates.name !== undefined) {
@@ -563,24 +568,30 @@ export default function TransactionsPage() {
         if (error) throw error
       } else {
         // Normal swap
-        const { error: error1 } = await (supabase
+        const { data: d1, error: error1 } = await (supabase
           .from('categories') as any)
           .update({ order: targetOrder })
           .eq('id', currentCategory.id)
           .eq('project_id', projectId)
-        if (error1) throw error1
+          .select()
 
-        const { error: error2 } = await (supabase
+        if (error1) throw error1
+        if (!d1 || d1.length === 0) throw new Error('Failed to update category order (RLS?)')
+
+        const { data: d2, error: error2 } = await (supabase
           .from('categories') as any)
           .update({ order: currentOrder })
           .eq('id', targetCategory.id)
           .eq('project_id', projectId)
+          .select()
+
         if (error2) throw error2
+        if (!d2 || d2.length === 0) throw new Error('Failed to update category order (RLS?)')
       }
       console.log('Category swap successful');
     } catch (err) {
       console.error('Error moving category:', err)
-      alert('Failed to save category order. Reverting...')
+      alert(err instanceof Error ? err.message : 'Failed to save category order. Reverting...')
       fetchCategories() // Revert to server state
     }
   }

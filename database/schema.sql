@@ -287,6 +287,26 @@ CREATE POLICY "Members can insert categories"
     )
   );
 
+-- Categories: Members can update categories
+CREATE POLICY "Members can update categories"
+  ON public.categories FOR UPDATE
+  USING (
+    project_id IN (
+      SELECT project_id FROM public.project_members
+      WHERE user_id = auth.uid() AND role IN ('member', 'owner')
+    )
+  );
+
+-- Categories: Members can delete categories
+CREATE POLICY "Members can delete categories"
+  ON public.categories FOR DELETE
+  USING (
+    project_id IN (
+      SELECT project_id FROM public.project_members
+      WHERE user_id = auth.uid() AND role IN ('member', 'owner')
+    )
+  );
+
 -- Transactions: Members can view transactions from their projects
 CREATE POLICY "Members can view project transactions"
   ON public.transactions FOR SELECT

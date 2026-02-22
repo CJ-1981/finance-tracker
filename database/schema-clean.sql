@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS public.categories (
   name TEXT NOT NULL,
   color TEXT DEFAULT '#6B7280',
   parent_id UUID REFERENCES public.categories(id) ON DELETE CASCADE,
+  "order" INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -281,6 +282,24 @@ CREATE POLICY "Members can view project categories"
 CREATE POLICY "Members can insert categories"
   ON public.categories FOR INSERT
   WITH CHECK (
+    project_id IN (
+      SELECT project_id FROM public.project_members
+      WHERE user_id = auth.uid() AND role IN ('member', 'owner')
+    )
+  );
+
+CREATE POLICY "Members can update categories"
+  ON public.categories FOR UPDATE
+  USING (
+    project_id IN (
+      SELECT project_id FROM public.project_members
+      WHERE user_id = auth.uid() AND role IN ('member', 'owner')
+    )
+  );
+
+CREATE POLICY "Members can delete categories"
+  ON public.categories FOR DELETE
+  USING (
     project_id IN (
       SELECT project_id FROM public.project_members
       WHERE user_id = auth.uid() AND role IN ('member', 'owner')
