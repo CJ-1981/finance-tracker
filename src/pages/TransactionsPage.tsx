@@ -33,9 +33,11 @@ export default function TransactionsPage() {
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null)
   const [editingCategoryName, setEditingCategoryName] = useState('')
   const [newFieldName, setNewFieldName] = useState('')
-  const [newFieldType, setNewFieldType] = useState<'text' | 'number' | 'date'>('text')
+  const [newFieldType, setNewFieldType] = useState<'text' | 'number' | 'date' | 'select'>('text')
+  const [newFieldOptions, setNewFieldOptions] = useState<string[]>([]) // For select type
   const [editingFieldOriginalName, setEditingFieldOriginalName] = useState<string | null>(null)
   const [editingFieldName, setEditingFieldName] = useState('')
+  const [editingFieldOptions, setEditingFieldOptions] = useState<string[]>([]) // For editing select fields
   const [editingTransactionId, setEditingTransactionId] = useState<string | null>(null)
   const [showImportModal, setShowImportModal] = useState(false)
   const [importFieldName, setImportFieldName] = useState('')
@@ -457,16 +459,26 @@ export default function TransactionsPage() {
   const handleAddField = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newFieldName || !project) return
+
+    const newField: any = { name: newFieldName, type: newFieldType }
+
+    // For select type, add options
+    if (newFieldType === 'select') {
+      newField.options = newFieldOptions.length > 0 ? newFieldOptions : ['Option 1', 'Option 2', 'Option 3']
+    }
+
     const currentFields = project.settings?.custom_fields || []
     const updatedSettings = {
       ...project.settings,
       currency: project.settings?.currency || 'USD',
       date_format: project.settings?.date_format || 'YYYY-MM-DD',
       notifications_enabled: project.settings?.notifications_enabled ?? true,
-      custom_fields: [...currentFields, { name: newFieldName, type: newFieldType }]
+      custom_fields: [...currentFields, newField]
     }
     await updateProjectSettings(updatedSettings)
     setNewFieldName('')
+    setNewFieldOptions([])
+    setNewFieldType('text')
   }
 
   const handleDeleteField = async (fieldName: string) => {
@@ -582,7 +594,11 @@ export default function TransactionsPage() {
 
     const updatedSettings = {
       ...project.settings,
-      custom_fields: currentFields.map(f => f.name === oldName ? { ...f, name: newName } : f)
+      custom_fields: currentFields.map(f =>
+        f.name === oldName
+          ? { ...f, name: newName, options: editingFieldOptions.length > 0 ? editingFieldOptions : f.options }
+          : f
+      )
     }
 
     try {
@@ -754,38 +770,64 @@ export default function TransactionsPage() {
             </div>
             <div className="card">
               <h2 className="text-lg font-semibold mb-4">Manage Custom Fields</h2>
-              <form onSubmit={handleAddField} className="flex gap-2 mb-4">
-                <input type="text" className="input flex-1" placeholder="Field Name" value={newFieldName} onChange={e => setNewFieldName(e.target.value)} required />
-                <select className="input w-32" value={newFieldType} onChange={e => setNewFieldType(e.target.value as any)}>
-                  <option value="text">Text</option>
-                  <option value="number">Number</option>
-                  <option value="date">Date</option>
-                </select>
-                <button type="submit" className="btn btn-primary whitespace-nowrap">Add</button>
+              <form onSubmit={handleAddField} className="flex flex-col gap-2 mb-4">
+                <div className="flex gap-2">
+                  <input type="text" className="input flex-1" placeholder="Field Name" value={newFieldName} onChange={e => setNewFieldName(e.target.value)} required />
+                  <select className="input w-32" value={newFieldType} onChange={e => setNewFieldType(e.target.value as any)}>
+                    <option value="text">Text</option>
+                    <option value="number">Number</option>
+                    <option value="date">Date</option>
+                    <option value="select">Dropdown</option>
+                  </select>
+                  <button type="submit" className="btn btn-primary whitespace-nowrap">Add</button>
+                </div>
+                {newFieldType === 'select' && (
+                  <div className="flex flex-col gap-2 p-3 bg-gray-50 rounded">
+                    <label className="text-sm font-medium text-gray-700">Dropdown Options (one per line)</label>
+                    <textarea
+                      className="input min-h-20 font-mono text-sm"
+                      placeholder="Option 1&#10;Option 2&#10;Option 3"
+                      value={newFieldOptions.join('\n')}
+                      onChange={(e) => setNewFieldOptions(e.target.value.split('\n').filter(v => v.trim()))}
+                    />
+                  </div>
+                )}
               </form>
               <div className="space-y-2">
                 {project?.settings?.custom_fields?.map((f, index) => (
                   <div key={f.name} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded">
                     {editingFieldOriginalName === f.name ? (
-                      <div className="flex-1 flex gap-2">
+                      <div className="flex-1 flex gap-2 flex-col">
                         <input
                           type="text"
                           className="input py-1 px-2 text-sm"
                           value={editingFieldName}
                           onChange={(e) => setEditingFieldName(e.target.value)}
                           autoFocus
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleRenameField(f.name, editingFieldName)
-                            if (e.key === 'Escape') setEditingFieldOriginalName(null)
-                          }}
                         />
-                        <button onClick={() => handleRenameField(f.name, editingFieldName)} className="text-blue-600 hover:text-blue-800 font-semibold text-xs">Save</button>
-                        <button onClick={() => setEditingFieldOriginalName(null)} className="text-gray-500 hover:text-gray-700 text-xs">Cancel</button>
+                        {f.type === 'select' && (
+                          <textarea
+                            className="input min-h-20 font-mono text-sm"
+                            placeholder="Option 1&#10;Option 2&#10;Option 3"
+                            value={editingFieldOptions.join('\n')}
+                            onChange={(e) => setEditingFieldOptions(e.target.value.split('\n').filter(v => v.trim()))}
+                          />
+                        )}
+                        <div className="flex gap-2">
+                          <button onClick={() => handleRenameField(f.name, editingFieldName)} className="text-blue-600 hover:text-blue-800 font-semibold text-xs">Save</button>
+                          <button onClick={() => {
+                            setEditingFieldOriginalName(null)
+                            setEditingFieldOptions([])
+                          }} className="text-gray-500 hover:text-gray-700 text-xs">Cancel</button>
+                        </div>
                       </div>
                     ) : (
                       <>
                         <div>
                           <span className="font-semibold">{f.name}</span> <span className="text-gray-500 text-xs">({f.type})</span>
+                          {f.type === 'select' && f.options && (
+                            <span className="text-gray-400 text-xs ml-2">[{f.options.length} options]</span>
+                          )}
                         </div>
                         <div className="flex items-center gap-2 text-xs">
                           <button disabled={index === 0} onClick={() => handleMoveField(index, 'up')} className="text-gray-500 hover:text-blue-600 disabled:opacity-30">↑</button>
@@ -803,9 +845,17 @@ export default function TransactionsPage() {
                               setImportValues(existingValues.join('\n'))
                             }} className="text-green-600 hover:text-green-700">Import</button>
                           )}
+                          {f.type === 'select' && (
+                            <button onClick={() => {
+                              setEditingFieldOriginalName(f.name)
+                              setEditingFieldName(f.name)
+                              setEditingFieldOptions(f.options || [])
+                            }} className="text-purple-600 hover:text-purple-700">Edit Options</button>
+                          )}
                           <button onClick={() => {
                             setEditingFieldOriginalName(f.name)
                             setEditingFieldName(f.name)
+                            setEditingFieldOptions(f.options || [])
                           }} className="text-blue-500 hover:text-blue-700">Rename</button>
                           <button onClick={() => handleDeleteField(f.name)} className="text-red-500 hover:text-red-700 ml-2">Delete</button>
                         </div>
@@ -981,6 +1031,16 @@ export default function TransactionsPage() {
                         ))}
                       </datalist>
                     </>
+                  ) : field.type === 'select' ? (
+                    <select
+                      className="input"
+                      value={customData[field.name] || (field.options?.[0] || '')}
+                      onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
+                    >
+                      {field.options?.map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
                   ) : (
                     <input
                       type={field.type}

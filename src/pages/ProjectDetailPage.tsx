@@ -839,6 +839,17 @@ export default function ProjectDetailPage() {
                       value={transactionCustomData[field.name] || ''}
                       onChange={(e) => setTransactionCustomData({ ...transactionCustomData, [field.name]: e.target.value })}
                     />
+                  ) : field.type === 'select' ? (
+                    <select
+                      id={`t-${field.name}`}
+                      className="input"
+                      value={transactionCustomData[field.name] || (field.options?.[0] || '')}
+                      onChange={(e) => setTransactionCustomData({ ...transactionCustomData, [field.name]: e.target.value })}
+                    >
+                      {field.options?.map((option: string) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
                   ) : (
                     <input
                       id={`t-${field.name}`}

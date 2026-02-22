@@ -19,7 +19,8 @@ export interface Project {
     notifications_enabled: boolean
     custom_fields?: Array<{
       name: string
-      type: 'text' | 'number' | 'date'
+      type: 'text' | 'number' | 'date' | 'select'
+      options?: string[] // For select type
     }>
     custom_field_values?: Record<string, string[]>
     default_date_period?: 'today' | 'yesterday' | 'last7days' | 'last30days' | 'thisMonth' | 'lastMonth' | 'thisYear' | 'all'
