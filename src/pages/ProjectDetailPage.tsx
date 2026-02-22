@@ -35,7 +35,7 @@ export default function ProjectDetailPage() {
   })
   const [transactionCustomData, setTransactionCustomData] = useState<Record<string, string>>({})
   const [savingTransaction, setSavingTransaction] = useState(false)
-  const [chartMode, setChartMode] = useState<'cumulative' | 'absolute'>('cumulative')
+  const [chartMode, setChartMode] = useState<'cumulative' | 'absolute'>('absolute')
 
   // Date filter states
   const [datePeriod, setDatePeriod] = useState<'today' | 'yesterday' | 'last7days' | 'last30days' | 'thisMonth' | 'lastMonth' | 'thisYear' | 'all'>('today')
