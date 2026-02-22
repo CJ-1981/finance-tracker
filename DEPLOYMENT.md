@@ -149,6 +149,17 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 
 ## Troubleshooting
 
+### 404 Errors on Invitation Links/Sub-paths
+
+GitHub Pages does not natively support Single Page Application (SPA) routing. When you visit a sub-path like `/invite`, GitHub Pages looks for a physical file named `invite`, fails, and returns a 404.
+
+To fix this, we have configured the build process to copy `index.html` to `404.html`. GitHub Pages automatically serves `404.html` when a path is not found, allowing the React Router to take over and render the correct page.
+
+If you are experiencing 404s:
+1. Ensure the `build` script in `package.json` includes `cp dist/index.html dist/404.html`
+2. If using GitHub Actions, ensure the `deploy.yml` workflow also has this step
+3. Verify that `vite.config.ts` has the correct `base` path (e.g., `'/finance-tracker/'`)
+
 ### OAuth Redirect Not Working
 
 - Make sure the redirect URL in Supabase matches your GitHub Pages URL exactly
