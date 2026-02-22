@@ -4,30 +4,16 @@ import { useAuth } from '../hooks/useAuth'
 import { getSupabaseClient } from '../lib/supabase'
 import { exportToCSV } from '../utils/csvExport'
 import type { Project, Transaction, Category } from '../types'
+import TransactionModal from '../components/TransactionModal'
 
 export default function TransactionsPage() {
-  const { user } = useAuth()
+  const { } = useAuth()
   const { projectId } = useParams<{ projectId: string }>()
   const [project, setProject] = useState<Project | null>(null)
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [showAddForm, setShowAddForm] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [formData, setFormData] = useState({
-    amount: '',
-    currency_code: 'USD',
-    category_id: '',
-    date: new Date().toISOString().split('T')[0],
-  })
-
-  // Update category_id when categories are loaded
-  useEffect(() => {
-    if (categories.length > 0 && !formData.category_id) {
-      setFormData(prev => ({ ...prev, category_id: categories[0].id }))
-    }
-  }, [categories])
-
-  const [customData, setCustomData] = useState<Record<string, string>>({})
   const [showSettings, setShowSettings] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null)
@@ -61,6 +47,15 @@ export default function TransactionsPage() {
       fetchProject()
       fetchTransactions()
       fetchCategories()
+    }
+
+    // Check for settings parameter in URL
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('settings') === 'true') {
+      setShowSettings(true)
+      setTimeout(() => {
+        document.getElementById('manage-custom-fields')?.scrollIntoView({ behavior: 'smooth' })
+      }, 500)
     }
   }, [projectId])
 
@@ -141,76 +136,14 @@ export default function TransactionsPage() {
       if (data) {
         const category = data as any
         setCategories([category])
-        setFormData((prev) => ({ ...prev, category_id: category.id }))
       }
     } catch (error) {
       console.error('Error creating default category:', error)
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-
-    if (!user?.id || !projectId) {
-      console.error('User or project not available')
-      return
-    }
-
-    try {
-      const supabase = getSupabaseClient()
-      if (editingTransactionId) {
-        const { error } = await (supabase
-          .from('transactions') as any)
-          .update({
-            amount: parseFloat(formData.amount),
-            currency_code: formData.currency_code,
-            category_id: formData.category_id,
-            date: formData.date,
-            custom_data: customData,
-          })
-          .eq('id', editingTransactionId)
-
-        if (error) throw error
-      } else {
-        const { error } = await (supabase
-          .from('transactions') as any)
-          .insert({
-            project_id: projectId,
-            amount: parseFloat(formData.amount),
-            currency_code: formData.currency_code,
-            category_id: formData.category_id,
-            date: formData.date,
-            created_by: user.id,
-            custom_data: customData,
-          })
-
-        if (error) throw error
-      }
-
-      setFormData({
-        amount: '',
-        currency_code: 'USD',
-        category_id: '',
-        date: new Date().toISOString().split('T')[0],
-      })
-      setCustomData({})
-      setEditingTransactionId(null)
-      setShowAddForm(false)
-      fetchTransactions()
-    } catch (error) {
-      console.error('Error creating transaction:', error)
-    }
-  }
-
   const handleEdit = (transaction: Transaction) => {
     setEditingTransactionId(transaction.id)
-    setFormData({
-      amount: transaction.amount.toString(),
-      currency_code: transaction.currency_code || 'USD',
-      category_id: transaction.category_id || '',
-      date: transaction.date || new Date().toISOString().split('T')[0],
-    })
-    setCustomData(transaction.custom_data || {})
     setShowAddForm(true)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -460,14 +393,20 @@ export default function TransactionsPage() {
     e.preventDefault()
     if (!newFieldName || !project) return
 
+    const currentFields = project.settings?.custom_fields || []
+    if (currentFields.some(f => f.name.toLowerCase() === newFieldName.toLowerCase())) {
+      alert('A field with this name already exists')
+      return
+    }
+
+    const filteredOptions = newFieldOptions.map(o => o.trim()).filter(Boolean)
     const newField: any = { name: newFieldName, type: newFieldType }
 
     // For select type, add options
     if (newFieldType === 'select') {
-      newField.options = newFieldOptions.length > 0 ? newFieldOptions : ['Option 1', 'Option 2', 'Option 3']
+      newField.options = filteredOptions.length > 0 ? filteredOptions : ['Option 1', 'Option 2', 'Option 3']
     }
 
-    const currentFields = project.settings?.custom_fields || []
     const updatedSettings = {
       ...project.settings,
       currency: project.settings?.currency || 'USD',
@@ -585,18 +524,21 @@ export default function TransactionsPage() {
   }
 
   const handleRenameField = async (oldName: string, newName: string) => {
-    if (!project || !newName.trim() || oldName === newName) return
+    if (!project || !newName.trim()) return
     const currentFields = project.settings?.custom_fields || []
-    if (currentFields.some(f => f.name === newName)) {
+
+    // Check if name changed and if new name already exists elsewhere
+    if (oldName !== newName && currentFields.some(f => f.name === newName)) {
       alert('A field with this name already exists')
       return
     }
 
+    const filteredOptions = editingFieldOptions.map(o => o.trim()).filter(Boolean)
     const updatedSettings = {
       ...project.settings,
       custom_fields: currentFields.map(f =>
         f.name === oldName
-          ? { ...f, name: newName, options: editingFieldOptions.length > 0 ? editingFieldOptions : f.options }
+          ? { ...f, name: newName, options: filteredOptions.length > 0 ? filteredOptions : f.options }
           : f
       )
     }
@@ -608,15 +550,18 @@ export default function TransactionsPage() {
         .eq('id', projectId as string)
       if (projectError) throw projectError
 
-      const { data: txs } = await (supabase.from('transactions') as any)
-        .select('id, custom_data')
-        .eq('project_id', projectId as string)
-      if (txs) {
-        for (const tx of txs as any[]) {
-          if (tx.custom_data && tx.custom_data[oldName] !== undefined) {
-            const newData = { ...tx.custom_data, [newName]: tx.custom_data[oldName] }
-            delete newData[oldName]
-            await (supabase.from('transactions') as any).update({ custom_data: newData }).eq('id', tx.id)
+      // Only sync transaction data if the field NAME changed
+      if (oldName !== newName) {
+        const { data: txs } = await (supabase.from('transactions') as any)
+          .select('id, custom_data')
+          .eq('project_id', projectId as string)
+        if (txs) {
+          for (const tx of txs as any[]) {
+            if (tx.custom_data && tx.custom_data[oldName] !== undefined) {
+              const newData = { ...tx.custom_data, [newName]: tx.custom_data[oldName] }
+              delete newData[oldName]
+              await (supabase.from('transactions') as any).update({ custom_data: newData }).eq('id', tx.id)
+            }
           }
         }
       }
@@ -691,6 +636,14 @@ export default function TransactionsPage() {
     )
   }
 
+  const handleGoToSettings = () => {
+    setShowAddForm(false)
+    setShowSettings(true)
+    setTimeout(() => {
+      document.getElementById('manage-custom-fields')?.scrollIntoView({ behavior: 'smooth' })
+    }, 100)
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20 md:pb-0 md:pl-64">
       <header className="bg-white shadow-sm">
@@ -708,13 +661,6 @@ export default function TransactionsPage() {
               </button>
               <button onClick={() => {
                 setEditingTransactionId(null)
-                setFormData({
-                  amount: '',
-                  currency_code: project?.settings?.currency || 'USD',
-                  category_id: categories.length > 0 ? categories[0].id : '',
-                  date: new Date().toISOString().split('T')[0],
-                })
-                setCustomData({})
                 setShowAddForm(true)
               }} className="btn btn-primary text-sm whitespace-nowrap">
                 Add Transaction
@@ -773,7 +719,7 @@ export default function TransactionsPage() {
                 ))}
               </ul>
             </div>
-            <div className="card">
+            <div className="card" id="manage-custom-fields">
               <h2 className="text-lg font-semibold mb-4">Manage Custom Fields</h2>
               <form onSubmit={handleAddField} className="flex flex-col gap-2 mb-4">
                 <div className="flex gap-2">
@@ -793,7 +739,7 @@ export default function TransactionsPage() {
                       className="input min-h-20 font-mono text-sm"
                       placeholder="Option 1&#10;Option 2&#10;Option 3"
                       value={newFieldOptions.join('\n')}
-                      onChange={(e) => setNewFieldOptions(e.target.value.split('\n').filter(v => v.trim()))}
+                      onChange={(e) => setNewFieldOptions(e.target.value.split('\n'))}
                     />
                   </div>
                 )}
@@ -815,7 +761,7 @@ export default function TransactionsPage() {
                             className="input min-h-20 font-mono text-sm"
                             placeholder="Option 1&#10;Option 2&#10;Option 3"
                             value={editingFieldOptions.join('\n')}
-                            onChange={(e) => setEditingFieldOptions(e.target.value.split('\n').filter(v => v.trim()))}
+                            onChange={(e) => setEditingFieldOptions(e.target.value.split('\n'))}
                           />
                         )}
                         <div className="flex gap-2">
@@ -931,162 +877,41 @@ export default function TransactionsPage() {
           </div>
         )}
 
-        {showAddForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
-              <h2 className="text-xl font-bold mb-4">
-                {editingTransactionId ? (
-                  selectedTransactions.size > 1 ? (
-                    `Edit Transaction ${currentEditIndex + 1} of ${selectedTransactions.size}`
-                  ) : 'Edit Transaction'
-                ) : 'Add Transaction'}
-              </h2>
-              {selectedTransactions.size > 1 && editingTransactionId && (
-                <div className="flex gap-2 mb-4">
-                  <button
-                    type="button"
-                    onClick={() => handleNavigateEdit('prev')}
-                    disabled={currentEditIndex === 0}
-                    className="px-3 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    ← Previous
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleNavigateEdit('next')}
-                    disabled={currentEditIndex >= selectedTransactions.size - 1}
-                    className="px-3 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Next →
-                  </button>
-                </div>
-              )}
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-1">
-                    Amount
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      id="amount"
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      inputMode="decimal"
-                      className="input flex-1"
-                      value={formData.amount}
-                      onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                      required
-                    />
-                    <select
-                      id="currency_code"
-                      className="input w-24"
-                      value={formData.currency_code}
-                      onChange={(e) => setFormData({ ...formData, currency_code: e.target.value })}
-                    >
-                      <option value="USD">USD</option>
-                      <option value="EUR">EUR</option>
-                      <option value="GBP">GBP</option>
-                      <option value="JPY">JPY</option>
-                      <option value="KRW">KRW</option>
-                      <option value="CNY">CNY</option>
-                      <option value="INR">INR</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-                    Category
-                  </label>
-                  <select
-                    id="category"
-                    className="input"
-                    value={formData.category_id}
-                    onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                    required
-                  >
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
-                    Date
-                  </label>
-                  <input
-                    id="date"
-                    type="date"
-                    className="input"
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    required
-                  />
-                </div>
-
-                {project?.settings?.custom_fields?.map((field) => (
-                  <div key={field.name}>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{field.name}</label>
-                    {field.type === 'text' ? (
-                      <>
-                        <input
-                          type="text"
-                          list={`custom-field-${field.name}`}
-                          className="input"
-                          value={customData[field.name] || ''}
-                          onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
-                        />
-                        <datalist id={`custom-field-${field.name}`}>
-                          {/* Combine imported values with existing transaction values */}
-                          {Array.from(new Set([
-                            ...(project?.settings?.custom_field_values?.[field.name] || []),
-                            ...transactions.map(t => t.custom_data?.[field.name]).filter(Boolean)
-                          ])).map((value, i) => (
-                            <option key={i} value={value as string} />
-                          ))}
-                        </datalist>
-                      </>
-                    ) : field.type === 'select' ? (
-                      <select
-                        className="input"
-                        value={customData[field.name] || (field.options?.[0] || '')}
-                        onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
-                      >
-                        {field.options?.map((option) => (
-                          <option key={option} value={option}>{option}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
-                        type={field.type}
-                        className="input"
-                        value={customData[field.name] || ''}
-                        onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
-                      />
-                    )}
-                  </div>
-                ))}
-
-                <div className="flex gap-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowAddForm(false)
-                      setEditingTransactionId(null)
-                    }}
-                    className="btn btn-secondary flex-1"
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" className="btn btn-primary flex-1">
-                    {editingTransactionId ? 'Update' : 'Add'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
+        {project && (
+          <TransactionModal
+            isOpen={showAddForm}
+            onClose={() => {
+              setShowAddForm(false)
+              setEditingTransactionId(null)
+            }}
+            onSuccess={fetchTransactions}
+            project={project}
+            categories={categories}
+            transaction={editingTransactionId ? transactions.find(t => t.id === editingTransactionId) : null}
+            onGoToSettings={handleGoToSettings}
+            allTransactions={transactions}
+          >
+            {selectedTransactions.size > 1 && editingTransactionId && (
+              <div className="flex gap-2 mb-4">
+                <button
+                  type="button"
+                  onClick={() => handleNavigateEdit('prev')}
+                  disabled={currentEditIndex === 0}
+                  className="px-3 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ← Previous
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleNavigateEdit('next')}
+                  disabled={currentEditIndex >= selectedTransactions.size - 1}
+                  className="px-3 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next →
+                </button>
+              </div>
+            )}
+          </TransactionModal>
         )}
 
         {transactions.length === 0 ? (
