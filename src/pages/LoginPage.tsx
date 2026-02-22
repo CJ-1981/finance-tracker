@@ -4,10 +4,12 @@ import { useNavigate, useLocation } from 'react-router-dom'
 export default function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
 
   // Check if user was redirected from invite page
   const inviteToken = location.state?.inviteToken
@@ -36,32 +38,43 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
+    setMessage('')
     setLoading(true)
 
     try {
       const { getSupabaseClient } = await import('../lib/supabase')
       const supabase = getSupabaseClient()
 
-      // Sign in
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      if (isSignUp) {
+        // Sign up
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: window.location.origin + import.meta.env.BASE_URL + 'login'
+          }
+        })
+        if (error) throw error
+        setMessage('Registration successful! Please check your email for a confirmation link.')
+      } else {
+        // Sign in
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
+        if (error) throw error
 
-      if (error) throw error
-
-      // After successful login, redirect to invite or projects
-      // The auth state change will trigger a redirect, but we can use navigate to be explicit
-      setTimeout(() => {
-        if (inviteToken) {
-          navigate(`/invite?token=${inviteToken}`)
-        } else {
-          navigate('/projects')
-        }
-      }, 100)
+        // After successful login, redirect to invite or projects
+        setTimeout(() => {
+          if (inviteToken) {
+            navigate(`/invite?token=${inviteToken}`)
+          } else {
+            navigate('/projects')
+          }
+        }, 100)
+      }
     } catch (err: any) {
       const errorMessage = err.message || 'Authentication failed'
-      // Provide helpful error messages
       if (errorMessage.includes('Invalid login credentials')) {
         setError('Invalid email or password. Please check your credentials and try again.')
       } else if (errorMessage.includes('Email not confirmed')) {
@@ -75,12 +88,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Finance Tracker</h1>
           <p className="text-gray-600 mt-2">
-            Sign in to your account
+            {isSignUp ? 'Create your account' : 'Sign in to your account'}
           </p>
         </div>
 
@@ -119,12 +132,14 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className={`rounded-md p-4 text-sm ${
-                error.includes('confirm your email')
-                  ? 'bg-blue-50 text-blue-800'
-                  : 'bg-red-50 text-red-800'
-              }`}>
+              <div className="rounded-md p-4 text-sm bg-red-50 text-red-800">
                 {error}
+              </div>
+            )}
+
+            {message && (
+              <div className="rounded-md p-4 text-sm bg-green-50 text-green-800">
+                {message}
               </div>
             )}
 
@@ -133,18 +148,21 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Loading...' : 'Sign In'}
+              {loading ? 'Loading...' : (isSignUp ? 'Sign Up' : 'Sign In')}
             </button>
           </form>
 
-          <div className="mt-4 text-center text-sm text-gray-600">
-            <p>Don't have an account?</p>
-            <ol className="text-left mt-2 space-y-1 text-xs">
-              <li>1. Create a Supabase account at <a href="https://supabase.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 underline">supabase.com</a></li>
-              <li>2. Create a new project</li>
-              <li>3. Configure this app with your project's URL and anon key</li>
-              <li>4. Come back here to sign in</li>
-            </ol>
+          <div className="mt-6 text-center text-sm">
+            <button
+              onClick={() => {
+                setIsSignUp(!isSignUp)
+                setError('')
+                setMessage('')
+              }}
+              className="text-blue-600 hover:text-blue-700 font-medium"
+            >
+              {isSignUp ? 'Already have an account? Sign In' : 'Don\'t have an account? Sign Up'}
+            </button>
           </div>
 
           <p className="mt-4 text-xs text-gray-500 text-center">
