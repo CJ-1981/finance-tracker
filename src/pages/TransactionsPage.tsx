@@ -828,10 +828,24 @@ export default function TransactionsPage() {
                       </div>
                     ) : (
                       <>
-                        <div>
-                          <span className="font-semibold">{f.name}</span> <span className="text-gray-500 text-xs">({f.type})</span>
-                          {f.type === 'select' && f.options && (
-                            <span className="text-gray-400 text-xs ml-2">[{f.options.length} options]</span>
+                        <div className="flex-1">
+                          <div>
+                            <span className="font-semibold">{f.name}</span> <span className="text-gray-500 text-xs">({f.type})</span>
+                            {f.type === 'select' && f.options && (
+                              <span className="text-gray-400 text-xs ml-2">[{f.options.length} options]</span>
+                            )}
+                            {f.type === 'text' && project?.settings?.custom_field_values?.[f.name] && (
+                              <span className="text-green-600 text-xs ml-2">[{project.settings.custom_field_values[f.name].length} imported values]</span>
+                            )}
+                          </div>
+                          {f.type === 'text' && project?.settings?.custom_field_values?.[f.name] && (
+                            <div className="mt-1 text-xs text-gray-600 max-w-md">
+                              <span className="font-medium">Values: </span>
+                              <span className="text-gray-500">
+                                {project.settings.custom_field_values[f.name].slice(0, 5).join(', ')}
+                                {project.settings.custom_field_values[f.name].length > 5 && ` ...and ${project.settings.custom_field_values[f.name].length - 5} more`}
+                              </span>
+                            </div>
                           )}
                         </div>
                         <div className="flex items-center gap-2 text-xs">

@@ -33,3 +33,8 @@
     @apply bg-white rounded-lg shadow-md p-6;
   }
 }
+
+/* Fix for datalist autocomplete dropdown styling */
+datalist {
+  display: none;
+}
