@@ -462,23 +462,23 @@ export default function TransactionsPage() {
     <div className="min-h-screen bg-gray-50 pb-20 md:pb-0 md:pl-64">
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+            <div className="min-w-0">
               <Link to={`/projects/${projectId}`} className="text-sm text-blue-600 hover:underline">
                 ← Back to Project
               </Link>
               <h1 className="text-2xl font-bold text-gray-900 mt-1">Transactions</h1>
             </div>
-            <div className="flex gap-2">
-              <button onClick={() => setShowSettings(!showSettings)} className="btn btn-secondary">
-                {showSettings ? 'Close Settings' : 'Template Settings'}
+            <div className="flex gap-2 flex-wrap">
+              <button onClick={() => setShowSettings(!showSettings)} className="btn btn-secondary text-sm whitespace-nowrap">
+                {showSettings ? 'Close' : 'Settings'}
               </button>
               <button onClick={() => {
                 setEditingTransactionId(null)
                 setFormData({ amount: '', currency_code: 'USD', category_id: '', description: '', date: new Date().toISOString().split('T')[0] })
                 setCustomData({})
                 setShowAddForm(true)
-              }} className="btn btn-primary">
+              }} className="btn btn-primary text-sm whitespace-nowrap">
                 Add Transaction
               </button>
             </div>

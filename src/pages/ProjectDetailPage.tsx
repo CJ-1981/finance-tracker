@@ -336,8 +336,8 @@ export default function ProjectDetailPage() {
     <div className="min-h-screen bg-gray-50 pb-20 md:pb-0 md:pl-64">
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+            <div className="flex-1 min-w-0">
               <Link to="/projects" className="text-sm text-blue-600 hover:underline mb-2 inline-block">
                 ← Back to Projects
               </Link>
@@ -356,7 +356,7 @@ export default function ProjectDetailPage() {
                 </form>
               ) : (
                 <div className="group flex flex-col gap-1 items-start mt-1">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-wrap">
                     <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
                     <button onClick={() => {
                       setIsEditing(true)
@@ -366,12 +366,12 @@ export default function ProjectDetailPage() {
                   {project.description && <p className="text-sm text-gray-600 max-w-2xl">{project.description}</p>}
 
                   {/* Date Period Selector */}
-                  <div className="mt-3 flex items-center gap-2">
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
                     <label className="text-sm font-medium text-gray-700">Period:</label>
                     <select
                       value={datePeriod}
                       onChange={(e) => setDatePeriod(e.target.value as any)}
-                      className="input py-1 px-3 text-sm w-40"
+                      className="input py-1 px-3 text-sm w-40 flex-shrink-0"
                     >
                       <option value="today">Today</option>
                       <option value="yesterday">Yesterday</option>
@@ -389,11 +389,11 @@ export default function ProjectDetailPage() {
                 </div>
               )}
             </div>
-            <div className="flex gap-2 ml-4">
-              <button onClick={() => setShowInviteModal(true)} className="btn btn-secondary border border-blue-600 text-blue-600 hover:bg-blue-50">
-                Invite Others
+            <div className="flex gap-2 flex-shrink-0">
+              <button onClick={() => setShowInviteModal(true)} className="btn btn-secondary border border-blue-600 text-blue-600 hover:bg-blue-50 text-sm whitespace-nowrap">
+                Invite
               </button>
-              <Link to={`/transactions/${id}`} className="btn btn-primary">
+              <Link to={`/transactions/${id}`} className="btn btn-primary text-sm whitespace-nowrap">
                 Add Transaction
               </Link>
             </div>

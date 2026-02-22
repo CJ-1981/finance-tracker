@@ -139,11 +139,11 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50 pb-20 md:pb-0 md:pl-64">
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">{user?.email}</span>
-              <button onClick={() => { signOut(); window.location.reload() }} className="btn btn-secondary">
+            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+              <span className="text-xs sm:text-sm text-gray-600 truncate max-w-[150px] sm:max-w-none">{user?.email}</span>
+              <button onClick={() => { signOut(); window.location.reload() }} className="btn btn-secondary text-sm whitespace-nowrap">
                 Logout
               </button>
             </div>

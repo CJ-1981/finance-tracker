@@ -93,13 +93,13 @@ export default function ProjectsPage() {
     <div className="min-h-screen bg-gray-50 pb-20 md:pb-0 md:pl-64">
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
-            <div className="flex gap-2">
-              <button onClick={() => setShowCreateForm(true)} className="btn btn-primary">
+            <div className="flex gap-2 flex-wrap">
+              <button onClick={() => setShowCreateForm(true)} className="btn btn-primary text-sm whitespace-nowrap">
                 New Project
               </button>
-              <button onClick={handleLogout} className="btn btn-secondary">
+              <button onClick={handleLogout} className="btn btn-secondary text-sm whitespace-nowrap">
                 Logout
               </button>
             </div>
