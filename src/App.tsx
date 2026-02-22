@@ -47,6 +47,7 @@ function App() {
       <Route path="/projects/:id" element={<ProjectDetailPage />} />
       <Route path="/transactions/:projectId" element={<TransactionsPage />} />
       <Route path="/invite" element={<InvitePage />} />
+      <Route path="/config" element={<ConfigPage />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   )
