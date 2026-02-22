@@ -812,13 +812,24 @@ export default function ProjectDetailPage() {
                     {field.name}
                   </label>
                   {field.type === 'text' ? (
-                    <input
-                      id={`t-${field.name}`}
-                      type="text"
-                      className="input"
-                      value={transactionCustomData[field.name] || ''}
-                      onChange={(e) => setTransactionCustomData({ ...transactionCustomData, [field.name]: e.target.value })}
-                    />
+                    <>
+                      <input
+                        id={`t-${field.name}`}
+                        type="text"
+                        list={`t-custom-field-${field.name}`}
+                        className="input"
+                        value={transactionCustomData[field.name] || ''}
+                        onChange={(e) => setTransactionCustomData({ ...transactionCustomData, [field.name]: e.target.value })}
+                      />
+                      <datalist id={`t-custom-field-${field.name}`}>
+                        {Array.from(new Set([
+                          ...(project?.settings?.custom_field_values?.[field.name] || []),
+                          ...transactions.map(t => t.custom_data?.[field.name]).filter(Boolean)
+                        ])).map((value, i) => (
+                          <option key={i} value={value as string} />
+                        ))}
+                      </datalist>
+                    </>
                   ) : field.type === 'number' ? (
                     <input
                       id={`t-${field.name}`}
