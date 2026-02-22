@@ -38,6 +38,11 @@ export default function ConfigPage() {
     }
   }, [])
 
+  // Allow reconfiguration when mode is 'signin' and user clicks to edit
+  const handleReconfigure = () => {
+    setMode('configure')
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setErrors([])
@@ -236,10 +241,17 @@ export default function ConfigPage() {
               <div className="pt-4 border-t border-gray-200 space-y-3">
                 <button
                   type="button"
-                  onClick={handleResetConfig}
+                  onClick={handleReconfigure}
                   className="w-full btn btn-secondary text-sm"
                 >
-                  Reset Configuration
+                  Edit Configuration
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResetConfig}
+                  className="w-full btn btn-secondary text-sm text-red-600 hover:text-red-700"
+                >
+                  Reset & Clear Configuration
                 </button>
                 <p className="text-center text-sm text-gray-500">
                   Don't have an account?{' '}
