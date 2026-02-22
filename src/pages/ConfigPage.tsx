@@ -119,8 +119,8 @@ export default function ConfigPage() {
           <h1 className="text-3xl font-bold text-gray-900">Finance Tracker</h1>
           <p className="text-gray-600 mt-2">
             {mode === 'configure' ? 'Setup your Supabase configuration' :
-             mode === 'signin' ? 'Sign in to your account' :
-             'Supabase Configuration'}
+              mode === 'signin' ? 'Sign in to your account' :
+                'Supabase Configuration'}
           </p>
         </div>
 
@@ -290,7 +290,7 @@ export default function ConfigPage() {
                   onClick={() => navigate('/projects')}
                   className="w-full btn btn-primary"
                 >
-                  ← Back to Projects
+                  ← Back to Projects List
                 </button>
                 <button
                   onClick={handleReconfigure}

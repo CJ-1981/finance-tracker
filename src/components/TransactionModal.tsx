@@ -44,7 +44,16 @@ export default function TransactionModal({
                 category_id: transaction.category_id || '',
                 date: transaction.date || new Date().toISOString().split('T')[0],
             })
-            setCustomData(transaction.custom_data || {})
+            // Initialize custom data with existing data, ensuring defaults for select fields
+            const initialCustomData = { ...(transaction.custom_data || {}) }
+            project?.settings?.custom_fields?.forEach(field => {
+                if (field.type === 'select' && field.options && field.options.length > 0) {
+                    if (!initialCustomData[field.name]) {
+                        initialCustomData[field.name] = field.options[0]
+                    }
+                }
+            })
+            setCustomData(initialCustomData)
         } else {
             setFormData({
                 amount: '',
@@ -52,7 +61,14 @@ export default function TransactionModal({
                 category_id: categories.length > 0 ? categories[0].id : '',
                 date: new Date().toISOString().split('T')[0],
             })
-            setCustomData({})
+            // Initialize custom data with default values for select fields
+            const defaultCustomData: Record<string, any> = {}
+            project?.settings?.custom_fields?.forEach(field => {
+                if (field.type === 'select' && field.options && field.options.length > 0) {
+                    defaultCustomData[field.name] = field.options[0]
+                }
+            })
+            setCustomData(defaultCustomData)
         }
     }, [transaction, project, categories])
 
@@ -106,25 +122,39 @@ export default function TransactionModal({
         }
     }
 
+    const ClearButton = ({ onClick, show }: { onClick: () => void, show: boolean }) => {
+        if (!show) return null;
+        return (
+            <button
+                type="button"
+                onClick={onClick}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition-colors z-10"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        );
+    };
+
     if (!isOpen) return null
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-bold">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">
                         {transaction ? 'Edit Transaction' : 'Add Transaction'}
                     </h2>
                     <button
                         type="button"
                         onClick={handleGoToSettings}
-                        className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
+                        className="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all"
                         title="Configure custom fields and categories"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
                         </svg>
-                        Settings
                     </button>
                 </div>
                 {children}
@@ -135,17 +165,20 @@ export default function TransactionModal({
                             Amount *
                         </label>
                         <div className="flex gap-2">
-                            <input
-                                id="modal-amount"
-                                type="number"
-                                step="0.01"
-                                placeholder="0.00"
-                                inputMode="decimal"
-                                className="input flex-1"
-                                value={formData.amount}
-                                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                                required
-                            />
+                            <div className="relative flex-1">
+                                <input
+                                    id="modal-amount"
+                                    type="number"
+                                    step="0.01"
+                                    placeholder="0.00"
+                                    inputMode="decimal"
+                                    className="input pr-10 w-full"
+                                    value={formData.amount}
+                                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                                    required
+                                />
+                                <ClearButton show={!!formData.amount} onClick={() => setFormData({ ...formData, amount: '' })} />
+                            </div>
                             <select
                                 id="modal-currency"
                                 className="input w-24"
@@ -167,14 +200,17 @@ export default function TransactionModal({
                         <label htmlFor="modal-date" className="block text-sm font-medium text-gray-700 mb-1">
                             Date *
                         </label>
-                        <input
-                            id="modal-date"
-                            type="date"
-                            className="input"
-                            value={formData.date}
-                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                            required
-                        />
+                        <div className="relative">
+                            <input
+                                id="modal-date"
+                                type="date"
+                                className="input pr-10"
+                                value={formData.date}
+                                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                required
+                            />
+                            <ClearButton show={!!formData.date} onClick={() => setFormData({ ...formData, date: '' })} />
+                        </div>
                     </div>
 
                     <div>
@@ -203,15 +239,16 @@ export default function TransactionModal({
                                 {field.name}
                             </label>
                             {field.type === 'text' ? (
-                                <>
+                                <div className="relative">
                                     <input
                                         id={`modal-${field.name}`}
                                         type="text"
                                         list={`modal-custom-list-${field.name}`}
-                                        className="input"
+                                        className="input pr-10"
                                         value={customData[field.name] || ''}
                                         onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
                                     />
+                                    <ClearButton show={!!customData[field.name]} onClick={() => setCustomData({ ...customData, [field.name]: '' })} />
                                     <datalist id={`modal-custom-list-${field.name}`}>
                                         {Array.from(new Set([
                                             ...(project?.settings?.custom_field_values?.[field.name] || []),
@@ -220,16 +257,19 @@ export default function TransactionModal({
                                             <option key={i} value={value as string} />
                                         ))}
                                     </datalist>
-                                </>
+                                </div>
                             ) : field.type === 'number' ? (
-                                <input
-                                    id={`modal-${field.name}`}
-                                    type="number"
-                                    step="0.01"
-                                    className="input"
-                                    value={customData[field.name] || ''}
-                                    onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
-                                />
+                                <div className="relative">
+                                    <input
+                                        id={`modal-${field.name}`}
+                                        type="number"
+                                        step="0.01"
+                                        className="input pr-10"
+                                        value={customData[field.name] || ''}
+                                        onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
+                                    />
+                                    <ClearButton show={!!customData[field.name]} onClick={() => setCustomData({ ...customData, [field.name]: '' })} />
+                                </div>
                             ) : field.type === 'select' ? (
                                 <select
                                     id={`modal-${field.name}`}
@@ -242,13 +282,16 @@ export default function TransactionModal({
                                     ))}
                                 </select>
                             ) : (
-                                <input
-                                    id={`modal-${field.name}`}
-                                    type="date"
-                                    className="input"
-                                    value={customData[field.name] || ''}
-                                    onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
-                                />
+                                <div className="relative">
+                                    <input
+                                        id={`modal-${field.name}`}
+                                        type="date"
+                                        className="input pr-10"
+                                        value={customData[field.name] || ''}
+                                        onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
+                                    />
+                                    <ClearButton show={!!customData[field.name]} onClick={() => setCustomData({ ...customData, [field.name]: '' })} />
+                                </div>
                             )}
                         </div>
                     ))}

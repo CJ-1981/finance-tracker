@@ -123,6 +123,7 @@ export default function ProjectDetailPage() {
         .from('categories')
         .select('*')
         .eq('project_id', id)
+        .order('order', { ascending: true })
 
       if (error) throw error
       setCategories(data || [])
@@ -378,7 +379,7 @@ export default function ProjectDetailPage() {
         <div className="max-w-7xl mx-auto">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Project not found</h1>
           <Link to="/projects" className="btn btn-secondary">
-            Back to Projects
+            Back to Projects List
           </Link>
         </div>
       </div>
@@ -386,24 +387,25 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div className="min-h-screen bg-slate-50 pb-20 md:pb-0">
+      <header className="bg-white border-b border-slate-200 shadow-sm relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-primary"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
             <div className="flex-1 min-w-0">
-              <Link to="/projects" className="text-sm text-blue-600 hover:underline mb-2 inline-block">
-                ← Back to Projects
+              <Link to="/projects" className="text-sm font-medium text-primary-600 hover:text-primary-700 mb-2 inline-flex items-center gap-1">
+                ← Back to Projects List
               </Link>
               {isEditing ? (
                 <form onSubmit={handleEditProject} className="flex flex-col gap-3 mt-1 w-full max-w-md">
                   <input type="text" className="input" value={editFormData.name} onChange={e => setEditFormData({ ...editFormData, name: e.target.value })} required placeholder="Project Name" />
                   <textarea className="input" value={editFormData.description} onChange={e => setEditFormData({ ...editFormData, description: e.target.value })} rows={2} placeholder="Project Description (Optional)" />
                   <div className="flex gap-2 items-center">
-                    <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Currency:</label>
+                    <label className="text-sm font-medium text-slate-700 whitespace-nowrap">Currency:</label>
                     <input type="text" className="input w-24" value={editFormData.currency} onChange={e => setEditFormData({ ...editFormData, currency: e.target.value })} placeholder="USD, EUR, etc." maxLength={5} />
                   </div>
                   <div className="flex gap-2 mt-1">
-                    <button type="submit" className="btn btn-primary px-4 py-1">Save</button>
+                    <button type="submit" className="btn btn-primary px-4 py-1">Save Changes</button>
                     <button type="button" onClick={() => setIsEditing(false)} className="btn btn-secondary px-4 py-1">Cancel</button>
                   </div>
                 </form>
@@ -447,7 +449,7 @@ export default function ProjectDetailPage() {
                 Invite
               </button>
               <button onClick={() => setShowAddTransactionModal(true)} className="btn btn-primary text-sm whitespace-nowrap">
-                Add Transaction
+                + Add Transaction
               </button>
             </div>
           </div>
@@ -542,20 +544,20 @@ export default function ProjectDetailPage() {
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Summary Cards */}
           <div className="lg:col-span-3 grid gap-4 md:grid-cols-3">
-            <div className="card">
-              <div className="text-sm text-gray-600">Total Spent</div>
-              <div className="text-2xl font-bold text-gray-900">
-                {project.settings?.currency || 'USD'} {totalSpent.toFixed(2)}
+            <div className="card border-t-4 border-t-primary-500">
+              <div className="text-xs font-bold text-primary-600 uppercase tracking-wider mb-1">Total Amount</div>
+              <div className="text-3xl font-black text-slate-900">
+                {project.settings?.currency || 'USD'} {totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
-            <div className="card">
-              <div className="text-sm text-gray-600">Transactions</div>
-              <div className="text-2xl font-bold text-gray-900">{filteredTransactions.length}</div>
+            <div className="card border-t-4 border-t-teal-500">
+              <div className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-1">Transactions</div>
+              <div className="text-3xl font-black text-slate-900">{filteredTransactions.length}</div>
             </div>
-            <div className="card">
-              <div className="text-sm text-gray-600">Avg Transaction</div>
-              <div className="text-2xl font-bold text-gray-900">
-                {project.settings?.currency || 'USD'} {avgTransaction.toFixed(2)}
+            <div className="card border-t-4 border-t-orange-500">
+              <div className="text-xs font-bold text-orange-600 uppercase tracking-wider mb-1">Avg Transaction</div>
+              <div className="text-3xl font-black text-slate-900">
+                {project.settings?.currency || 'USD'} {avgTransaction.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
           </div>
@@ -564,34 +566,45 @@ export default function ProjectDetailPage() {
           {filteredTransactions.length > 0 && (
             <>
               {/* Pie Chart and Recent Transactions in same row */}
-              <div className="lg:col-span-2 card">
-                <h2 className="text-lg font-semibold mb-4">Amount by Category</h2>
-                <div className="flex items-center justify-center h-64">
+              <div className="lg:col-span-2 card border-t-4 border-t-primary-500">
+                <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                  <span className="w-2 h-6 bg-primary-500 rounded-full"></span>
+                  Amount by Category
+                </h2>
+                <div className="flex items-center justify-center p-4">
                   <div className="w-full max-w-xs">
-                    <Pie data={getChartData()} options={{ maintainAspectRatio: true }} />
+                    <Pie data={getChartData()} options={{ maintainAspectRatio: true, plugins: { legend: { position: 'bottom' } } }} />
                   </div>
                 </div>
               </div>
 
               {/* Recent Transactions */}
-              <div className="lg:col-span-1 card">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-semibold">Recent Transactions</h2>
-                  <Link to={`/transactions/${id}`} className="text-sm text-blue-600 hover:text-blue-700">
-                    Show All →
+              <div className="lg:col-span-1 card border-t-4 border-t-teal-500 flex flex-col">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <span className="w-2 h-6 bg-teal-500 rounded-full"></span>
+                    Recent
+                  </h2>
+                  <Link to={`/transactions/${id}`} className="text-sm font-semibold text-primary-600 hover:text-primary-700">
+                    View All →
                   </Link>
                 </div>
-                <div className="space-y-1">
-                  {filteredTransactions.slice(0, 5).map((transaction) => (
-                    <Link key={transaction.id} to={`/transactions/${id}`} className="flex justify-between items-start p-2 -mx-2 hover:bg-gray-50 rounded transition-colors group cursor-pointer block">
-                      <div className="flex-1">
-                        <div className="text-sm text-gray-600">{getCategoryName(transaction.category_id)}</div>
+                <div className="space-y-3 flex-1 overflow-auto">
+                  {filteredTransactions.slice(0, 6).map((transaction) => (
+                    <Link key={transaction.id} to={`/transactions/${id}`} className="flex justify-between items-center p-3 hover:bg-slate-50 rounded-xl transition-all border border-transparent hover:border-slate-100 group">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm bg-white border border-slate-100" style={{ color: getCategoryColor(transaction.category_id) }}>
+                          {getCategoryName(transaction.category_id).charAt(0)}
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-slate-800">{getCategoryName(transaction.category_id)}</div>
+                          <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">{transaction.date}</div>
+                        </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-semibold text-gray-900">
+                        <div className="font-extrabold text-slate-900">
                           {project.settings?.currency || 'USD'} {transaction.amount.toFixed(2)}
                         </div>
-                        <div className="text-xs text-gray-500">{transaction.date}</div>
                       </div>
                     </Link>
                   ))}
@@ -604,7 +617,7 @@ export default function ProjectDetailPage() {
               </div>
 
               {datePeriod !== 'today' && (
-                <div className="lg:col-span-3 card">
+                <div className="lg:col-span-3 card border-t-4 border-t-primary-500">
                   <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-semibold">Amount Over Time by Category</h2>
                     <div className="flex items-center gap-2">

@@ -90,19 +90,23 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div className="min-h-screen bg-slate-50 pb-20 md:pb-0">
+      <header className="bg-white border-b border-slate-200 shadow-sm relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-primary"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-            <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
-            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+            <div>
+              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Financial Tracker</h1>
+              <p className="text-slate-500 text-sm mt-1">Manage your projects and transactions</p>
+            </div>
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
               <button onClick={() => setShowCreateForm(true)} className="btn btn-primary text-sm whitespace-nowrap">
-                New Project
+                + New Project
               </button>
               <button onClick={() => { navigate('/config') }} className="btn btn-secondary text-sm whitespace-nowrap" title="Reconfigure Supabase connection">
                 ⚙️ Settings
               </button>
-              <button onClick={handleLogout} className="btn btn-secondary text-sm whitespace-nowrap">
+              <button onClick={handleLogout} className="btn border border-red-200 text-red-600 hover:bg-red-50 text-sm whitespace-nowrap px-4 py-2 rounded-xl font-semibold transition-all">
                 Logout
               </button>
             </div>
@@ -170,14 +174,25 @@ export default function ProjectsPage() {
               <Link
                 key={project.id}
                 to={`/projects/${project.id}`}
-                className="card hover:shadow-lg transition-shadow"
+                className="card card-accent hover:border-primary-300 hover:-translate-y-1 block"
               >
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{project.name}</h3>
+                <div className="flex justify-between items-start">
+                  <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-primary-600 transition-colors">{project.name}</h3>
+                  <span className="bg-primary-50 text-primary-700 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border border-primary-100">
+                    Project
+                  </span>
+                </div>
                 {project.description && (
-                  <p className="text-sm text-gray-600 mb-4">{project.description}</p>
+                  <p className="text-sm text-slate-600 mb-4 line-clamp-2">{project.description}</p>
                 )}
-                <div className="text-xs text-gray-500">
-                  Currency: {project.settings?.currency || 'USD'}
+                <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50">
+                  <span className="text-xs font-medium text-slate-500 flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-teal-500"></span>
+                    {project.settings?.currency || 'USD'}
+                  </span>
+                  <span className="text-primary-600 text-xs font-semibold group-hover:translate-x-1 transition-transform">
+                    View Details →
+                  </span>
                 </div>
               </Link>
             ))}

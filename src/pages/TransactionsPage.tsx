@@ -16,8 +16,11 @@ export default function TransactionsPage() {
   const [loading, setLoading] = useState(true)
   const [showSettings, setShowSettings] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
+  const [newCategoryColor, setNewCategoryColor] = useState('#' + Math.floor(Math.random() * 16777215).toString(16).padEnd(6, '0'))
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null)
   const [editingCategoryName, setEditingCategoryName] = useState('')
+  const [editingCategoryColor, setEditingCategoryColor] = useState('')
+  const [isUpdatingCategory, setIsUpdatingCategory] = useState<string | null>(null)
   const [newFieldName, setNewFieldName] = useState('')
   const [newFieldType, setNewFieldType] = useState<'text' | 'number' | 'date' | 'select'>('text')
   const [newFieldOptions, setNewFieldOptions] = useState<string[]>([]) // For select type
@@ -378,12 +381,13 @@ export default function TransactionsPage() {
       const order = categories.length // New category goes at the end
       const { data, error } = await (supabase
         .from('categories') as any)
-        .insert([{ project_id: projectId, name: newCategoryName, color: '#' + Math.floor(Math.random() * 16777215).toString(16).padEnd(6, '0'), order }])
+        .insert([{ project_id: projectId, name: newCategoryName, color: newCategoryColor, order }])
         .select()
         .single()
       if (error) throw error
       setCategories([...categories, data as Category])
       setNewCategoryName('')
+      setNewCategoryColor('#' + Math.floor(Math.random() * 16777215).toString(16).padEnd(6, '0'))
     } catch (err) {
       console.error(err)
     }
@@ -478,16 +482,41 @@ export default function TransactionsPage() {
     }
   }
 
-  const handleRenameCategory = async (categoryId: string, newName: string) => {
-    if (!newName.trim()) return
+  const handleUpdateCategory = async (categoryId: string, updates: { name?: string, color?: string }) => {
+    if (updates.name !== undefined && !updates.name.trim()) return
+    if (!projectId) return
+
+    // Update local state instantly for responsiveness (optimistic update)
+    setCategories(prev => prev.map(c => c.id === categoryId ? { ...c, ...updates } : c))
+
     try {
+      console.log('Sending category update to DB:', { categoryId, updates, projectId });
+      setIsUpdatingCategory(categoryId)
       const supabase = getSupabaseClient()
-      const { error } = await (supabase.from('categories') as any).update({ name: newName }).eq('id', categoryId)
-      if (error) throw error
-      setCategories(categories.map(c => c.id === categoryId ? { ...c, name: newName } : c))
-      setEditingCategoryId(null)
+      const { data, error } = await (supabase
+        .from('categories') as any)
+        .update(updates)
+        .eq('id', categoryId)
+        .eq('project_id', projectId)
+        .select()
+
+      if (error) {
+        console.error('Supabase error updating category:', error);
+        throw error;
+      }
+
+      console.log('Category update successful. Response data:', data);
+
+      if (updates.name !== undefined) {
+        setEditingCategoryId(null)
+      }
     } catch (err) {
-      console.error(err)
+      console.error('Error updating category:', err)
+      // Revert local state on error by re-fetching
+      fetchCategories()
+      alert('Failed to save category changes. Please check your connection.')
+    } finally {
+      setIsUpdatingCategory(null)
     }
   }
 
@@ -495,31 +524,64 @@ export default function TransactionsPage() {
     if (index < 0 || index >= categories.length) return
     if (direction === 'up' && index === 0) return
     if (direction === 'down' && index === categories.length - 1) return
+    if (!projectId) return
+
+    const currentCategory = categories[index]
+    const targetIndex = direction === 'up' ? index - 1 : index + 1
+    const targetCategory = categories[targetIndex]
+
+    // Ensure they have different orders to swap. If same, just assign new sequential orders.
+    const currentOrder = currentCategory.order
+    const targetOrder = targetCategory.order
+
+    // Optimistically update local state for instant feedback
+    setCategories(prev => {
+      const next = [...prev]
+      const temp = next[index]
+      next[index] = next[targetIndex]
+      next[targetIndex] = temp
+      return next
+    })
 
     try {
       const supabase = getSupabaseClient()
-      const currentCategory = categories[index]
-      const targetIndex = direction === 'up' ? index - 1 : index + 1
-      const targetCategory = categories[targetIndex]
+      console.log('Swapping category orders:', {
+        c1: { id: currentCategory.id, old: currentOrder, new: targetOrder },
+        c2: { id: targetCategory.id, old: targetOrder, new: currentOrder }
+      });
 
-      // Swap the order values in the database
-      const { error: error1 } = await (supabase.from('categories') as any)
-        .update({ order: targetCategory.order })
-        .eq('id', currentCategory.id)
-      if (error1) throw error1
+      // If orders are the same, we need to re-verify all orders
+      if (currentOrder === targetOrder) {
+        console.warn('Categories have same order value, performing fallback re-order');
+        // Fallback: update target with current + 1 or -1
+        const newOrder = direction === 'up' ? Math.max(0, targetOrder - 1) : targetOrder + 1
+        const { error } = await (supabase
+          .from('categories') as any)
+          .update({ order: newOrder })
+          .eq('id', currentCategory.id)
+          .eq('project_id', projectId)
+        if (error) throw error
+      } else {
+        // Normal swap
+        const { error: error1 } = await (supabase
+          .from('categories') as any)
+          .update({ order: targetOrder })
+          .eq('id', currentCategory.id)
+          .eq('project_id', projectId)
+        if (error1) throw error1
 
-      const { error: error2 } = await (supabase.from('categories') as any)
-        .update({ order: currentCategory.order })
-        .eq('id', targetCategory.id)
-      if (error2) throw error2
-
-      // Update local state
-      const newCategories = [...categories]
-      newCategories[index] = targetCategory
-      newCategories[targetIndex] = currentCategory
-      setCategories(newCategories)
+        const { error: error2 } = await (supabase
+          .from('categories') as any)
+          .update({ order: currentOrder })
+          .eq('id', targetCategory.id)
+          .eq('project_id', projectId)
+        if (error2) throw error2
+      }
+      console.log('Category swap successful');
     } catch (err) {
       console.error('Error moving category:', err)
+      alert('Failed to save category order. Reverting...')
+      fetchCategories() // Revert to server state
     }
   }
 
@@ -645,25 +707,26 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div className="min-h-screen bg-slate-50 pb-20 md:pb-0">
+      <header className="bg-white border-b border-slate-200 shadow-sm relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-primary"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
             <div className="min-w-0">
-              <Link to={`/projects/${projectId}`} className="text-sm text-blue-600 hover:underline">
-                ← Back to Project
+              <Link to={`/projects/${projectId}`} className="text-sm font-medium text-primary-600 hover:text-primary-700 mb-2 inline-flex items-center gap-1">
+                ← Back to Project Dashboard
               </Link>
-              <h1 className="text-2xl font-bold text-gray-900 mt-1">Transactions</h1>
+              <h1 className="text-2xl font-bold text-slate-900 mt-1">Transactions</h1>
             </div>
             <div className="flex gap-2 flex-wrap">
               <button onClick={() => setShowSettings(!showSettings)} className="btn btn-secondary text-sm whitespace-nowrap">
-                {showSettings ? 'Close' : 'Settings'}
+                {showSettings ? 'Close Settings' : '⚙️ Settings'}
               </button>
               <button onClick={() => {
                 setEditingTransactionId(null)
                 setShowAddForm(true)
               }} className="btn btn-primary text-sm whitespace-nowrap">
-                Add Transaction
+                + Add Transaction
               </button>
             </div>
           </div>
@@ -672,46 +735,88 @@ export default function TransactionsPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {showSettings && (
-          <div className="grid md:grid-cols-2 gap-6 mb-6">
-            <div className="card">
-              <h2 className="text-lg font-semibold mb-4">Manage Categories</h2>
-              <form onSubmit={handleAddCategory} className="flex gap-2 mb-4">
-                <input type="text" className="input" placeholder="New Category Name" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} required />
+          <div className="grid md:grid-cols-2 gap-6 mb-8 mt-2">
+            <div className="card border-t-4 border-t-primary-500">
+              <h2 className="text-xl font-extrabold text-slate-900 mb-6 flex items-center gap-2">
+                <span className="p-1.5 bg-primary-100 text-primary-600 rounded-lg">🏷️</span>
+                Manage Categories
+              </h2>
+              <form onSubmit={handleAddCategory} className="flex gap-2 mb-6 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <input
+                  type="color"
+                  value={newCategoryColor}
+                  onChange={(e) => setNewCategoryColor(e.target.value)}
+                  className="w-10 h-10 rounded-lg cursor-pointer bg-transparent border-none p-0"
+                  title="Choose new category color"
+                />
+                <input type="text" className="input flex-1" placeholder="New Category Name" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} required />
                 <button type="submit" className="btn btn-primary whitespace-nowrap">Add</button>
               </form>
-              <ul className="space-y-2">
+              <ul className="space-y-3">
                 {categories.map((c, index) => (
-                  <li key={c.id} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded">
+                  <li key={c.id} className="flex justify-between items-center text-sm p-3 bg-slate-50 border border-slate-100 rounded-xl hover:border-primary-100 transition-colors">
                     {editingCategoryId === c.id ? (
-                      <div className="flex-1 flex gap-2">
+                      <div className="flex-1 flex gap-2 items-center">
+                        <input
+                          type="color"
+                          value={editingCategoryColor}
+                          onChange={(e) => setEditingCategoryColor(e.target.value)}
+                          className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-none p-0"
+                          title="Choose category color"
+                        />
                         <input
                           type="text"
-                          className="input py-1 px-2 text-sm"
+                          className="input py-1 px-2 text-sm flex-1"
                           value={editingCategoryName}
                           onChange={(e) => setEditingCategoryName(e.target.value)}
                           autoFocus
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleRenameCategory(c.id, editingCategoryName)
+                            if (e.key === 'Enter') handleUpdateCategory(c.id, { name: editingCategoryName, color: editingCategoryColor })
                             if (e.key === 'Escape') setEditingCategoryId(null)
                           }}
                         />
-                        <button onClick={() => handleRenameCategory(c.id, editingCategoryName)} className="text-blue-600 hover:text-blue-800 font-semibold">Save</button>
-                        <button onClick={() => setEditingCategoryId(null)} className="text-gray-500 hover:text-gray-700">Cancel</button>
+                        <button onClick={() => handleUpdateCategory(c.id, { name: editingCategoryName, color: editingCategoryColor })} className="text-primary-600 hover:text-primary-800 font-bold px-2 py-1 rounded-lg hover:bg-primary-50 transition-colors">Save</button>
+                        <button onClick={() => setEditingCategoryId(null)} className="text-slate-500 hover:text-slate-700 font-medium px-2 py-1 rounded-lg hover:bg-slate-100 transition-colors">Cancel</button>
                       </div>
                     ) : (
                       <>
-                        <div className="flex items-center gap-2">
-                          <span className="w-3 h-3 rounded-full" style={{ backgroundColor: c.color }}></span>
-                          {c.name}
+                        <div className="flex items-center gap-2 group relative">
+                          <input
+                            type="color"
+                            value={c.color}
+                            onInput={(e) => {
+                              const color = (e.target as HTMLInputElement).value;
+                              setCategories(prev => prev.map(item => item.id === c.id ? { ...item, color } : item));
+                            }}
+                            onChange={(e) => {
+                              const val = (e.target as HTMLInputElement).value;
+                              console.log('Category color change triggered:', val);
+                              handleUpdateCategory(c.id, { color: val });
+                            }}
+                            onBlur={(e) => {
+                              const val = (e.target as HTMLInputElement).value;
+                              console.log('Category color blur triggered:', val);
+                              handleUpdateCategory(c.id, { color: val });
+                            }}
+                            className="w-6 h-6 rounded-full cursor-pointer bg-transparent border-2 border-white shadow-sm hover:scale-110 transition-transform p-0"
+                            title="Quick change color"
+                          />
+                          <span className="font-semibold text-slate-700">{c.name}</span>
+                          {isUpdatingCategory === c.id && (
+                            <span className="absolute -left-1 -top-1 w-2 h-2 bg-primary-500 rounded-full animate-ping"></span>
+                          )}
                         </div>
                         <div className="flex items-center gap-2 text-xs">
-                          <button disabled={index === 0} onClick={() => handleMoveCategory(index, 'up')} className="text-gray-500 hover:text-blue-600 disabled:opacity-30">↑</button>
-                          <button disabled={index === categories.length - 1} onClick={() => handleMoveCategory(index, 'down')} className="text-gray-500 hover:text-blue-600 disabled:opacity-30">↓</button>
+                          <div className="flex bg-white rounded-lg border border-slate-100 p-0.5">
+                            <button disabled={index === 0} onClick={() => handleMoveCategory(index, 'up')} className="p-1 text-slate-400 hover:text-primary-600 disabled:opacity-20 transition-colors" title="Move Up">↑</button>
+                            <button disabled={index === categories.length - 1} onClick={() => handleMoveCategory(index, 'down')} className="p-1 text-slate-400 hover:text-primary-600 disabled:opacity-20 transition-colors" title="Move Down">↓</button>
+                          </div>
                           <button onClick={() => {
                             setEditingCategoryId(c.id)
                             setEditingCategoryName(c.name)
-                          }} className="text-blue-500 hover:text-blue-700">Rename</button>
-                          <button onClick={() => handleDeleteCategory(c.id)} className="text-red-500 hover:text-red-700">Delete</button>
+                            setEditingCategoryColor(c.color)
+                          }} className="btn border border-slate-200 bg-white text-slate-600 hover:text-primary-600 hover:border-primary-200 py-1 px-3 text-[10px] uppercase font-bold rounded-lg transition-all">Rename</button>
+                          <button onClick={() => handleDeleteCategory(c.id)} className="btn border border-red-100 bg-white text-red-500 hover:bg-red-50 py-1 px-3 text-[10px] uppercase font-bold rounded-lg transition-all">Delete</button>
                         </div>
                       </>
                     )}
@@ -719,32 +824,35 @@ export default function TransactionsPage() {
                 ))}
               </ul>
             </div>
-            <div className="card" id="manage-custom-fields">
-              <h2 className="text-lg font-semibold mb-4">Manage Custom Fields</h2>
-              <form onSubmit={handleAddField} className="flex flex-col gap-2 mb-4">
+            <div className="card border-t-4 border-t-teal-500" id="manage-custom-fields">
+              <h2 className="text-xl font-extrabold text-slate-900 mb-6 flex items-center gap-2">
+                <span className="p-1.5 bg-teal-100 text-teal-600 rounded-lg">📋</span>
+                Custom Fields
+              </h2>
+              <form onSubmit={handleAddField} className="flex flex-col gap-3 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
                 <div className="flex gap-2">
-                  <input type="text" className="input flex-1" placeholder="Field Name" value={newFieldName} onChange={e => setNewFieldName(e.target.value)} required />
+                  <input type="text" className="input flex-1" placeholder="Field Name (e.g., Note, Tag)" value={newFieldName} onChange={e => setNewFieldName(e.target.value)} required />
                   <select className="input w-32" value={newFieldType} onChange={e => setNewFieldType(e.target.value as any)}>
                     <option value="text">Text</option>
                     <option value="number">Number</option>
                     <option value="date">Date</option>
                     <option value="select">Dropdown</option>
                   </select>
-                  <button type="submit" className="btn btn-primary whitespace-nowrap">Add</button>
                 </div>
                 {newFieldType === 'select' && (
-                  <div className="flex flex-col gap-2 p-3 bg-gray-50 rounded">
-                    <label className="text-sm font-medium text-gray-700">Dropdown Options (one per line)</label>
+                  <div className="flex flex-col gap-2 p-3 bg-white border border-slate-200 rounded-xl">
+                    <label className="text-xs font-bold text-slate-500 uppercase">Dropdown Options (one per line)</label>
                     <textarea
-                      className="input min-h-20 font-mono text-sm"
-                      placeholder="Option 1&#10;Option 2&#10;Option 3"
+                      className="input min-h-20 font-mono text-sm border-transparent focus:border-transparent focus:ring-0 p-0"
+                      placeholder="Enter each option on a new line..."
                       value={newFieldOptions.join('\n')}
                       onChange={(e) => setNewFieldOptions(e.target.value.split('\n'))}
                     />
                   </div>
                 )}
+                <button type="submit" className="btn btn-primary w-full">Add Field</button>
               </form>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {project?.settings?.custom_fields?.map((f, index) => (
                   <div key={f.name} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded">
                     {editingFieldOriginalName === f.name ? (

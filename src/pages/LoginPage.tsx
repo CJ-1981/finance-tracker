@@ -88,16 +88,19 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
-      <div className="max-w-md w-full">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-12 relative overflow-hidden">
+      <div className="absolute top-0 -left-20 w-80 h-80 bg-primary-100/50 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 -right-20 w-80 h-80 bg-secondary-100/50 rounded-full blur-3xl"></div>
+
+      <div className="max-w-md w-full relative z-10">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Finance Tracker</h1>
-          <p className="text-gray-600 mt-2">
-            {isSignUp ? 'Create your account' : 'Sign in to your account'}
+          <h1 className="text-4xl font-black text-slate-900 tracking-tight">Financial <span className="text-primary-600">Tracker</span></h1>
+          <p className="text-slate-500 mt-2 font-medium">
+            {isSignUp ? 'Create your new account' : 'Welcome back! Please sign in'}
           </p>
         </div>
 
-        <div className="card">
+        <div className="card shadow-xl border-t-4 border-t-primary-500">
           {/* Email/Password Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

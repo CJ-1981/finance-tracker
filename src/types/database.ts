@@ -23,6 +23,13 @@ export interface Database {
             currency: string
             date_format: string
             notifications_enabled: boolean
+            custom_fields?: Array<{
+              name: string
+              type: 'text' | 'number' | 'date' | 'select'
+              options?: string[]
+            }>
+            custom_field_values?: Record<string, string[]>
+            default_date_period?: string
           } | null
           created_at: string
           updated_at: string
@@ -91,6 +98,7 @@ export interface Database {
           receipt_url: string | null
           created_by: string
           status: 'pending' | 'approved' | 'rejected'
+          custom_data: Json | null
           created_at: string
           updated_at: string
         }
@@ -105,6 +113,7 @@ export interface Database {
           receipt_url?: string | null
           created_by: string
           status?: 'pending' | 'approved' | 'rejected'
+          custom_data?: Json | null
           created_at?: string
           updated_at?: string
         }
@@ -119,6 +128,7 @@ export interface Database {
           receipt_url?: string | null
           created_by?: string
           status?: 'pending' | 'approved' | 'rejected'
+          custom_data?: Json | null
           created_at?: string
           updated_at?: string
         }
