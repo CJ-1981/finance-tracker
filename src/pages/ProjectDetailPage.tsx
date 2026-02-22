@@ -244,7 +244,7 @@ export default function ProjectDetailPage() {
     setSavingTransaction(true)
     try {
       const supabase = getSupabaseClient()
-      const { error } = await supabase.from('transactions').insert({
+      const { error } = await (supabase.from('transactions') as any).insert({
         project_id: id,
         amount: parseFloat(transactionFormData.amount),
         currency_code: transactionFormData.currency_code,
