@@ -708,7 +708,12 @@ export default function TransactionsPage() {
               </button>
               <button onClick={() => {
                 setEditingTransactionId(null)
-                setFormData({ amount: '', currency_code: 'USD', category_id: '', date: new Date().toISOString().split('T')[0] })
+                setFormData({
+                  amount: '',
+                  currency_code: project?.settings?.currency || 'USD',
+                  category_id: categories.length > 0 ? categories[0].id : '',
+                  date: new Date().toISOString().split('T')[0],
+                })
                 setCustomData({})
                 setShowAddForm(true)
               }} className="btn btn-primary text-sm whitespace-nowrap">
@@ -913,17 +918,17 @@ export default function TransactionsPage() {
         )}
 
         {showAddForm && (
-          <div className="card mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+              <h2 className="text-xl font-bold mb-4">
                 {editingTransactionId ? (
                   selectedTransactions.size > 1 ? (
                     `Edit Transaction ${currentEditIndex + 1} of ${selectedTransactions.size}`
                   ) : 'Edit Transaction'
-                ) : 'Add New Transaction'}
+                ) : 'Add Transaction'}
               </h2>
               {selectedTransactions.size > 1 && editingTransactionId && (
-                <div className="flex gap-2">
+                <div className="flex gap-2 mb-4">
                   <button
                     type="button"
                     onClick={() => handleNavigateEdit('prev')}
@@ -942,132 +947,131 @@ export default function TransactionsPage() {
                   </button>
                 </div>
               )}
-            </div>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-1">
-                  Amount
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    id="amount"
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    inputMode="decimal"
-                    className="input flex-1"
-                    value={formData.amount}
-                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                    required
-                  />
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-1">
+                    Amount
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      id="amount"
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      inputMode="decimal"
+                      className="input flex-1"
+                      value={formData.amount}
+                      onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                      required
+                    />
+                    <select
+                      id="currency_code"
+                      className="input w-24"
+                      value={formData.currency_code}
+                      onChange={(e) => setFormData({ ...formData, currency_code: e.target.value })}
+                    >
+                      <option value="USD">USD</option>
+                      <option value="EUR">EUR</option>
+                      <option value="GBP">GBP</option>
+                      <option value="JPY">JPY</option>
+                      <option value="KRW">KRW</option>
+                      <option value="CNY">CNY</option>
+                      <option value="INR">INR</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+                    Category
+                  </label>
                   <select
-                    id="currency_code"
-                    className="input w-24"
-                    value={formData.currency_code}
-                    onChange={(e) => setFormData({ ...formData, currency_code: e.target.value })}
+                    id="category"
+                    className="input"
+                    value={formData.category_id}
+                    onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                    required
                   >
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                    <option value="GBP">GBP</option>
-                    <option value="JPY">JPY</option>
-                    <option value="KRW">KRW</option>
-                    <option value="CNY">CNY</option>
-                    <option value="INR">INR</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
-              </div>
-              <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-                  Category
-                </label>
-                <select
-                  id="category"
-                  className="input"
-                  value={formData.category_id}
-                  onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                  required
-                >
-                  <option value="">Select a category</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
-                  Date
-                </label>
-                <input
-                  id="date"
-                  type="date"
-                  className="input"
-                  value={formData.date}
-                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  required
-                />
-              </div>
+                <div>
+                  <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
+                    Date
+                  </label>
+                  <input
+                    id="date"
+                    type="date"
+                    className="input"
+                    value={formData.date}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    required
+                  />
+                </div>
 
-              {project?.settings?.custom_fields?.map((field) => (
-                <div key={field.name}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{field.name}</label>
-                  {field.type === 'text' ? (
-                    <>
+                {project?.settings?.custom_fields?.map((field) => (
+                  <div key={field.name}>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{field.name}</label>
+                    {field.type === 'text' ? (
+                      <>
+                        <input
+                          type="text"
+                          list={`custom-field-${field.name}`}
+                          className="input"
+                          value={customData[field.name] || ''}
+                          onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
+                        />
+                        <datalist id={`custom-field-${field.name}`}>
+                          {/* Combine imported values with existing transaction values */}
+                          {Array.from(new Set([
+                            ...(project?.settings?.custom_field_values?.[field.name] || []),
+                            ...transactions.map(t => t.custom_data?.[field.name]).filter(Boolean)
+                          ])).map((value, i) => (
+                            <option key={i} value={value as string} />
+                          ))}
+                        </datalist>
+                      </>
+                    ) : field.type === 'select' ? (
+                      <select
+                        className="input"
+                        value={customData[field.name] || (field.options?.[0] || '')}
+                        onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
+                      >
+                        {field.options?.map((option) => (
+                          <option key={option} value={option}>{option}</option>
+                        ))}
+                      </select>
+                    ) : (
                       <input
-                        type="text"
-                        list={`custom-field-${field.name}`}
+                        type={field.type}
                         className="input"
                         value={customData[field.name] || ''}
                         onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
                       />
-                      <datalist id={`custom-field-${field.name}`}>
-                        {/* Combine imported values with existing transaction values */}
-                        {Array.from(new Set([
-                          ...(project?.settings?.custom_field_values?.[field.name] || []),
-                          ...transactions.map(t => t.custom_data?.[field.name]).filter(Boolean)
-                        ])).map((value, i) => (
-                          <option key={i} value={value as string} />
-                        ))}
-                      </datalist>
-                    </>
-                  ) : field.type === 'select' ? (
-                    <select
-                      className="input"
-                      value={customData[field.name] || (field.options?.[0] || '')}
-                      onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
-                    >
-                      {field.options?.map((option) => (
-                        <option key={option} value={option}>{option}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type={field.type}
-                      className="input"
-                      value={customData[field.name] || ''}
-                      onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
-                    />
-                  )}
-                </div>
-              ))}
+                    )}
+                  </div>
+                ))}
 
-              <div className="flex gap-2">
-                <button type="submit" className="btn btn-primary">
-                  {editingTransactionId ? 'Update Transaction' : 'Save Transaction'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddForm(false)
-                    setEditingTransactionId(null)
-                  }}
-                  className="btn btn-secondary"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddForm(false)
+                      setEditingTransactionId(null)
+                    }}
+                    className="btn btn-secondary flex-1"
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary flex-1">
+                    {editingTransactionId ? 'Update' : 'Add'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
 
