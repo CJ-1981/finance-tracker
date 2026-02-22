@@ -44,7 +44,9 @@ export default function TransactionsPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
   const [sortColumn, setSortColumn] = useState<'date' | 'description' | 'category' | 'amount'>('date')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
-  const [datePeriod, setDatePeriod] = useState<'today' | 'yesterday' | 'last7days' | 'last30days' | 'thisMonth' | 'lastMonth' | 'thisYear' | 'all'>('all')
+  const [datePeriod, setDatePeriod] = useState<'today' | 'yesterday' | 'last7days' | 'last30days' | 'thisMonth' | 'lastMonth' | 'thisYear' | 'all' | 'custom'>('all')
+  const [customStartDate, setCustomStartDate] = useState('')
+  const [customEndDate, setCustomEndDate] = useState('')
 
   useEffect(() => {
     if (projectId) {
@@ -366,6 +368,16 @@ export default function TransactionsPage() {
           const transactionDate = new Date(t.date)
           return transactionDate >= startOfYear && transactionDate <= endOfYear
         })
+        break
+      case 'custom':
+        if (customStartDate && customEndDate) {
+          const start = new Date(customStartDate)
+          const end = new Date(customEndDate)
+          filtered = filtered.filter(t => {
+            const transactionDate = new Date(t.date)
+            return transactionDate >= start && transactionDate <= end
+          })
+        }
         break
       case 'all':
       default:
@@ -1057,6 +1069,7 @@ export default function TransactionsPage() {
                   <option value="thisMonth">This Month</option>
                   <option value="lastMonth">Last Month</option>
                   <option value="thisYear">This Year</option>
+                  <option value="custom">Custom Range</option>
                 </select>
               </div>
 
@@ -1074,6 +1087,30 @@ export default function TransactionsPage() {
                 </select>
               </div>
             </div>
+
+            {/* Custom Date Range Inputs */}
+            {datePeriod === 'custom' && (
+              <div className="flex flex-col sm:flex-row gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                  <input
+                    type="date"
+                    className="input"
+                    value={customStartDate}
+                    onChange={(e) => setCustomStartDate(e.target.value)}
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                  <input
+                    type="date"
+                    className="input"
+                    value={customEndDate}
+                    onChange={(e) => setCustomEndDate(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Multi-select and Action Bar */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
