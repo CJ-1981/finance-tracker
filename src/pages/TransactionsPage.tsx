@@ -37,6 +37,13 @@ export default function TransactionsPage() {
   const [importedFieldValues, setImportedFieldValues] = useState<Record<string, string[]>>({})
   const [selectedTransactions, setSelectedTransactions] = useState<Set<string>>(new Set())
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false)
+  const [currentEditIndex, setCurrentEditIndex] = useState(0)
+
+  // Filter, search, sort states
+  const [searchQuery, setSearchQuery] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState<string>('all')
+  const [sortColumn, setSortColumn] = useState<'date' | 'description' | 'category' | 'amount'>('date')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
 
   useEffect(() => {
     if (projectId) {
@@ -258,6 +265,98 @@ export default function TransactionsPage() {
       fetchTransactions()
     } catch (error) {
       console.error('Error deleting transactions:', error)
+    }
+  }
+
+  // Fix: Clear selection when canceling multi-select mode
+  const handleCancelMultiSelect = () => {
+    setSelectedTransactions(new Set())
+    setIsMultiSelectMode(false)
+  }
+
+  // Multi-edit navigation
+  const handleMultiEdit = () => {
+    if (selectedTransactions.size === 0) return
+    setCurrentEditIndex(0)
+    const firstId = Array.from(selectedTransactions)[0]
+    const transaction = transactions.find(t => t.id === firstId)
+    if (transaction) {
+      handleEdit(transaction)
+    }
+  }
+
+  const handleNavigateEdit = (direction: 'prev' | 'next') => {
+    const selectedIds = Array.from(selectedTransactions)
+    if (direction === 'prev' && currentEditIndex > 0) {
+      const newIndex = currentEditIndex - 1
+      setCurrentEditIndex(newIndex)
+      const transaction = transactions.find(t => t.id === selectedIds[newIndex])
+      if (transaction) {
+        handleEdit(transaction)
+      }
+    } else if (direction === 'next' && currentEditIndex < selectedIds.length - 1) {
+      const newIndex = currentEditIndex + 1
+      setCurrentEditIndex(newIndex)
+      const transaction = transactions.find(t => t.id === selectedIds[newIndex])
+      if (transaction) {
+        handleEdit(transaction)
+      }
+    }
+  }
+
+  // Get filtered and sorted transactions
+  const getFilteredAndSortedTransactions = () => {
+    let filtered = [...transactions]
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(t =>
+        t.description?.toLowerCase().includes(query) ||
+        t.custom_data && Object.values(t.custom_data).some(v =>
+          String(v).toLowerCase().includes(query)
+        )
+      )
+    }
+
+    // Apply category filter
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(t => t.category_id === categoryFilter)
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let comparison = 0
+
+      switch (sortColumn) {
+        case 'date':
+          comparison = new Date(a.date).getTime() - new Date(b.date).getTime()
+          break
+        case 'description':
+          comparison = (a.description || '').localeCompare(b.description || '')
+          break
+        case 'category':
+          const catA = getCategoryName(a.category_id)
+          const catB = getCategoryName(b.category_id)
+          comparison = catA.localeCompare(catB)
+          break
+        case 'amount':
+          comparison = a.amount - b.amount
+          break
+      }
+
+      return sortDirection === 'asc' ? comparison : -comparison
+    })
+
+    return filtered
+  }
+
+  const handleSort = (column: typeof sortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortColumn(column)
+      setSortDirection('desc')
     }
   }
 
@@ -690,7 +789,35 @@ export default function TransactionsPage() {
 
         {showAddForm && (
           <div className="card mb-6">
-            <h2 className="text-lg font-semibold mb-4">{editingTransactionId ? 'Edit Transaction' : 'Add New Transaction'}</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold">
+                {editingTransactionId ? (
+                  selectedTransactions.size > 1 ? (
+                    `Edit Transaction ${currentEditIndex + 1} of ${selectedTransactions.size}`
+                  ) : 'Edit Transaction'
+                ) : 'Add New Transaction'}
+              </h2>
+              {selectedTransactions.size > 1 && editingTransactionId && (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleNavigateEdit('prev')}
+                    disabled={currentEditIndex === 0}
+                    className="px-3 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    ← Previous
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleNavigateEdit('next')}
+                    disabled={currentEditIndex >= selectedTransactions.size - 1}
+                    className="px-3 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next →
+                  </button>
+                </div>
+              )}
+            </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-1">
@@ -837,27 +964,64 @@ export default function TransactionsPage() {
           </div>
         ) : (
           <div className="card">
+            {/* Filter and Search Bar */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-4">
+              {/* Search */}
+              <div className="flex-1">
+                <input
+                  type="text"
+                  placeholder="Search transactions..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="input w-full"
+                />
+              </div>
+
+              {/* Category Filter */}
+              <div className="sm:w-48">
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="input w-full"
+                >
+                  <option value="all">All Categories</option>
+                  {categories.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Multi-select and Action Bar */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-              <div className="flex items-center gap-4">
-                <h2 className="text-lg font-semibold">Transactions ({transactions.length})</h2>
+              <div className="flex items-center gap-4 flex-wrap">
+                <h2 className="text-lg font-semibold">
+                  Transactions ({getFilteredAndSortedTransactions().length}/{transactions.length})
+                </h2>
                 <button
-                  onClick={() => setIsMultiSelectMode(!isMultiSelectMode)}
+                  onClick={isMultiSelectMode ? handleCancelMultiSelect : () => setIsMultiSelectMode(true)}
                   className={`text-sm px-3 py-1 rounded ${isMultiSelectMode ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`}
                 >
-                  {isMultiSelectMode ? 'Cancel Selection' : 'Select'}
+                  {isMultiSelectMode ? 'Cancel' : 'Select'}
                 </button>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 {isMultiSelectMode ? (
                   <>
                     {selectedTransactions.size > 0 && (
                       <>
                         <span className="text-sm text-gray-600 py-1">{selectedTransactions.size} selected</span>
                         <button
-                          onClick={handleBulkDelete}
-                          className="btn bg-red-600 hover:bg-red-700 text-white text-sm"
+                          onClick={handleMultiEdit}
+                          className="btn btn-primary text-sm whitespace-nowrap"
                         >
-                          Delete Selected
+                          Edit Selected
+                        </button>
+                        <button
+                          onClick={handleBulkDelete}
+                          className="btn bg-red-600 hover:bg-red-700 text-white text-sm whitespace-nowrap"
+                        >
+                          Delete
                         </button>
                       </>
                     )}
@@ -866,16 +1030,17 @@ export default function TransactionsPage() {
                   <button
                     onClick={() => {
                       if (project) {
-                        exportToCSV({ transactions, project, categories })
+                        exportToCSV({ transactions: getFilteredAndSortedTransactions(), project, categories })
                       }
                     }}
-                    className="btn btn-secondary text-sm"
+                    className="btn btn-secondary text-sm whitespace-nowrap"
                   >
                     Export CSV
                   </button>
                 )}
               </div>
             </div>
+
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -884,30 +1049,50 @@ export default function TransactionsPage() {
                       <th className="text-center py-3 px-4 w-12">
                         <input
                           type="checkbox"
-                          checked={selectedTransactions.size === transactions.length && transactions.length > 0}
+                          checked={selectedTransactions.size === getFilteredAndSortedTransactions().length && getFilteredAndSortedTransactions().length > 0}
                           onChange={handleSelectAll}
                           className="w-4 h-4 text-blue-600 rounded"
                         />
                       </th>
                     )}
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Date</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Description</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Category</th>
+                    <th
+                      className="text-left py-3 px-4 text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort('date')}
+                    >
+                      Date {sortColumn === 'date' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    </th>
+                    <th
+                      className="text-left py-3 px-4 text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort('description')}
+                    >
+                      Description {sortColumn === 'description' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    </th>
+                    <th
+                      className="text-left py-3 px-4 text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort('category')}
+                    >
+                      Category {sortColumn === 'category' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    </th>
                     {project?.settings?.custom_fields?.map((field: any) => (
                       <th key={field.name} className="text-left py-3 px-4 text-sm font-semibold text-gray-900">{field.name}</th>
                     ))}
                     <th className="text-right py-3 px-4 text-sm font-semibold text-gray-900">Currency</th>
-                    <th className="text-right py-3 px-4 text-sm font-semibold text-gray-900">Amount</th>
+                    <th
+                      className="text-right py-3 px-4 text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort('amount')}
+                    >
+                      Amount {sortColumn === 'amount' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    </th>
                     {!isMultiSelectMode && (
                       <th className="text-right py-3 px-4 text-sm font-semibold text-gray-900">Actions</th>
                     )}
                   </tr>
                 </thead>
                 <tbody>
-                  {transactions.map((transaction) => (
+                  {getFilteredAndSortedTransactions().map((transaction) => (
                     <tr
                       key={transaction.id}
-                      className={`border-b border-gray-100 hover:bg-gray-50 ${selectedTransactions.has(transaction.id) ? 'bg-blue-50' : ''}`}
+                      className={`border-b border-gray-100 hover:bg-gray-50 ${isMultiSelectMode && selectedTransactions.has(transaction.id) ? 'bg-blue-50' : ''}`}
                     >
                       {isMultiSelectMode && (
                         <td className="text-center py-3 px-4">
