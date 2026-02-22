@@ -562,7 +562,7 @@ export default function ProjectDetailPage() {
             </div>
             <div className="card">
               <div className="text-sm text-gray-600">Transactions</div>
-              <div className="text-2xl font-bold text-gray-900">{transactions.length}</div>
+              <div className="text-2xl font-bold text-gray-900">{filteredTransactions.length}</div>
             </div>
             <div className="card">
               <div className="text-sm text-gray-600">Avg Transaction</div>
@@ -573,7 +573,7 @@ export default function ProjectDetailPage() {
           </div>
 
           {/* Chart */}
-          {transactions.length > 0 && (
+          {filteredTransactions.length > 0 && (
             <div className="lg:col-span-2 card">
               <h2 className="text-lg font-semibold mb-4">Spending by Category</h2>
               <div className="h-64">
