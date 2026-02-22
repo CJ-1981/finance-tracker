@@ -660,74 +660,76 @@ export default function ProjectDetailPage() {
                 )}
               </div>
 
-              <div className="lg:col-span-3 card">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-semibold">Amount Over Time by Category</h2>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setChartMode('cumulative')}
-                      className={`px-3 py-1 text-sm rounded transition-colors ${
-                        chartMode === 'cumulative'
-                          ? 'bg-blue-100 text-blue-700 font-medium'
-                          : 'text-gray-600 hover:bg-gray-100'
-                      }`}
-                    >
-                      Cumulative
-                    </button>
-                    <button
-                      onClick={() => setChartMode('absolute')}
-                      className={`px-3 py-1 text-sm rounded transition-colors ${
-                        chartMode === 'absolute'
-                          ? 'bg-blue-100 text-blue-700 font-medium'
-                          : 'text-gray-600 hover:bg-gray-100'
-                      }`}
-                    >
-                      Absolute
-                    </button>
+              {datePeriod !== 'today' && (
+                <div className="lg:col-span-3 card">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-lg font-semibold">Amount Over Time by Category</h2>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setChartMode('cumulative')}
+                        className={`px-3 py-1 text-sm rounded transition-colors ${
+                          chartMode === 'cumulative'
+                            ? 'bg-blue-100 text-blue-700 font-medium'
+                            : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                      >
+                        Cumulative
+                      </button>
+                      <button
+                        onClick={() => setChartMode('absolute')}
+                        className={`px-3 py-1 text-sm rounded transition-colors ${
+                          chartMode === 'absolute'
+                            ? 'bg-blue-100 text-blue-700 font-medium'
+                            : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                      >
+                        Absolute
+                      </button>
+                    </div>
+                  </div>
+                  <div className="h-64">
+                    <Line
+                      data={getAreaChartData()}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                          legend: {
+                            position: 'top' as const,
+                          },
+                          tooltip: {
+                            mode: 'index' as const,
+                            intersect: false,
+                          },
+                        },
+                        scales: {
+                          x: {
+                            stacked: true,
+                            title: {
+                              display: true,
+                              text: 'Date',
+                            },
+                          },
+                          y: {
+                            stacked: true,
+                            title: {
+                              display: true,
+                              text: chartMode === 'cumulative' ? 'Cumulative Amount' : 'Amount',
+                            },
+                            beginAtZero: true,
+                          },
+                        },
+                        elements: {
+                          point: {
+                            radius: 0,
+                            hitRadius: 10,
+                          },
+                        },
+                      }}
+                    />
                   </div>
                 </div>
-                <div className="h-64">
-                  <Line
-                    data={getAreaChartData()}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          position: 'top' as const,
-                        },
-                        tooltip: {
-                          mode: 'index' as const,
-                          intersect: false,
-                        },
-                      },
-                      scales: {
-                        x: {
-                          stacked: true,
-                          title: {
-                            display: true,
-                            text: 'Date',
-                          },
-                        },
-                        y: {
-                          stacked: true,
-                          title: {
-                            display: true,
-                            text: 'Cumulative Amount',
-                          },
-                          beginAtZero: true,
-                        },
-                      },
-                      elements: {
-                        point: {
-                          radius: 0,
-                          hitRadius: 10,
-                        },
-                      },
-                    }}
-                  />
-                </div>
-              </div>
+              )}
             </>
           )}
         </div>
