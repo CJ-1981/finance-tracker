@@ -261,7 +261,7 @@ export default function ProjectDetailPage() {
       setTransactionFormData({
         amount: '',
         currency_code: 'USD',
-        category_id: '',
+        category_id: categories.length > 0 ? categories[0].id : '',
         date: new Date().toISOString().split('T')[0],
       })
       setTransactionCustomData({})
@@ -281,7 +281,7 @@ export default function ProjectDetailPage() {
     setTransactionFormData({
       amount: '',
       currency_code: project?.settings?.currency || 'USD',
-      category_id: '',
+      category_id: categories.length > 0 ? categories[0].id : '',
       date: new Date().toISOString().split('T')[0],
     })
     setTransactionCustomData({})

@@ -20,6 +20,13 @@ export default function TransactionsPage() {
     date: new Date().toISOString().split('T')[0],
   })
 
+  // Update category_id when categories are loaded
+  useEffect(() => {
+    if (categories.length > 0 && !formData.category_id) {
+      setFormData(prev => ({ ...prev, category_id: categories[0].id }))
+    }
+  }, [categories])
+
   const [customData, setCustomData] = useState<Record<string, string>>({})
   const [showSettings, setShowSettings] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
