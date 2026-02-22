@@ -653,11 +653,6 @@ export default function ProjectDetailPage() {
                     </div>
                   )}
                 </div>
-                {filteredTransactions.length > 5 && (
-                  <Link to={`/transactions/${id}`} className="block mt-4 text-center text-sm text-blue-600">
-                    View all transactions →
-                  </Link>
-                )}
               </div>
 
               {datePeriod !== 'today' && (
