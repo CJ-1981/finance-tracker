@@ -35,6 +35,8 @@ export default function TransactionsPage() {
   const [importFieldName, setImportFieldName] = useState('')
   const [importValues, setImportValues] = useState('')
   const [importedFieldValues, setImportedFieldValues] = useState<Record<string, string[]>>({})
+  const [selectedTransactions, setSelectedTransactions] = useState<Set<string>>(new Set())
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false)
 
   useEffect(() => {
     if (projectId) {
@@ -215,6 +217,47 @@ export default function TransactionsPage() {
       fetchTransactions()
     } catch (error) {
       console.error('Error deleting transaction:', error)
+    }
+  }
+
+  const handleToggleSelect = (transactionId: string) => {
+    const newSelected = new Set(selectedTransactions)
+    if (newSelected.has(transactionId)) {
+      newSelected.delete(transactionId)
+    } else {
+      newSelected.add(transactionId)
+    }
+    setSelectedTransactions(newSelected)
+  }
+
+  const handleSelectAll = () => {
+    if (selectedTransactions.size === transactions.length) {
+      setSelectedTransactions(new Set())
+    } else {
+      setSelectedTransactions(new Set(transactions.map(t => t.id)))
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    if (selectedTransactions.size === 0) return
+
+    if (!confirm(`Are you sure you want to delete ${selectedTransactions.size} selected transaction(s)?`)) {
+      return
+    }
+
+    try {
+      const supabase = getSupabaseClient()
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .in('id', Array.from(selectedTransactions))
+
+      if (error) throw error
+      setSelectedTransactions(new Set())
+      setIsMultiSelectMode(false)
+      fetchTransactions()
+    } catch (error) {
+      console.error('Error deleting transactions:', error)
     }
   }
 
@@ -794,23 +837,59 @@ export default function TransactionsPage() {
           </div>
         ) : (
           <div className="card">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Transactions ({transactions.length})</h2>
-              <button
-                onClick={() => {
-                  if (project) {
-                    exportToCSV({ transactions, project, categories })
-                  }
-                }}
-                className="btn btn-secondary"
-              >
-                Export CSV
-              </button>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+              <div className="flex items-center gap-4">
+                <h2 className="text-lg font-semibold">Transactions ({transactions.length})</h2>
+                <button
+                  onClick={() => setIsMultiSelectMode(!isMultiSelectMode)}
+                  className={`text-sm px-3 py-1 rounded ${isMultiSelectMode ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`}
+                >
+                  {isMultiSelectMode ? 'Cancel Selection' : 'Select'}
+                </button>
+              </div>
+              <div className="flex gap-2">
+                {isMultiSelectMode ? (
+                  <>
+                    {selectedTransactions.size > 0 && (
+                      <>
+                        <span className="text-sm text-gray-600 py-1">{selectedTransactions.size} selected</span>
+                        <button
+                          onClick={handleBulkDelete}
+                          className="btn bg-red-600 hover:bg-red-700 text-white text-sm"
+                        >
+                          Delete Selected
+                        </button>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <button
+                    onClick={() => {
+                      if (project) {
+                        exportToCSV({ transactions, project, categories })
+                      }
+                    }}
+                    className="btn btn-secondary text-sm"
+                  >
+                    Export CSV
+                  </button>
+                )}
+              </div>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
+                    {isMultiSelectMode && (
+                      <th className="text-center py-3 px-4 w-12">
+                        <input
+                          type="checkbox"
+                          checked={selectedTransactions.size === transactions.length && transactions.length > 0}
+                          onChange={handleSelectAll}
+                          className="w-4 h-4 text-blue-600 rounded"
+                        />
+                      </th>
+                    )}
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Date</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Description</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Category</th>
@@ -819,12 +898,27 @@ export default function TransactionsPage() {
                     ))}
                     <th className="text-right py-3 px-4 text-sm font-semibold text-gray-900">Currency</th>
                     <th className="text-right py-3 px-4 text-sm font-semibold text-gray-900">Amount</th>
-                    <th className="text-right py-3 px-4 text-sm font-semibold text-gray-900">Actions</th>
+                    {!isMultiSelectMode && (
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-gray-900">Actions</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
                   {transactions.map((transaction) => (
-                    <tr key={transaction.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <tr
+                      key={transaction.id}
+                      className={`border-b border-gray-100 hover:bg-gray-50 ${selectedTransactions.has(transaction.id) ? 'bg-blue-50' : ''}`}
+                    >
+                      {isMultiSelectMode && (
+                        <td className="text-center py-3 px-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedTransactions.has(transaction.id)}
+                            onChange={() => handleToggleSelect(transaction.id)}
+                            className="w-4 h-4 text-blue-600 rounded"
+                          />
+                        </td>
+                      )}
                       <td className="py-3 px-4 text-sm text-gray-900">{transaction.date}</td>
                       <td className="py-3 px-4 text-sm text-gray-900">{transaction.description}</td>
                       <td className="py-3 px-4 text-sm text-gray-600">
@@ -841,20 +935,22 @@ export default function TransactionsPage() {
                       <td className="py-3 px-4 text-sm text-right font-semibold text-gray-900">
                         {transaction.amount.toFixed(2)}
                       </td>
-                      <td className="py-3 px-4 text-right">
-                        <button
-                          onClick={() => handleEdit(transaction)}
-                          className="text-sm text-blue-600 hover:text-blue-800 mr-3"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(transaction.id)}
-                          className="text-sm text-red-600 hover:text-red-800"
-                        >
-                          Delete
-                        </button>
-                      </td>
+                      {!isMultiSelectMode && (
+                        <td className="py-3 px-4 text-right">
+                          <button
+                            onClick={() => handleEdit(transaction)}
+                            className="text-sm text-blue-600 hover:text-blue-800 mr-3"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(transaction.id)}
+                            className="text-sm text-red-600 hover:text-red-800"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
