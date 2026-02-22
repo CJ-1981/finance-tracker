@@ -9,7 +9,7 @@ interface ExportOptions {
 
 export function exportToCSV({ transactions, project, categories }: ExportOptions) {
   // Build headers dynamically based on project settings
-  const headers: string[] = ['Date', 'Description', 'Category']
+  const headers: string[] = ['Date', 'Category']
 
   // Add custom field headers
   const customFields = project.settings?.custom_fields || []
@@ -24,7 +24,6 @@ export function exportToCSV({ transactions, project, categories }: ExportOptions
   const csvData = transactions.map((t) => {
     const row: Record<string, string> = {
       Date: t.date,
-      Description: t.description || '',
       Category: categories.find(c => c.id === t.category_id)?.name || 'Uncategorized',
     }
 

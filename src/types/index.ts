@@ -52,7 +52,6 @@ export interface Transaction {
   amount: number
   currency_code: string
   category_id: string
-  description?: string
   date: string
   receipt_url?: string
   created_by: string

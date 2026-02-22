@@ -17,7 +17,6 @@ export default function TransactionsPage() {
     amount: '',
     currency_code: 'USD',
     category_id: '',
-    description: '',
     date: new Date().toISOString().split('T')[0],
   })
 
@@ -42,7 +41,7 @@ export default function TransactionsPage() {
   // Filter, search, sort states
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
-  const [sortColumn, setSortColumn] = useState<'date' | 'description' | 'category' | 'amount'>('date')
+  const [sortColumn, setSortColumn] = useState<'date' | 'category' | 'amount'>('date')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
   const [datePeriod, setDatePeriod] = useState<'today' | 'yesterday' | 'last7days' | 'last30days' | 'thisMonth' | 'lastMonth' | 'thisYear' | 'all' | 'custom'>('all')
   const [customStartDate, setCustomStartDate] = useState('')
@@ -157,7 +156,6 @@ export default function TransactionsPage() {
             amount: parseFloat(formData.amount),
             currency_code: formData.currency_code,
             category_id: formData.category_id,
-            description: formData.description,
             date: formData.date,
             custom_data: customData,
           })
@@ -172,7 +170,6 @@ export default function TransactionsPage() {
             amount: parseFloat(formData.amount),
             currency_code: formData.currency_code,
             category_id: formData.category_id,
-            description: formData.description,
             date: formData.date,
             created_by: user.id,
             custom_data: customData,
@@ -185,7 +182,6 @@ export default function TransactionsPage() {
         amount: '',
         currency_code: 'USD',
         category_id: '',
-        description: '',
         date: new Date().toISOString().split('T')[0],
       })
       setCustomData({})
@@ -203,7 +199,6 @@ export default function TransactionsPage() {
       amount: transaction.amount.toString(),
       currency_code: transaction.currency_code || 'USD',
       category_id: transaction.category_id || '',
-      description: transaction.description || '',
       date: transaction.date || new Date().toISOString().split('T')[0],
     })
     setCustomData(transaction.custom_data || {})
@@ -389,7 +384,6 @@ export default function TransactionsPage() {
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
       filtered = filtered.filter(t =>
-        t.description?.toLowerCase().includes(query) ||
         t.custom_data && Object.values(t.custom_data).some(v =>
           String(v).toLowerCase().includes(query)
         )
@@ -408,9 +402,6 @@ export default function TransactionsPage() {
       switch (sortColumn) {
         case 'date':
           comparison = new Date(a.date).getTime() - new Date(b.date).getTime()
-          break
-        case 'description':
-          comparison = (a.description || '').localeCompare(b.description || '')
           break
         case 'category':
           const catA = getCategoryName(a.category_id)
@@ -694,7 +685,7 @@ export default function TransactionsPage() {
               </button>
               <button onClick={() => {
                 setEditingTransactionId(null)
-                setFormData({ amount: '', currency_code: 'USD', category_id: '', description: '', date: new Date().toISOString().split('T')[0] })
+                setFormData({ amount: '', currency_code: 'USD', category_id: '', date: new Date().toISOString().split('T')[0] })
                 setCustomData({})
                 setShowAddForm(true)
               }} className="btn btn-primary text-sm whitespace-nowrap">
@@ -948,24 +939,6 @@ export default function TransactionsPage() {
                 </select>
               </div>
               <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
-                <input
-                  id="description"
-                  type="text"
-                  list="description-options"
-                  className="input"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-                <datalist id="description-options">
-                  {Array.from(new Set(transactions.map(t => t.description))).filter(Boolean).map((desc, i) => (
-                    <option key={i} value={desc} />
-                  ))}
-                </datalist>
-              </div>
-              <div>
                 <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
                   Date
                 </label>
@@ -1183,12 +1156,6 @@ export default function TransactionsPage() {
                     </th>
                     <th
                       className="text-left py-3 px-4 text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSort('description')}
-                    >
-                      Description {sortColumn === 'description' && (sortDirection === 'asc' ? '↑' : '↓')}
-                    </th>
-                    <th
-                      className="text-left py-3 px-4 text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
                       onClick={() => handleSort('category')}
                     >
                       Category {sortColumn === 'category' && (sortDirection === 'asc' ? '↑' : '↓')}
@@ -1225,7 +1192,6 @@ export default function TransactionsPage() {
                         </td>
                       )}
                       <td className="py-3 px-4 text-sm text-gray-900">{transaction.date}</td>
-                      <td className="py-3 px-4 text-sm text-gray-900">{transaction.description}</td>
                       <td className="py-3 px-4 text-sm text-gray-600">
                         {getCategoryName(transaction.category_id)}
                       </td>

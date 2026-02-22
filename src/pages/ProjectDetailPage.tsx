@@ -31,7 +31,6 @@ export default function ProjectDetailPage() {
     amount: '',
     currency_code: 'USD',
     category_id: '',
-    description: '',
     date: new Date().toISOString().split('T')[0],
   })
   const [transactionCustomData, setTransactionCustomData] = useState<Record<string, string>>({})
@@ -250,7 +249,6 @@ export default function ProjectDetailPage() {
         amount: parseFloat(transactionFormData.amount),
         currency_code: transactionFormData.currency_code,
         category_id: transactionFormData.category_id || null,
-        description: transactionFormData.description,
         date: transactionFormData.date,
         custom_data: transactionCustomData,
         created_by: user?.id,
@@ -263,7 +261,6 @@ export default function ProjectDetailPage() {
         amount: '',
         currency_code: 'USD',
         category_id: '',
-        description: '',
         date: new Date().toISOString().split('T')[0],
       })
       setTransactionCustomData({})
@@ -284,7 +281,6 @@ export default function ProjectDetailPage() {
       amount: '',
       currency_code: project?.settings?.currency || 'USD',
       category_id: '',
-      description: '',
       date: new Date().toISOString().split('T')[0],
     })
     setTransactionCustomData({})
@@ -594,7 +590,6 @@ export default function ProjectDetailPage() {
               {filteredTransactions.slice(0, 5).map((transaction) => (
                 <Link key={transaction.id} to={`/transactions/${id}`} className="flex justify-between items-start p-2 -mx-2 hover:bg-gray-50 rounded transition-colors group cursor-pointer block">
                   <div className="flex-1">
-                    <div className="font-medium text-gray-900 group-hover:text-blue-600">{transaction.description}</div>
                     <div className="text-sm text-gray-600">{getCategoryName(transaction.category_id)}</div>
                   </div>
                   <div className="text-right">
@@ -669,21 +664,6 @@ export default function ProjectDetailPage() {
                   className="input"
                   value={transactionFormData.date}
                   onChange={(e) => setTransactionFormData({ ...transactionFormData, date: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div>
-                <label htmlFor="t-description" className="block text-sm font-medium text-gray-700 mb-1">
-                  Description *
-                </label>
-                <input
-                  id="t-description"
-                  type="text"
-                  className="input"
-                  placeholder="Enter description"
-                  value={transactionFormData.description}
-                  onChange={(e) => setTransactionFormData({ ...transactionFormData, description: e.target.value })}
                   required
                 />
               </div>

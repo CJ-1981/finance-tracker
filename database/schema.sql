@@ -54,7 +54,6 @@ CREATE TABLE IF NOT EXISTS public.transactions (
   amount DECIMAL(15,2) NOT NULL,
   currency_code TEXT DEFAULT 'USD',
   category_id UUID REFERENCES public.categories(id) ON DELETE SET NULL,
-  description TEXT,
   date DATE NOT NULL,
   receipt_url TEXT,
   created_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
