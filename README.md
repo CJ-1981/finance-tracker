@@ -70,7 +70,20 @@ npm run dev
 
 4. Open [http://localhost:5173/](http://localhost:5173/) in your browser
 
-5. Sign up with email and password
+5. **Important - Disable email confirmation (recommended for personal use):**
+   - Go to your Supabase project dashboard
+   - Navigate to **Authentication → Providers**
+   - Click on **Email** provider
+   - Under **Email confirmation**, turn off **Enable email confirmation**
+   - Click **Save**
+
+   Without this, users will need to confirm their email before signing in (which may not work depending on your email provider).
+
+6. Sign up with email and password:
+   - Click **"Don't have an account? Sign Up"** toggle
+   - Enter your email and password
+   - Click **Sign Up**
+   - You'll be automatically signed in
 
 ### Building for Production
 

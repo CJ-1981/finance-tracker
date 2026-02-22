@@ -59,11 +59,19 @@ export default function LoginPage() {
 
         if (error) throw error
 
-        if (data.user && !data.session) {
+        // If email confirmation is disabled, user is signed in automatically
+        if (data.session) {
+          // User is automatically signed in
+          setTimeout(() => {
+            if (inviteToken) {
+              navigate(`/invite?token=${inviteToken}`)
+            } else {
+              navigate('/projects')
+            }
+          }, 100)
+        } else if (data.user && !data.session) {
           // Email confirmation required
-          setError('Please check your email for a confirmation link.')
-        } else {
-          setError('Account created! You can now sign in.')
+          setError('Please check your email for a confirmation link. After confirming, you can sign in.')
           setIsSignUp(false)
         }
       } else {
@@ -85,7 +93,15 @@ export default function LoginPage() {
         }, 100)
       }
     } catch (err: any) {
-      setError(err.message || 'Authentication failed')
+      const errorMessage = err.message || 'Authentication failed'
+      // Provide more helpful error messages
+      if (errorMessage.includes('Invalid login credentials')) {
+        setError('Invalid email or password. If you just created an account, please try signing in.')
+      } else if (errorMessage.includes('User already registered')) {
+        setError('An account with this email already exists. Please sign in instead.')
+      } else {
+        setError(errorMessage)
+      }
     } finally {
       setLoading(false)
     }
