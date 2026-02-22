@@ -106,6 +106,7 @@ export default function ConfigPage() {
   }
 
   const handleResetConfig = () => {
+    // Only clear localStorage configuration, not the Supabase database
     localStorage.removeItem('supabase_config')
     setConfig({ url: '', anonKey: '' })
     setMode('configure')
@@ -251,7 +252,7 @@ export default function ConfigPage() {
                 {signingIn ? 'Signing in...' : 'Sign In'}
               </button>
 
-              <div className="pt-4 border-t border-gray-200 space-y-3">
+              <div className="pt-4 border-t border-gray-200 space-y-4">
                 <button
                   type="button"
                   onClick={handleReconfigure}
@@ -259,19 +260,20 @@ export default function ConfigPage() {
                 >
                   Edit Configuration
                 </button>
-                <button
-                  type="button"
-                  onClick={handleResetConfig}
-                  className="w-full btn btn-secondary text-sm text-red-600 hover:text-red-700"
-                >
-                  Reset & Clear Configuration
-                </button>
-                <p className="text-center text-sm text-gray-500">
-                  Don't have an account?{' '}
-                  <a href="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
-                    Sign up
-                  </a>
-                </p>
+
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={handleResetConfig}
+                    className="w-full btn btn-secondary text-sm text-red-600 hover:text-red-700"
+                  >
+                    Clear App Configuration
+                  </button>
+                  <p className="text-xs text-gray-500 text-center px-2">
+                    This will only remove your Supabase URL and key from this browser.
+                    Your data in Supabase will NOT be affected.
+                  </p>
+                </div>
               </div>
             </form>
           )}
@@ -283,7 +285,7 @@ export default function ConfigPage() {
                 <p className="font-semibold text-gray-900">{user?.email}</p>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <button
                   onClick={() => navigate('/projects')}
                   className="w-full btn btn-primary"
@@ -305,12 +307,19 @@ export default function ConfigPage() {
                 >
                   Sign Out
                 </button>
-                <button
-                  onClick={handleResetConfig}
-                  className="w-full btn btn-secondary text-red-600 hover:text-red-700"
-                >
-                  Reset & Clear Configuration
-                </button>
+
+                <div className="space-y-2">
+                  <button
+                    onClick={handleResetConfig}
+                    className="w-full btn btn-secondary text-red-600 hover:text-red-700"
+                  >
+                    Clear App Configuration
+                  </button>
+                  <p className="text-xs text-gray-500 text-center px-2">
+                    This will only remove your Supabase URL and key from this browser.
+                    Your data in Supabase will NOT be affected.
+                  </p>
+                </div>
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
