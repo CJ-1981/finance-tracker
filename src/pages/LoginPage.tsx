@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 export default function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const [isSignUp, setIsSignUp] = useState(false)
+  const [isSignUp, setIsSignUp] = useState(location.state?.isSignUp || false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -12,6 +12,13 @@ export default function LoginPage() {
 
   // Check if user was redirected from invite page
   const inviteToken = location.state?.inviteToken
+
+  useEffect(() => {
+    // Update sign up mode when location state changes
+    if (location.state?.isSignUp !== undefined) {
+      setIsSignUp(location.state.isSignUp)
+    }
+  }, [location.state])
 
   useEffect(() => {
     // If user is already logged in and has invite token, redirect to invite

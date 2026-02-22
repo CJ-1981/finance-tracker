@@ -2,15 +2,22 @@
 
 A collaborative financial tracking web application built with React, TypeScript, and Supabase.
 
+**Live Demo:** [https://cj-1981.github.io/finance-tracker/](https://cj-1981.github.io/finance-tracker/)
+
 ## Features
 
 - **Email/Password Authentication** - Sign up and sign in with email
+- **Landing page** - Welcome screen with sign in/sign up buttons
 - **Project-based financial tracking** - Organize finances by project
 - **Date period filtering** - View analytics by today, custom ranges, all-time
 - **Interactive dashboard with charts** - Visual spending breakdown by category
-- **Multi-currency support** - Track transactions in USD, EUR, KRW, and more
-- **Custom fields** - Add custom text/number/date fields per project
+  - Pie chart for amount by category
+  - Area plot for amount over time by category (cumulative/absolute toggle)
+  - Hides time-based charts for single-day views
+- **Multi-currency support** - Track transactions in USD, EUR, GBP, JPY, KRW, CNY, INR
+- **Custom fields** - Add custom text/number/date/select fields per project
 - **Custom field autocomplete** - Import known values for faster data entry
+- **Dropdown list support** - Create select fields with predefined options
 - **Category management** - Create, rename, reorder categories with color coding
 - **CSV export** - Export transactions matching table structure
 - **Multi-user collaboration** - Invite members with role-based access (owner, member, viewer)
@@ -25,6 +32,7 @@ A collaborative financial tracking web application built with React, TypeScript,
 - **Routing**: React Router v6
 - **CSV Export**: PapaParse
 - **Date Handling**: Native browser date pickers
+- **Deployment**: GitHub Pages
 
 ## Getting Started
 
@@ -46,7 +54,7 @@ A collaborative financial tracking web application built with React, TypeScript,
 
 1. Clone the repository:
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/CJ-1981/finance-tracker.git
 cd finance-tracker
 ```
 
@@ -60,7 +68,7 @@ npm install
 npm run dev
 ```
 
-4. Open [http://localhost:3000/finance-tracker](http://localhost:3000/finance-tracker) in your browser
+4. Open [http://localhost:5173/](http://localhost:5173/) in your browser
 
 5. Sign up with email and password
 
@@ -75,6 +83,11 @@ The built files will be in the `dist/` directory.
 ## Deployment
 
 ### GitHub Pages
+
+This project is configured for GitHub Pages deployment. The live site is available at:
+[https://cj-1981.github.io/finance-tracker/](https://cj-1981.github.io/finance-tracker/)
+
+To deploy your own fork:
 
 1. Update `vite.config.ts` with your repository name:
 ```typescript

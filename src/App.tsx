@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import { useSupabase } from './hooks/useSupabase'
 import ConfigPage from './pages/ConfigPage'
+import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import ProjectsPage from './pages/ProjectsPage'
@@ -26,12 +27,14 @@ function App() {
     return <ConfigPage />
   }
 
-  // Redirect to login if not authenticated
+  // Redirect to landing/login if not authenticated
   if (!user) {
     return (
       <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/invite" element={<InvitePage />} />
-        <Route path="*" element={<LoginPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )
   }
