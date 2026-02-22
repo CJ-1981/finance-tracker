@@ -246,13 +246,24 @@ CREATE POLICY "Owners can insert members"
     )
   );
 
--- Project Members: Owners can delete members
 CREATE POLICY "Owners can delete members"
   ON public.project_members FOR DELETE
   USING (
     EXISTS (
       SELECT 1 FROM public.projects
       WHERE id = project_id AND owner_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Anyone with valid invitation can join project"
+  ON public.project_members FOR INSERT
+  WITH CHECK (
+    auth.uid() = user_id AND
+    EXISTS (
+      SELECT 1 FROM public.invitations
+      WHERE project_id = project_members.project_id
+      AND email = (auth.jwt() ->> 'email')
+      AND status = 'pending'
     )
   );
 
@@ -319,14 +330,14 @@ CREATE POLICY "Creators can delete own transactions"
   );
 
 -- Invitations: Owners can view invitations for their projects
-CREATE POLICY "Owners can view project invitations"
+CREATE POLICY "Anyone can view invitation by token"
   ON public.invitations FOR SELECT
-  USING (
-    project_id IN (
-      SELECT project_id FROM public.project_members
-      WHERE user_id = auth.uid() AND role = 'owner'
-    )
-  );
+  USING ( true );
+
+CREATE POLICY "Anyone can update invitation status to accepted"
+  ON public.invitations FOR UPDATE
+  USING ( true )
+  WITH CHECK ( status = 'accepted' );
 
 -- Invitations: Owners can insert invitations
 CREATE POLICY "Owners can insert invitations"

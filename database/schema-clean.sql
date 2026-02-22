@@ -256,6 +256,18 @@ CREATE POLICY "Owners can delete members"
     )
   );
 
+CREATE POLICY "Anyone with valid invitation can join project"
+  ON public.project_members FOR INSERT
+  WITH CHECK (
+    auth.uid() = user_id AND
+    EXISTS (
+      SELECT 1 FROM public.invitations
+      WHERE project_id = project_members.project_id
+      AND email = (auth.jwt() ->> 'email')
+      AND status = 'pending'
+    )
+  );
+
 -- Categories policies
 CREATE POLICY "Members can view project categories"
   ON public.categories FOR SELECT
@@ -298,6 +310,11 @@ CREATE POLICY "Members and owners can insert transactions"
 CREATE POLICY "Anyone can view invitation by token"
   ON public.invitations FOR SELECT
   USING ( true );
+
+CREATE POLICY "Anyone can update invitation status to accepted"
+  ON public.invitations FOR UPDATE
+  USING ( true )
+  WITH CHECK ( status = 'accepted' );
 
 CREATE POLICY "Owners can insert invitations"
   ON public.invitations FOR INSERT
