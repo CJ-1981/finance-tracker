@@ -44,6 +44,7 @@ export default function TransactionsPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
   const [sortColumn, setSortColumn] = useState<'date' | 'description' | 'category' | 'amount'>('date')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
+  const [datePeriod, setDatePeriod] = useState<'today' | 'yesterday' | 'last7days' | 'last30days' | 'thisMonth' | 'lastMonth' | 'thisYear' | 'all'>('all')
 
   useEffect(() => {
     if (projectId) {
@@ -307,6 +308,70 @@ export default function TransactionsPage() {
   // Get filtered and sorted transactions
   const getFilteredAndSortedTransactions = () => {
     let filtered = [...transactions]
+
+    // Apply date period filter
+    const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+    switch (datePeriod) {
+      case 'today':
+        filtered = filtered.filter(t => {
+          const transactionDate = new Date(t.date)
+          return transactionDate.toDateString() === today.toDateString()
+        })
+        break
+      case 'yesterday':
+        const yesterday = new Date(today)
+        yesterday.setDate(yesterday.getDate() - 1)
+        filtered = filtered.filter(t => {
+          const transactionDate = new Date(t.date)
+          return transactionDate.toDateString() === yesterday.toDateString()
+        })
+        break
+      case 'last7days':
+        const sevenDaysAgo = new Date(today)
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+        filtered = filtered.filter(t => {
+          const transactionDate = new Date(t.date)
+          return transactionDate >= sevenDaysAgo && transactionDate <= today
+        })
+        break
+      case 'last30days':
+        const thirtyDaysAgo = new Date(today)
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+        filtered = filtered.filter(t => {
+          const transactionDate = new Date(t.date)
+          return transactionDate >= thirtyDaysAgo && transactionDate <= today
+        })
+        break
+      case 'thisMonth':
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+        filtered = filtered.filter(t => {
+          const transactionDate = new Date(t.date)
+          return transactionDate >= startOfMonth && transactionDate <= now
+        })
+        break
+      case 'lastMonth':
+        const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+        const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0)
+        filtered = filtered.filter(t => {
+          const transactionDate = new Date(t.date)
+          return transactionDate >= startOfLastMonth && transactionDate <= endOfLastMonth
+        })
+        break
+      case 'thisYear':
+        const startOfYear = new Date(now.getFullYear(), 0, 1)
+        const endOfYear = new Date(now.getFullYear(), 11, 31)
+        filtered = filtered.filter(t => {
+          const transactionDate = new Date(t.date)
+          return transactionDate >= startOfYear && transactionDate <= endOfYear
+        })
+        break
+      case 'all':
+      default:
+        // Show all transactions
+        break
+    }
 
     // Apply search filter
     if (searchQuery) {
@@ -975,6 +1040,24 @@ export default function TransactionsPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="input w-full"
                 />
+              </div>
+
+              {/* Period Filter */}
+              <div className="sm:w-40">
+                <select
+                  value={datePeriod}
+                  onChange={(e) => setDatePeriod(e.target.value as any)}
+                  className="input w-full"
+                >
+                  <option value="all">All Time</option>
+                  <option value="today">Today</option>
+                  <option value="yesterday">Yesterday</option>
+                  <option value="last7days">Last 7 Days</option>
+                  <option value="last30days">Last 30 Days</option>
+                  <option value="thisMonth">This Month</option>
+                  <option value="lastMonth">Last Month</option>
+                  <option value="thisYear">This Year</option>
+                </select>
               </div>
 
               {/* Category Filter */}
