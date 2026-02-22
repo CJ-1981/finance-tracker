@@ -95,9 +95,12 @@ export default function ProjectsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
               <button onClick={() => setShowCreateForm(true)} className="btn btn-primary text-sm whitespace-nowrap">
                 New Project
+              </button>
+              <button onClick={() => { navigate('/config') }} className="btn btn-secondary text-sm whitespace-nowrap" title="Reconfigure Supabase connection">
+                ⚙️ Settings
               </button>
               <button onClick={handleLogout} className="btn btn-secondary text-sm whitespace-nowrap">
                 Logout
