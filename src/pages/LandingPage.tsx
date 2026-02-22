@@ -89,19 +89,15 @@ export default function LandingPage() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             to="/login"
-            state={{ isSignUp: false }}
             className="btn btn-primary px-8 py-3 text-lg"
           >
-            Sign In
-          </Link>
-          <Link
-            to="/login"
-            state={{ isSignUp: true }}
-            className="btn btn-secondary px-8 py-3 text-lg"
-          >
-            Create Account
+            Sign In / Sign Up
           </Link>
         </div>
+
+        <p className="mt-4 text-sm text-gray-500">
+          New users can create an account directly on the sign-in page
+        </p>
 
         <p className="mt-8 text-sm text-gray-500">
           Your data is secured with Supabase Auth and stored in your own project
