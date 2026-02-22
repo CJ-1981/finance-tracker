@@ -98,10 +98,6 @@ export default function LandingPage() {
         <p className="mt-8 text-sm text-gray-500">
           Your data is secured with Supabase Auth and stored in your own project
         </p>
-
-        <p className="mt-8 text-sm text-gray-500">
-          Your data is secured with Supabase Auth and stored in your own project
-        </p>
       </div>
     </div>
   )
