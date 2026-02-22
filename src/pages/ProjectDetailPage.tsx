@@ -3,11 +3,11 @@ import { Link, useParams } from 'react-router-dom'
 import { getSupabaseClient } from '../lib/supabase'
 import { getPendingInvitation } from '../lib/invitations'
 import type { Project, Transaction, Category } from '../types'
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
-import { Pie } from 'react-chartjs-2'
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Filler } from 'chart.js'
+import { Pie, Line } from 'react-chartjs-2'
 import { useAuth } from '../hooks/useAuth'
 
-ChartJS.register(ArcElement, Tooltip, Legend)
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Filler)
 
 export default function ProjectDetailPage() {
   const { user } = useAuth()
@@ -369,6 +369,44 @@ export default function ProjectDetailPage() {
     }
   }
 
+  const getAreaChartData = () => {
+    // Get all unique dates from filtered transactions, sorted
+    const dates = Array.from(new Set(filteredTransactions.map(t => t.date))).sort()
+
+    // Get all categories
+    const categoryNames = Array.from(new Set(filteredTransactions.map(t => getCategoryName(t.category_id))))
+
+    // Build dataset for each category
+    const datasets = categoryNames.map((categoryName) => {
+      const category = categories.find(c => c.name === categoryName)
+      const color = category?.color || '#6B7280'
+
+      // Calculate cumulative amount for each date
+      let cumulative = 0
+      const data = dates.map(date => {
+        const dayTotal = filteredTransactions
+          .filter(t => t.date === date && getCategoryName(t.category_id) === categoryName)
+          .reduce((sum, t) => sum + t.amount, 0)
+        cumulative += dayTotal
+        return cumulative
+      })
+
+      return {
+        label: categoryName,
+        data: data,
+        borderColor: color,
+        backgroundColor: `${color}33`,
+        fill: true,
+        tension: 0.4,
+      }
+    })
+
+    return {
+      labels: dates,
+      datasets: datasets,
+    }
+  }
+
   const totalSpent = filteredTransactions.reduce((sum, t) => sum + t.amount, 0)
   const avgTransaction = filteredTransactions.length > 0 ? totalSpent / filteredTransactions.length : 0
 
@@ -568,14 +606,61 @@ export default function ProjectDetailPage() {
             </div>
           </div>
 
-          {/* Chart */}
+          {/* Charts */}
           {filteredTransactions.length > 0 && (
-            <div className="lg:col-span-2 card">
-              <h2 className="text-lg font-semibold mb-4">Spending by Category</h2>
-              <div className="h-64">
-                <Pie data={getChartData()} />
+            <>
+              <div className="lg:col-span-2 card">
+                <h2 className="text-lg font-semibold mb-4">Amount by Category</h2>
+                <div className="h-64">
+                  <Pie data={getChartData()} />
+                </div>
               </div>
-            </div>
+
+              <div className="lg:col-span-3 card">
+                <h2 className="text-lg font-semibold mb-4">Amount Over Time by Category</h2>
+                <div className="h-64">
+                  <Line
+                    data={getAreaChartData()}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          position: 'top' as const,
+                        },
+                        tooltip: {
+                          mode: 'index' as const,
+                          intersect: false,
+                        },
+                      },
+                      scales: {
+                        x: {
+                          stacked: true,
+                          title: {
+                            display: true,
+                            text: 'Date',
+                          },
+                        },
+                        y: {
+                          stacked: true,
+                          title: {
+                            display: true,
+                            text: 'Cumulative Amount',
+                          },
+                          beginAtZero: true,
+                        },
+                      },
+                      elements: {
+                        point: {
+                          radius: 0,
+                          hitRadius: 10,
+                        },
+                      },
+                    }}
+                  />
+                </div>
+              </div>
+            </>
           )}
 
           {/* Recent Transactions */}
