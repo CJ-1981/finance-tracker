@@ -29,6 +29,7 @@ export default function TransactionModal({
     const { user } = useAuth()
     const [saving, setSaving] = useState(false)
     const [formData, setFormData] = useState({
+        transactionType: 'expense' as 'income' | 'expense',
         amount: '',
         currency_code: project?.settings?.currency || 'USD',
         category_id: '',
@@ -39,7 +40,8 @@ export default function TransactionModal({
     useEffect(() => {
         if (transaction) {
             setFormData({
-                amount: transaction.amount.toString(),
+                transactionType: transaction.amount < 0 ? 'expense' : 'income',
+                amount: Math.abs(transaction.amount).toString(),
                 currency_code: transaction.currency_code || 'USD',
                 category_id: transaction.category_id || '',
                 date: transaction.date || new Date().toISOString().split('T')[0],
@@ -56,6 +58,7 @@ export default function TransactionModal({
             setCustomData(initialCustomData)
         } else {
             setFormData({
+                transactionType: 'expense',
                 amount: '',
                 currency_code: project?.settings?.currency || 'USD',
                 category_id: categories.length > 0 ? categories[0].id : '',
@@ -89,9 +92,12 @@ export default function TransactionModal({
         setSaving(true)
         try {
             const supabase = getSupabaseClient()
+            const absoluteAmount = Math.abs(parseFloat(formData.amount))
+            const signedAmount = formData.transactionType === 'expense' ? -absoluteAmount : absoluteAmount
+
             const transactionData = {
                 project_id: project.id,
-                amount: parseFloat(formData.amount),
+                amount: signedAmount,
                 currency_code: formData.currency_code,
                 category_id: formData.category_id || null,
                 date: formData.date,
@@ -160,6 +166,37 @@ export default function TransactionModal({
                 {children}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* Income/Expense Segmented Control */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Transaction Type
+                        </label>
+                        <div className="flex gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setFormData({ ...formData, transactionType: 'income' })}
+                                className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
+                                    formData.transactionType === 'income'
+                                        ? 'bg-emerald-500 text-white shadow-md'
+                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                }`}
+                            >
+                                Income
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setFormData({ ...formData, transactionType: 'expense' })}
+                                className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
+                                    formData.transactionType === 'expense'
+                                        ? 'bg-rose-500 text-white shadow-md'
+                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                }`}
+                            >
+                                Expense
+                            </button>
+                        </div>
+                    </div>
+
                     <div>
                         <label htmlFor="modal-amount" className="block text-sm font-medium text-gray-700 mb-1">
                             Amount *
@@ -170,9 +207,14 @@ export default function TransactionModal({
                                     id="modal-amount"
                                     type="number"
                                     step="0.01"
+                                    min="0"
                                     placeholder="0.00"
                                     inputMode="decimal"
-                                    className="input pr-10 w-full"
+                                    className={`input pr-10 w-full ${
+                                        formData.transactionType === 'income'
+                                            ? 'text-emerald-600 focus:ring-emerald-400 focus:border-emerald-400'
+                                            : 'text-rose-600 focus:ring-rose-400 focus:border-rose-400'
+                                    }`}
                                     value={formData.amount}
                                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                                     required

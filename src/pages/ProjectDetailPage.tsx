@@ -608,8 +608,10 @@ export default function ProjectDetailPage() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-extrabold text-slate-900">
-                          {project.settings?.currency || 'USD'} {transaction.amount.toFixed(2)}
+                        <div className={`font-extrabold ${
+                          transaction.amount < 0 ? 'text-rose-600' : 'text-emerald-600'
+                        }`}>
+                          {transaction.amount < 0 ? '-' : ''}{project.settings?.currency || 'USD'} {Math.abs(transaction.amount).toFixed(2)}
                         </div>
                       </div>
                     </Link>

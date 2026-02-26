@@ -1232,8 +1232,10 @@ export default function TransactionsPage() {
                       <td className="py-3 px-4 text-sm text-right text-gray-600">
                         {transaction.currency_code || 'USD'}
                       </td>
-                      <td className="py-3 px-4 text-sm text-right font-semibold text-gray-900">
-                        {transaction.amount.toFixed(2)}
+                      <td className={`py-3 px-4 text-sm text-right font-semibold ${
+                        transaction.amount < 0 ? 'text-rose-600' : 'text-emerald-600'
+                      }`}>
+                        {transaction.amount < 0 ? '-' : ''}{Math.abs(transaction.amount).toFixed(2)}
                       </td>
                       {!isMultiSelectMode && (
                         <td className="py-3 px-4 text-right">

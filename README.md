@@ -9,6 +9,10 @@ A collaborative financial tracking web application built with React, TypeScript,
 - **Email/Password Authentication** - Sign up and sign in with email
 - **Landing page** - Welcome screen with sign in/sign up buttons
 - **Project-based financial tracking** - Organize finances by project
+- **Income/Expense Selector** - Mobile-friendly segmented control for transaction types
+  - No minus sign needed on mobile keyboards
+  - Visual color coding (green for income, red for expense)
+  - Automatic sign handling in database
 - **Date period filtering** - View analytics by today, custom ranges, all-time
 - **Interactive dashboard with charts** - Visual spending breakdown by category
   - Pie chart for amount by category
@@ -162,8 +166,10 @@ See `database/schema.sql` for the complete schema including RLS policies.
    - Import known values for custom fields
 4. **Add Categories**: Create categories with colors, reorder as needed
 5. **Add Transactions**:
-   - Enter amount and select currency
-   - Choose category
+   - Select transaction type (Income or Expense) using the segmented control
+   - Enter positive amount (no minus sign needed)
+   - Choose currency
+   - Select category
    - Fill in custom fields with autocomplete
 6. **Filter by Date**: Use period selector to view specific time ranges
 7. **View Analytics**: See spending breakdown by category in charts
@@ -199,6 +205,25 @@ finance-tracker/
 ```
 
 ## Recent Updates
+
+### v2.1.0 - Mobile-Enhanced Transaction Entry
+
+**New Features:**
+- ✅ Income/Expense segmented control - Mobile-friendly toggle for transaction types
+- ✅ Color-coded transaction amounts - Green for income, red for expense
+- ✅ Simplified mobile entry - No minus sign needed on number keyboards
+- ✅ Automatic type detection - Edit mode detects expense/income from existing amounts
+
+**UI Improvements:**
+- Segmented control with large touch targets for mobile
+- Dynamic amount field styling based on transaction type
+- Absolute value display (no minus sign visible) throughout the app
+- Enhanced visual feedback for transaction types
+
+**Technical:**
+- No database changes required - backward compatible
+- Sign transformation handled at application layer
+- Expenses stored as negative, income as positive
 
 ### v2.0.0 - Major Feature Release
 
