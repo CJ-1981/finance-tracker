@@ -27,6 +27,10 @@ A collaborative financial tracking web application built with React, TypeScript,
 - **Multi-user collaboration** - Invite members with role-based access (owner, member, viewer)
 - **Email invitations** - Send invitations with token-based acceptance flow
 - **Mobile-responsive design** - Works seamlessly on all devices
+  - No horizontal overflow on mobile (320px-375px)
+  - Touch targets ≥44px meeting WCAG 2.1 AA standards
+  - E2E testing with Playwright for mobile interactions
+  - Icon-only buttons for space optimization on small screens
 
 ## Tech Stack
 
@@ -36,6 +40,7 @@ A collaborative financial tracking web application built with React, TypeScript,
 - **Routing**: React Router v6
 - **CSV Export**: PapaParse
 - **Date Handling**: Native browser date pickers
+- **Testing**: Playwright (E2E)
 - **Deployment**: GitHub Pages
 
 ## Getting Started
@@ -44,6 +49,7 @@ A collaborative financial tracking web application built with React, TypeScript,
 
 - Node.js 18+ and npm
 - A Supabase project
+- Playwright (for E2E testing, optional)
 
 ### Supabase Setup
 
@@ -87,6 +93,22 @@ npm run dev
 7. **Sign in with your Supabase credentials:**
    - Enter the email and password you use for Supabase
    - Click "Sign In"
+
+### Testing
+
+```bash
+# Run development server
+npm run dev
+
+# Run unit tests
+npm test
+
+# Run E2E tests (Playwright)
+npm run test:e2e
+
+# Run tests in CI/CD mode
+npm run test:e2e:ci
+```
 
 ### Building for Production
 
@@ -205,6 +227,24 @@ finance-tracker/
 ```
 
 ## Recent Updates
+
+### v2.2.0 - Complete Mobile Responsiveness & E2E Testing
+
+**New Features:**
+- ✅ Complete mobile UI optimization (no horizontal overflow)
+- ✅ E2E testing framework with Playwright
+- ✅ Icon-only buttons for space optimization
+- ✅ Touch targets ≥44px meeting WCAG 2.1 AA standards
+- ✅ Responsive grids and text truncation for all screen sizes
+- ✅ Fixed widget overflow in ProjectDetailPage
+- ✅ Global mobile CSS optimizations
+
+**Technical Improvements:**
+- Playwright test suite for cross-browser testing
+- Mobile viewport testing (320px-375px)
+- Enhanced touch interaction handling
+- Performance optimization for mobile devices
+- Complete test automation pipeline
 
 ### v2.1.0 - Mobile-Enhanced Transaction Entry
 
