@@ -552,7 +552,6 @@ export default function ProjectDetailPage() {
   }
 
   const totalSpent = filteredTransactions.reduce((sum, t) => sum + t.amount, 0)
-  const avgTransaction = filteredTransactions.length > 0 ? totalSpent / filteredTransactions.length : 0
 
   if (loading) {
     return (
@@ -742,12 +741,6 @@ export default function ProjectDetailPage() {
             <div className="card border-t-4 border-t-teal-500 overflow-hidden">
               <div className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-1">Transactions</div>
               <div className="text-3xl font-black text-slate-900">{filteredTransactions.length}</div>
-            </div>
-            <div className="card border-t-4 border-t-orange-500 overflow-hidden">
-              <div className="text-xs font-bold text-orange-600 uppercase tracking-wider mb-1">Avg Transaction</div>
-              <div className="text-3xl font-black text-slate-900 break-all">
-                {project.settings?.currency || 'USD'} {avgTransaction.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
             </div>
           </div>
 
