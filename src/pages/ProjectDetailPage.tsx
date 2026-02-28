@@ -31,7 +31,11 @@ export default function ProjectDetailPage() {
   const [showAddTransactionModal, setShowAddTransactionModal] = useState(false)
   const [chartMode, setChartMode] = useState<'cumulative' | 'absolute'>('absolute')
 
-  // Chart metric selection states (supports 'amount', 'count', and custom field names)
+  // Chart grouping states (what to group segments by - category or custom text field)
+  const [categoryChartGroupBy, setCategoryChartGroupBy] = useState<string>('category')
+  const [timeChartGroupBy, setTimeChartGroupBy] = useState<string>('category')
+
+  // Chart metric states (what values to aggregate - amount, count, or custom number field)
   const [categoryChartMetric, setCategoryChartMetric] = useState<string>('amount')
   const [timeChartMetric, setTimeChartMetric] = useState<string>('amount')
 
@@ -340,49 +344,91 @@ export default function ProjectDetailPage() {
     }
   }
 
-  const getChartData = (metric: string = 'amount') => {
-    const categoryTotals: Record<string, number> = {}
-    const categoryColors: Record<string, string> = {}
+  // Get grouping key for a transaction based on groupBy selection
+  const getGroupingKey = (transaction: Transaction, groupBy: string): string => {
+    if (groupBy === 'category') {
+      return getCategoryName(transaction.category_id)
+    } else {
+      // Custom field - get the value
+      const customValue = transaction.custom_data?.[groupBy]
+      return customValue ? String(customValue) : '(empty)'
+    }
+  }
+
+  // Get color for a grouping key
+  const getGroupingColor = (key: string, groupBy: string): string => {
+    if (groupBy === 'category') {
+      // Find category by name to get its color
+      const category = categories.find(c => c.name === key)
+      return category?.color || '#6B7280'
+    } else {
+      // Generate consistent color based on key hash
+      let hash = 0
+      for (let i = 0; i < key.length; i++) {
+        hash = key.charCodeAt(i) + ((hash << 5) - hash)
+      }
+      const hue = Math.abs(hash) % 360
+      return `hsl(${hue}, 70%, 50%)`
+    }
+  }
+
+  // Get available grouping options (category + text/select custom fields)
+  const getGroupingOptions = () => {
+    const standardOptions = [
+      { value: 'category', label: 'Category' },
+    ]
+
+    // Add custom text and select fields
+    const customFields = project?.settings?.custom_fields || []
+    const groupableFields = customFields
+      .filter(f => f.type === 'text' || f.type === 'select')
+      .map(f => ({ value: f.name, label: f.name }))
+
+    return [...standardOptions, ...groupableFields]
+  }
+
+  const getChartData = (groupBy: string = 'category', metric: string = 'amount') => {
+    const groupTotals: Record<string, number> = {}
+    const groupColors: Record<string, string> = {}
 
     filteredTransactions.forEach((t) => {
-      const categoryName = getCategoryName(t.category_id)
+      const groupingKey = getGroupingKey(t, groupBy)
       const value = getTransactionValue(t, metric)
-      categoryTotals[categoryName] = (categoryTotals[categoryName] || 0) + value
-      categoryColors[categoryName] = getCategoryColor(t.category_id)
+      groupTotals[groupingKey] = (groupTotals[groupingKey] || 0) + value
+      groupColors[groupingKey] = getGroupingColor(groupingKey, groupBy)
     })
 
-    const labels = Object.keys(categoryTotals).map(name => {
-      return `${name}: ${getMetricLabel(metric, categoryTotals[name])}`
+    const labels = Object.keys(groupTotals).map(name => {
+      return `${name}: ${getMetricLabel(metric, groupTotals[name])}`
     })
 
     return {
       labels: labels,
       datasets: [
         {
-          data: Object.values(categoryTotals),
-          backgroundColor: Object.values(categoryColors),
+          data: Object.values(groupTotals),
+          backgroundColor: Object.values(groupColors),
         },
       ],
     }
   }
 
-  const getAreaChartData = (metric: string = 'amount') => {
+  const getAreaChartData = (groupBy: string = 'category', metric: string = 'amount') => {
     // Get all unique dates from filtered transactions, sorted
     const dates = Array.from(new Set(filteredTransactions.map(t => t.date))).sort()
 
-    // Get all categories
-    const categoryNames = Array.from(new Set(filteredTransactions.map(t => getCategoryName(t.category_id))))
+    // Get all unique grouping keys
+    const groupingKeys = Array.from(new Set(filteredTransactions.map(t => getGroupingKey(t, groupBy)))).sort()
 
-    // Build dataset for each category
-    const datasets = categoryNames.map((categoryName) => {
-      const category = categories.find(c => c.name === categoryName)
-      const color = category?.color || '#6B7280'
+    // Build dataset for each grouping key
+    const datasets = groupingKeys.map((groupingKey) => {
+      const color = getGroupingColor(groupingKey, groupBy)
 
       // Calculate metric for each date based on chart mode
       let cumulative = 0
       const data = dates.map(date => {
         const dayTransactions = filteredTransactions
-          .filter(t => t.date === date && getCategoryName(t.category_id) === categoryName)
+          .filter(t => t.date === date && getGroupingKey(t, groupBy) === groupingKey)
 
         const dayTotal = dayTransactions.reduce((sum, t) => sum + getTransactionValue(t, metric), 0)
 
@@ -395,7 +441,7 @@ export default function ProjectDetailPage() {
       })
 
       return {
-        label: categoryName,
+        label: groupingKey,
         data: data,
         borderColor: color,
         backgroundColor: `${color}33`,
@@ -636,19 +682,32 @@ export default function ProjectDetailPage() {
                     <span className="w-2 h-6 bg-primary-500 rounded-full"></span>
                     Amount by Category
                   </h2>
-                  <select
-                    value={categoryChartMetric}
-                    onChange={(e) => setCategoryChartMetric(e.target.value)}
-                    className="input py-1 px-2 text-xs sm:py-1 sm:px-3 w-full sm:w-auto sm:min-w-0 flex-1 sm:flex-initial"
-                  >
-                    {getChartMetricOptions().map(option => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={categoryChartGroupBy}
+                      onChange={(e) => setCategoryChartGroupBy(e.target.value)}
+                      className="input py-1 px-2 text-xs sm:py-1 sm:px-3 w-full sm:w-auto sm:min-w-0"
+                      title="Group by"
+                    >
+                      {getGroupingOptions().map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                    <select
+                      value={categoryChartMetric}
+                      onChange={(e) => setCategoryChartMetric(e.target.value)}
+                      className="input py-1 px-2 text-xs sm:py-1 sm:px-3 w-full sm:w-auto sm:min-w-0"
+                      title="Metric"
+                    >
+                      {getChartMetricOptions().map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
                 <div className="flex items-center justify-center p-4">
                   <div className="w-full max-w-xs">
-                    <Pie data={getChartData(categoryChartMetric)} options={{ maintainAspectRatio: true, plugins: { legend: { position: 'bottom' } } }} />
+                    <Pie data={getChartData(categoryChartGroupBy, categoryChartMetric)} options={{ maintainAspectRatio: true, plugins: { legend: { position: 'bottom' } } }} />
                   </div>
                 </div>
               </div>
@@ -699,9 +758,20 @@ export default function ProjectDetailPage() {
                     <h2 className="text-lg font-semibold truncate pr-2">Amount Over Time by Category</h2>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <select
+                        value={timeChartGroupBy}
+                        onChange={(e) => setTimeChartGroupBy(e.target.value)}
+                        className="input py-1 px-2 text-xs sm:py-1 sm:px-3 w-full sm:w-auto sm:min-w-0"
+                        title="Group by"
+                      >
+                        {getGroupingOptions().map(option => (
+                          <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                      </select>
+                      <select
                         value={timeChartMetric}
                         onChange={(e) => setTimeChartMetric(e.target.value)}
                         className="input py-1 px-2 text-xs sm:py-1 sm:px-3 w-full sm:w-auto sm:min-w-0"
+                        title="Metric"
                       >
                         {getChartMetricOptions().map(option => (
                           <option key={option.value} value={option.value}>{option.label}</option>
@@ -729,7 +799,7 @@ export default function ProjectDetailPage() {
                   </div>
                   <div className="h-64">
                     <Line
-                      data={getAreaChartData(timeChartMetric)}
+                      data={getAreaChartData(timeChartGroupBy, timeChartMetric)}
                       options={{
                         responsive: true,
                         maintainAspectRatio: false,
@@ -754,7 +824,7 @@ export default function ProjectDetailPage() {
                             stacked: true,
                             title: {
                               display: true,
-                              text: chartMode === 'cumulative' ? 'Cumulative Amount' : 'Amount',
+                              text: `${chartMode === 'cumulative' ? 'Cumulative' : ''} ${timeChartMetric === 'amount' ? 'Amount' : timeChartMetric === 'count' ? 'Count' : timeChartMetric}`.trim(),
                             },
                             beginAtZero: true,
                           },
