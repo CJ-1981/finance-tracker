@@ -31,9 +31,9 @@ export default function ProjectDetailPage() {
   const [showAddTransactionModal, setShowAddTransactionModal] = useState(false)
   const [chartMode, setChartMode] = useState<'cumulative' | 'absolute'>('absolute')
 
-  // Chart metric selection states
-  const [categoryChartMetric, setCategoryChartMetric] = useState<'amount' | 'count'>('amount')
-  const [timeChartMetric, setTimeChartMetric] = useState<'amount' | 'count'>('amount')
+  // Chart metric selection states (supports 'amount', 'count', and custom field names)
+  const [categoryChartMetric, setCategoryChartMetric] = useState<string>('amount')
+  const [timeChartMetric, setTimeChartMetric] = useState<string>('amount')
 
   // Date filter states
   const [datePeriod, setDatePeriod] = useState<'today' | 'yesterday' | 'last7days' | 'last30days' | 'thisMonth' | 'lastMonth' | 'thisYear' | 'all'>('today')
@@ -310,28 +310,49 @@ export default function ProjectDetailPage() {
 
   const filteredTransactions = getFilteredTransactions()
 
-  const getChartData = (metric: 'amount' | 'count' = 'amount') => {
+  // Helper function to get value from transaction based on metric
+  const getTransactionValue = (transaction: Transaction, metric: string): number => {
+    if (metric === 'amount') {
+      return transaction.amount
+    } else if (metric === 'count') {
+      return 1
+    } else {
+      // Custom field - only support number types
+      const customValue = transaction.custom_data?.[metric]
+      return typeof customValue === 'number' ? customValue : 0
+    }
+  }
+
+  // Get label for a metric value
+  const getMetricLabel = (metric: string, value: number): string => {
+    if (metric === 'amount') {
+      const currency = project?.settings?.currency || 'USD'
+      return `${currency} ${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    } else if (metric === 'count') {
+      return value.toString()
+    } else {
+      // Custom field
+      const field = project?.settings?.custom_fields?.find(f => f.name === metric)
+      if (field?.type === 'number') {
+        return value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      }
+      return value.toString()
+    }
+  }
+
+  const getChartData = (metric: string = 'amount') => {
     const categoryTotals: Record<string, number> = {}
     const categoryColors: Record<string, string> = {}
 
     filteredTransactions.forEach((t) => {
       const categoryName = getCategoryName(t.category_id)
-      if (metric === 'amount') {
-        categoryTotals[categoryName] = (categoryTotals[categoryName] || 0) + t.amount
-      } else {
-        categoryTotals[categoryName] = (categoryTotals[categoryName] || 0) + 1
-      }
+      const value = getTransactionValue(t, metric)
+      categoryTotals[categoryName] = (categoryTotals[categoryName] || 0) + value
       categoryColors[categoryName] = getCategoryColor(t.category_id)
     })
 
-    const currency = project?.settings?.currency || 'USD'
     const labels = Object.keys(categoryTotals).map(name => {
-      if (metric === 'amount') {
-        const amount = categoryTotals[name].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-        return `${name}: ${currency} ${amount}`
-      } else {
-        return `${name}: ${categoryTotals[name]}`
-      }
+      return `${name}: ${getMetricLabel(metric, categoryTotals[name])}`
     })
 
     return {
@@ -345,7 +366,7 @@ export default function ProjectDetailPage() {
     }
   }
 
-  const getAreaChartData = (metric: 'amount' | 'count' = 'amount') => {
+  const getAreaChartData = (metric: string = 'amount') => {
     // Get all unique dates from filtered transactions, sorted
     const dates = Array.from(new Set(filteredTransactions.map(t => t.date))).sort()
 
@@ -363,9 +384,7 @@ export default function ProjectDetailPage() {
         const dayTransactions = filteredTransactions
           .filter(t => t.date === date && getCategoryName(t.category_id) === categoryName)
 
-        const dayTotal = metric === 'amount'
-          ? dayTransactions.reduce((sum, t) => sum + t.amount, 0)
-          : dayTransactions.length
+        const dayTotal = dayTransactions.reduce((sum, t) => sum + getTransactionValue(t, metric), 0)
 
         if (chartMode === 'cumulative') {
           cumulative += dayTotal
@@ -389,6 +408,22 @@ export default function ProjectDetailPage() {
       labels: dates,
       datasets: datasets,
     }
+  }
+
+  // Get available chart metrics (standard + custom number fields)
+  const getChartMetricOptions = () => {
+    const standardOptions = [
+      { value: 'amount', label: 'Amount' },
+      { value: 'count', label: 'Count' },
+    ]
+
+    // Add custom number fields
+    const customFields = project?.settings?.custom_fields || []
+    const numberFields = customFields
+      .filter(f => f.type === 'number')
+      .map(f => ({ value: f.name, label: f.name }))
+
+    return [...standardOptions, ...numberFields]
   }
 
   const totalSpent = filteredTransactions.reduce((sum, t) => sum + t.amount, 0)
@@ -603,11 +638,12 @@ export default function ProjectDetailPage() {
                   </h2>
                   <select
                     value={categoryChartMetric}
-                    onChange={(e) => setCategoryChartMetric(e.target.value as 'amount' | 'count')}
+                    onChange={(e) => setCategoryChartMetric(e.target.value)}
                     className="input py-1 px-2 text-xs sm:py-1 sm:px-3 w-full sm:w-auto sm:min-w-0 flex-1 sm:flex-initial"
                   >
-                    <option value="amount">Amount</option>
-                    <option value="count">Count</option>
+                    {getChartMetricOptions().map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="flex items-center justify-center p-4">
@@ -664,11 +700,12 @@ export default function ProjectDetailPage() {
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <select
                         value={timeChartMetric}
-                        onChange={(e) => setTimeChartMetric(e.target.value as 'amount' | 'count')}
+                        onChange={(e) => setTimeChartMetric(e.target.value)}
                         className="input py-1 px-2 text-xs sm:py-1 sm:px-3 w-full sm:w-auto sm:min-w-0"
                       >
-                        <option value="amount">Amount</option>
-                        <option value="count">Count</option>
+                        {getChartMetricOptions().map(option => (
+                          <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
                       </select>
                       <button
                         onClick={() => setChartMode('cumulative')}
