@@ -401,12 +401,12 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20 md:pb-0">
+    <div className="min-h-screen bg-slate-50 pb-20 md:pb-0 overflow-x-hidden">
       <header className="bg-white border-b border-slate-200 shadow-sm relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-primary"></div>
         <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-            <div className="flex-1 min-w-0 overflow-hidden">
+            <div className="flex-1 min-w-0">
               <Link to="/projects" className="text-sm font-medium text-primary-600 hover:text-primary-700 mb-2 inline-flex items-center gap-1">
                 ← Back to Projects List
               </Link>
@@ -424,23 +424,23 @@ export default function ProjectDetailPage() {
                   </div>
                 </form>
               ) : (
-                <div className="group flex flex-col gap-1 items-start mt-1">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <h1 className="text-2xl font-bold text-gray-900 truncate">{project.name}</h1>
+                <div className="group flex flex-col gap-1 items-start mt-1 min-w-0">
+                  <div className="flex items-center gap-3 flex-wrap min-w-0">
+                    <h1 className="text-2xl font-bold text-gray-900 truncate flex-shrink">{project.name}</h1>
                     <button onClick={() => {
                       setIsEditing(true)
                       setEditFormData({ name: project.name, description: project.description || '', currency: project.settings?.currency || 'USD' })
                     }} className="text-blue-500 hover:text-blue-700 text-sm opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">Edit</button>
                   </div>
-                  {project.description && <p className="text-sm text-gray-600 max-w-2xl">{project.description}</p>}
+                  {project.description && <p className="text-sm text-gray-600 max-w-2xl break-words">{project.description}</p>}
 
                   {/* Date Period Selector */}
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <div className="mt-3 flex flex-wrap items-center gap-2 min-w-0">
                     <label className="text-sm font-medium text-gray-700">Period:</label>
                     <select
                       value={datePeriod}
                       onChange={(e) => setDatePeriod(e.target.value as any)}
-                      className="input py-1 px-3 text-sm w-32 sm:w-40 flex-shrink-0"
+                      className="input py-1 px-3 text-sm flex-1 min-w-[120px] max-w-[160px] sm:max-w-none sm:w-40"
                     >
                       <option value="today">Today</option>
                       <option value="yesterday">Yesterday</option>
@@ -451,14 +451,14 @@ export default function ProjectDetailPage() {
                       <option value="thisYear">This Year</option>
                       <option value="all">All Time</option>
                     </select>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-gray-500 flex-shrink-0">
                       ({filteredTransactions.length} transactions)
                     </span>
                   </div>
                 </div>
               )}
             </div>
-            <div className="flex gap-2 flex-shrink-0 overflow-x-auto">
+            <div className="flex gap-2 flex-shrink-0">
               <button onClick={() => setShowInviteModal(true)} className="btn btn-secondary border border-blue-600 text-blue-600 hover:bg-blue-50 text-sm whitespace-nowrap">
                 Invite
               </button>
@@ -554,23 +554,23 @@ export default function ProjectDetailPage() {
         </div>
       )}
 
-      <main className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-8 overflow-x-hidden">
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Summary Cards */}
           <div className="lg:col-span-3 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-            <div className="card border-t-4 border-t-primary-500">
+            <div className="card border-t-4 border-t-primary-500 overflow-hidden">
               <div className="text-xs font-bold text-primary-600 uppercase tracking-wider mb-1">Total Amount</div>
-              <div className="text-3xl font-black text-slate-900">
+              <div className="text-3xl font-black text-slate-900 break-all">
                 {project.settings?.currency || 'USD'} {totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
-            <div className="card border-t-4 border-t-teal-500">
+            <div className="card border-t-4 border-t-teal-500 overflow-hidden">
               <div className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-1">Transactions</div>
               <div className="text-3xl font-black text-slate-900">{filteredTransactions.length}</div>
             </div>
-            <div className="card border-t-4 border-t-orange-500">
+            <div className="card border-t-4 border-t-orange-500 overflow-hidden">
               <div className="text-xs font-bold text-orange-600 uppercase tracking-wider mb-1">Avg Transaction</div>
-              <div className="text-3xl font-black text-slate-900">
+              <div className="text-3xl font-black text-slate-900 break-all">
                 {project.settings?.currency || 'USD'} {avgTransaction.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
@@ -593,10 +593,10 @@ export default function ProjectDetailPage() {
               </div>
 
               {/* Recent Transactions */}
-              <div className="lg:col-span-1 card border-t-4 border-t-teal-500 flex flex-col">
+              <div className="lg:col-span-1 card border-t-4 border-t-teal-500 flex flex-col overflow-hidden">
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-6">
                   <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                    <span className="w-2 h-6 bg-teal-500 rounded-full"></span>
+                    <span className="w-2 h-6 bg-teal-500 rounded-full flex-shrink-0"></span>
                     Recent
                   </h2>
                   <Link to={`/transactions/${id}`} className="text-sm font-semibold text-primary-600 hover:text-primary-700 whitespace-nowrap">
@@ -610,13 +610,13 @@ export default function ProjectDetailPage() {
                         <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm bg-white border border-slate-100 flex-shrink-0" style={{ color: getCategoryColor(transaction.category_id) }}>
                           {getCategoryName(transaction.category_id).charAt(0)}
                         </div>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <div className="text-sm font-bold text-slate-800 truncate">{getCategoryName(transaction.category_id)}</div>
-                          <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">{transaction.date}</div>
+                          <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider truncate">{transaction.date}</div>
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <div className={`font-extrabold text-sm ${
+                        <div className={`font-extrabold text-sm break-words ${
                           transaction.amount < 0 ? 'text-rose-600' : 'text-emerald-600'
                         }`}>
                           {transaction.amount < 0 ? '-' : ''}{project.settings?.currency || 'USD'} {Math.abs(transaction.amount).toFixed(2)}
@@ -633,10 +633,10 @@ export default function ProjectDetailPage() {
               </div>
 
               {datePeriod !== 'today' && (
-                <div className="lg:col-span-3 card border-t-4 border-t-primary-500">
+                <div className="lg:col-span-3 card border-t-4 border-t-primary-500 overflow-hidden">
                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-4">
-                    <h2 className="text-lg font-semibold">Amount Over Time by Category</h2>
-                    <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-semibold truncate pr-2">Amount Over Time by Category</h2>
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       <button
                         onClick={() => setChartMode('cumulative')}
                         className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded transition-colors ${chartMode === 'cumulative'
