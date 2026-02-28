@@ -214,7 +214,7 @@ export default function ProjectsPage() {
               </button>
               <button onClick={handleLogout} className="btn border border-red-200 text-red-600 hover:bg-red-50 text-sm whitespace-nowrap px-4 py-2 rounded-xl font-semibold transition-all">
                 <span className="hidden sm:inline">Logout</span>
-                <span className="sm:hidden">↪</span>
+                <span className="sm:hidden">Log Out</span>
               </button>
             </div>
           </div>
