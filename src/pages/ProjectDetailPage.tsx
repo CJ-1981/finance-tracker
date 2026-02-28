@@ -579,7 +579,7 @@ export default function ProjectDetailPage() {
     <div className="min-h-screen bg-slate-50 pb-20 md:pb-0 overflow-x-hidden">
       <header className="bg-white border-b border-slate-200 shadow-sm relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-primary"></div>
-        <div className="max-w-7xl mx-auto px-0 sm:px-2 md:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
             <div className="flex-1 min-w-0">
               <Link to="/projects" className="text-sm font-medium text-primary-600 hover:text-primary-700 mb-2 inline-flex items-center gap-1">
