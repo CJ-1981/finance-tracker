@@ -30,6 +30,10 @@ export interface Database {
             }>
             custom_field_values?: Record<string, string[]>
             default_date_period?: string
+            category_chart_group_by?: string
+            category_chart_metric?: string
+            time_chart_group_by?: string
+            time_chart_metric?: string
           } | null
           created_at: string
           updated_at: string

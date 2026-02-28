@@ -58,6 +58,25 @@ export default function ProjectDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project?.id])
 
+  // Load chart preferences from project settings
+  useEffect(() => {
+    if (project?.settings) {
+      if (project.settings.category_chart_group_by) {
+        setCategoryChartGroupBy(project.settings.category_chart_group_by)
+      }
+      if (project.settings.category_chart_metric) {
+        setCategoryChartMetric(project.settings.category_chart_metric)
+      }
+      if (project.settings.time_chart_group_by) {
+        setTimeChartGroupBy(project.settings.time_chart_group_by)
+      }
+      if (project.settings.time_chart_metric) {
+        setTimeChartMetric(project.settings.time_chart_metric)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project?.id])
+
   // Save date period preference when changed (debounced)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -68,6 +87,28 @@ export default function ProjectDetailPage() {
     return () => clearTimeout(timeoutId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [datePeriod])
+
+  // Save category chart preferences when changed (debounced)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (project) {
+        saveCategoryChartPreferences(categoryChartGroupBy, categoryChartMetric)
+      }
+    }, 500)
+    return () => clearTimeout(timeoutId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoryChartGroupBy, categoryChartMetric])
+
+  // Save time chart preferences when changed (debounced)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (project) {
+        saveTimeChartPreferences(timeChartGroupBy, timeChartMetric)
+      }
+    }, 500)
+    return () => clearTimeout(timeoutId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeChartGroupBy, timeChartMetric])
 
   const saveDatePeriodPreference = async (period: typeof datePeriod) => {
     if (!project) return
@@ -84,6 +125,44 @@ export default function ProjectDetailPage() {
       setProject({ ...project, settings: updatedSettings as any })
     } catch (err) {
       console.error('Error saving date period preference:', err)
+    }
+  }
+
+  const saveCategoryChartPreferences = async (groupBy: string, metric: string) => {
+    if (!project) return
+    try {
+      const supabase = getSupabaseClient()
+      const updatedSettings = {
+        ...project.settings,
+        category_chart_group_by: groupBy,
+        category_chart_metric: metric
+      }
+      await (supabase
+        .from('projects') as any)
+        .update({ settings: updatedSettings })
+        .eq('id', id)
+      setProject({ ...project, settings: updatedSettings as any })
+    } catch (err) {
+      console.error('Error saving category chart preferences:', err)
+    }
+  }
+
+  const saveTimeChartPreferences = async (groupBy: string, metric: string) => {
+    if (!project) return
+    try {
+      const supabase = getSupabaseClient()
+      const updatedSettings = {
+        ...project.settings,
+        time_chart_group_by: groupBy,
+        time_chart_metric: metric
+      }
+      await (supabase
+        .from('projects') as any)
+        .update({ settings: updatedSettings })
+        .eq('id', id)
+      setProject({ ...project, settings: updatedSettings as any })
+    } catch (err) {
+      console.error('Error saving time chart preferences:', err)
     }
   }
 
