@@ -31,6 +31,10 @@ export default function ProjectDetailPage() {
   const [showAddTransactionModal, setShowAddTransactionModal] = useState(false)
   const [chartMode, setChartMode] = useState<'cumulative' | 'absolute'>('absolute')
 
+  // Chart metric selection states
+  const [categoryChartMetric, setCategoryChartMetric] = useState<'amount' | 'count'>('amount')
+  const [timeChartMetric, setTimeChartMetric] = useState<'amount' | 'count'>('amount')
+
   // Date filter states
   const [datePeriod, setDatePeriod] = useState<'today' | 'yesterday' | 'last7days' | 'last30days' | 'thisMonth' | 'lastMonth' | 'thisYear' | 'all'>('today')
 
@@ -306,20 +310,28 @@ export default function ProjectDetailPage() {
 
   const filteredTransactions = getFilteredTransactions()
 
-  const getChartData = () => {
+  const getChartData = (metric: 'amount' | 'count' = 'amount') => {
     const categoryTotals: Record<string, number> = {}
     const categoryColors: Record<string, string> = {}
 
     filteredTransactions.forEach((t) => {
       const categoryName = getCategoryName(t.category_id)
-      categoryTotals[categoryName] = (categoryTotals[categoryName] || 0) + t.amount
+      if (metric === 'amount') {
+        categoryTotals[categoryName] = (categoryTotals[categoryName] || 0) + t.amount
+      } else {
+        categoryTotals[categoryName] = (categoryTotals[categoryName] || 0) + 1
+      }
       categoryColors[categoryName] = getCategoryColor(t.category_id)
     })
 
     const currency = project?.settings?.currency || 'USD'
     const labels = Object.keys(categoryTotals).map(name => {
-      const amount = categoryTotals[name].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-      return `${name}: ${currency} ${amount}`
+      if (metric === 'amount') {
+        const amount = categoryTotals[name].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        return `${name}: ${currency} ${amount}`
+      } else {
+        return `${name}: ${categoryTotals[name]}`
+      }
     })
 
     return {
@@ -333,7 +345,7 @@ export default function ProjectDetailPage() {
     }
   }
 
-  const getAreaChartData = () => {
+  const getAreaChartData = (metric: 'amount' | 'count' = 'amount') => {
     // Get all unique dates from filtered transactions, sorted
     const dates = Array.from(new Set(filteredTransactions.map(t => t.date))).sort()
 
@@ -345,12 +357,15 @@ export default function ProjectDetailPage() {
       const category = categories.find(c => c.name === categoryName)
       const color = category?.color || '#6B7280'
 
-      // Calculate amount for each date based on chart mode
+      // Calculate metric for each date based on chart mode
       let cumulative = 0
       const data = dates.map(date => {
-        const dayTotal = filteredTransactions
+        const dayTransactions = filteredTransactions
           .filter(t => t.date === date && getCategoryName(t.category_id) === categoryName)
-          .reduce((sum, t) => sum + t.amount, 0)
+
+        const dayTotal = metric === 'amount'
+          ? dayTransactions.reduce((sum, t) => sum + t.amount, 0)
+          : dayTransactions.length
 
         if (chartMode === 'cumulative') {
           cumulative += dayTotal
@@ -404,7 +419,7 @@ export default function ProjectDetailPage() {
     <div className="min-h-screen bg-slate-50 pb-20 md:pb-0 overflow-x-hidden">
       <header className="bg-white border-b border-slate-200 shadow-sm relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-primary"></div>
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-0 sm:px-2 md:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
             <div className="flex-1 min-w-0">
               <Link to="/projects" className="text-sm font-medium text-primary-600 hover:text-primary-700 mb-2 inline-flex items-center gap-1">
@@ -440,12 +455,12 @@ export default function ProjectDetailPage() {
                     <select
                       value={datePeriod}
                       onChange={(e) => setDatePeriod(e.target.value as any)}
-                      className="input py-1 px-3 text-sm flex-1 min-w-[120px] max-w-[160px] sm:max-w-none sm:w-40"
+                      className="input py-1 px-2 text-xs sm:py-1 sm:px-3 w-full sm:w-auto sm:min-w-0 flex-1"
                     >
                       <option value="today">Today</option>
                       <option value="yesterday">Yesterday</option>
-                      <option value="last7days">Last 7 Days</option>
-                      <option value="last30days">Last 30 Days</option>
+                      <option value="last7days">Last 7</option>
+                      <option value="last30days">Last 30</option>
                       <option value="thisMonth">This Month</option>
                       <option value="lastMonth">Last Month</option>
                       <option value="thisYear">This Year</option>
@@ -554,7 +569,7 @@ export default function ProjectDetailPage() {
         </div>
       )}
 
-      <main className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-8 overflow-x-hidden">
+      <main className="max-w-7xl mx-auto px-0 sm:px-2 md:px-6 lg:px-8 py-8 overflow-x-hidden">
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Summary Cards */}
           <div className="lg:col-span-3 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
@@ -581,13 +596,23 @@ export default function ProjectDetailPage() {
             <>
               {/* Pie Chart and Recent Transactions in same row */}
               <div className="lg:col-span-2 card border-t-4 border-t-primary-500">
-                <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                  <span className="w-2 h-6 bg-primary-500 rounded-full"></span>
-                  Amount by Category
-                </h2>
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-6">
+                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <span className="w-2 h-6 bg-primary-500 rounded-full"></span>
+                    Amount by Category
+                  </h2>
+                  <select
+                    value={categoryChartMetric}
+                    onChange={(e) => setCategoryChartMetric(e.target.value as 'amount' | 'count')}
+                    className="input py-1 px-2 text-xs sm:py-1 sm:px-3 w-full sm:w-auto sm:min-w-0 flex-1 sm:flex-initial"
+                  >
+                    <option value="amount">Amount</option>
+                    <option value="count">Count</option>
+                  </select>
+                </div>
                 <div className="flex items-center justify-center p-4">
                   <div className="w-full max-w-xs">
-                    <Pie data={getChartData()} options={{ maintainAspectRatio: true, plugins: { legend: { position: 'bottom' } } }} />
+                    <Pie data={getChartData(categoryChartMetric)} options={{ maintainAspectRatio: true, plugins: { legend: { position: 'bottom' } } }} />
                   </div>
                 </div>
               </div>
@@ -637,6 +662,14 @@ export default function ProjectDetailPage() {
                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-4">
                     <h2 className="text-lg font-semibold truncate pr-2">Amount Over Time by Category</h2>
                     <div className="flex items-center gap-2 flex-shrink-0">
+                      <select
+                        value={timeChartMetric}
+                        onChange={(e) => setTimeChartMetric(e.target.value as 'amount' | 'count')}
+                        className="input py-1 px-2 text-xs sm:py-1 sm:px-3 w-full sm:w-auto sm:min-w-0"
+                      >
+                        <option value="amount">Amount</option>
+                        <option value="count">Count</option>
+                      </select>
                       <button
                         onClick={() => setChartMode('cumulative')}
                         className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded transition-colors ${chartMode === 'cumulative'
@@ -659,7 +692,7 @@ export default function ProjectDetailPage() {
                   </div>
                   <div className="h-64">
                     <Line
-                      data={getAreaChartData()}
+                      data={getAreaChartData(timeChartMetric)}
                       options={{
                         responsive: true,
                         maintainAspectRatio: false,
