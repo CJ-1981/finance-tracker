@@ -177,12 +177,12 @@ export default function ConfigPage() {
                 {testing ? 'Testing connection...' : 'Save Configuration'}
               </button>
 
-              <div className="text-sm text-gray-500">
-                <p className="font-medium mb-2">Where to find these credentials:</p>
-                <ol className="list-decimal list-inside space-y-1">
+              <div className="text-sm text-gray-500 max-w-full">
+                <p className="font-medium mb-2 text-xs sm:text-sm">Where to find these credentials:</p>
+                <ol className="list-decimal list-inside space-y-1 text-xs sm:text-sm">
                   <li>Go to your Supabase project</li>
                   <li> Navigate to Project Settings → API</li>
-                  <li>Copy the Project URL and anon public key</li>
+                  <li>Copy the Project URL and anon key</li>
                 </ol>
               </div>
 

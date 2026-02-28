@@ -176,21 +176,26 @@ export default function ProjectDetailPage() {
           token = existingInvite.token
           isNewInvite = false
         } else {
-          // Role changed - ask to create new invitation or update existing
-          const shouldCreateNew = confirm(
+          // Role changed - update existing invitation instead of creating new
+          const shouldUpdate = confirm(
             `${inviteEmail} already has a pending invitation as ${existingInvite.role}.\n\n` +
-            `Click OK to send a new invitation as ${inviteRole}.\n` +
+            `Click OK to update to ${inviteRole}.\n` +
             `Click Cancel to keep the existing invitation.`
           )
-          if (!shouldCreateNew) {
+          if (!shouldUpdate) {
             return
           }
-          // Mark old invitation as expired (replaced by new one)
-          await (supabase.from('invitations') as any)
-            .update({ status: 'expired' })
+          // Update existing invitation with new role and new token
+          token = Math.random().toString(36).substring(2) + Date.now().toString(36)
+          const { error: updateError } = await (supabase.from('invitations') as any)
+            .update({
+              role: inviteRole,
+              token: token,
+              expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+            })
             .eq('id', existingInvite.id)
-          // Create new invitation below
-          isNewInvite = true
+          if (updateError) throw updateError
+          isNewInvite = false
         }
       } else {
         isNewInvite = true
@@ -210,8 +215,11 @@ export default function ProjectDetailPage() {
         if (error) throw error
       }
 
-      // Generate invite link and store recipient email for mailto link
-      const link = `${window.location.origin}/finance-tracker/invite?token=${token!}`
+      // Generate invite link with embedded config and store recipient email for mailto link
+      const { getConfig } = await import('../lib/config')
+      const { generateInviteLink } = await import('../lib/inviteConfig')
+      const config = getConfig()
+      const link = generateInviteLink(window.location.origin, token!, config || undefined)
       setInviteLink(link)
       setInviteRecipientEmail(inviteEmail) // Store before clearing
       setShowInviteLink(true)
@@ -398,7 +406,7 @@ export default function ProjectDetailPage() {
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-primary"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 overflow-hidden">
               <Link to="/projects" className="text-sm font-medium text-primary-600 hover:text-primary-700 mb-2 inline-flex items-center gap-1">
                 ← Back to Projects List
               </Link>
@@ -418,11 +426,11 @@ export default function ProjectDetailPage() {
               ) : (
                 <div className="group flex flex-col gap-1 items-start mt-1">
                   <div className="flex items-center gap-3 flex-wrap">
-                    <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 truncate">{project.name}</h1>
                     <button onClick={() => {
                       setIsEditing(true)
                       setEditFormData({ name: project.name, description: project.description || '', currency: project.settings?.currency || 'USD' })
-                    }} className="text-blue-500 hover:text-blue-700 text-sm opacity-0 group-hover:opacity-100 transition-opacity">Edit</button>
+                    }} className="text-blue-500 hover:text-blue-700 text-sm opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">Edit</button>
                   </div>
                   {project.description && <p className="text-sm text-gray-600 max-w-2xl">{project.description}</p>}
 
@@ -432,7 +440,7 @@ export default function ProjectDetailPage() {
                     <select
                       value={datePeriod}
                       onChange={(e) => setDatePeriod(e.target.value as any)}
-                      className="input py-1 px-3 text-sm w-40 flex-shrink-0"
+                      className="input py-1 px-3 text-sm w-32 sm:w-40 flex-shrink-0"
                     >
                       <option value="today">Today</option>
                       <option value="yesterday">Yesterday</option>
@@ -450,7 +458,7 @@ export default function ProjectDetailPage() {
                 </div>
               )}
             </div>
-            <div className="flex gap-2 flex-shrink-0">
+            <div className="flex gap-2 flex-shrink-0 overflow-x-auto">
               <button onClick={() => setShowInviteModal(true)} className="btn btn-secondary border border-blue-600 text-blue-600 hover:bg-blue-50 text-sm whitespace-nowrap">
                 Invite
               </button>
@@ -506,7 +514,7 @@ export default function ProjectDetailPage() {
             {/* Invite Link */}
             <div className="bg-gray-50 p-3 rounded-md mb-3">
               <p className="text-xs text-gray-500 mb-1">Invite Link:</p>
-              <p className="text-sm text-blue-600 break-all">{inviteLink}</p>
+              <p className="text-sm text-blue-600 break-words overflow-wrap-anywhere">{inviteLink}</p>
             </div>
 
             {/* Actions */}
@@ -549,7 +557,7 @@ export default function ProjectDetailPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Summary Cards */}
-          <div className="lg:col-span-3 grid gap-4 md:grid-cols-3">
+          <div className="lg:col-span-3 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
             <div className="card border-t-4 border-t-primary-500">
               <div className="text-xs font-bold text-primary-600 uppercase tracking-wider mb-1">Total Amount</div>
               <div className="text-3xl font-black text-slate-900">
@@ -586,29 +594,29 @@ export default function ProjectDetailPage() {
 
               {/* Recent Transactions */}
               <div className="lg:col-span-1 card border-t-4 border-t-teal-500 flex flex-col">
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-6">
                   <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                     <span className="w-2 h-6 bg-teal-500 rounded-full"></span>
                     Recent
                   </h2>
-                  <Link to={`/transactions/${id}`} className="text-sm font-semibold text-primary-600 hover:text-primary-700">
+                  <Link to={`/transactions/${id}`} className="text-sm font-semibold text-primary-600 hover:text-primary-700 whitespace-nowrap">
                     View All →
                   </Link>
                 </div>
                 <div className="space-y-3 flex-1 overflow-auto">
                   {filteredTransactions.slice(0, 6).map((transaction) => (
-                    <Link key={transaction.id} to={`/transactions/${id}`} className="flex justify-between items-center p-3 hover:bg-slate-50 rounded-xl transition-all border border-transparent hover:border-slate-100 group">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm bg-white border border-slate-100" style={{ color: getCategoryColor(transaction.category_id) }}>
+                    <Link key={transaction.id} to={`/transactions/${id}`} className="flex justify-between items-center gap-2 p-3 hover:bg-slate-50 rounded-xl transition-all border border-transparent hover:border-slate-100 group">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm bg-white border border-slate-100 flex-shrink-0" style={{ color: getCategoryColor(transaction.category_id) }}>
                           {getCategoryName(transaction.category_id).charAt(0)}
                         </div>
-                        <div>
-                          <div className="text-sm font-bold text-slate-800">{getCategoryName(transaction.category_id)}</div>
+                        <div className="min-w-0">
+                          <div className="text-sm font-bold text-slate-800 truncate">{getCategoryName(transaction.category_id)}</div>
                           <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">{transaction.date}</div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className={`font-extrabold ${
+                      <div className="text-right flex-shrink-0">
+                        <div className={`font-extrabold text-sm ${
                           transaction.amount < 0 ? 'text-rose-600' : 'text-emerald-600'
                         }`}>
                           {transaction.amount < 0 ? '-' : ''}{project.settings?.currency || 'USD'} {Math.abs(transaction.amount).toFixed(2)}
@@ -626,12 +634,12 @@ export default function ProjectDetailPage() {
 
               {datePeriod !== 'today' && (
                 <div className="lg:col-span-3 card border-t-4 border-t-primary-500">
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-4">
                     <h2 className="text-lg font-semibold">Amount Over Time by Category</h2>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => setChartMode('cumulative')}
-                        className={`px-3 py-1 text-sm rounded transition-colors ${chartMode === 'cumulative'
+                        className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded transition-colors ${chartMode === 'cumulative'
                           ? 'bg-blue-100 text-blue-700 font-medium'
                           : 'text-gray-600 hover:bg-gray-100'
                           }`}
@@ -640,7 +648,7 @@ export default function ProjectDetailPage() {
                       </button>
                       <button
                         onClick={() => setChartMode('absolute')}
-                        className={`px-3 py-1 text-sm rounded transition-colors ${chartMode === 'absolute'
+                        className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded transition-colors ${chartMode === 'absolute'
                           ? 'bg-blue-100 text-blue-700 font-medium'
                           : 'text-gray-600 hover:bg-gray-100'
                           }`}

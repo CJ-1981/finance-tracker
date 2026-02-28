@@ -112,8 +112,21 @@ export default function ProjectsPage() {
         tokens.push(token)
       }
 
-      // Generate combined invitation link
-      const link = `${window.location.origin}/finance-tracker/invite?tokens=${tokens.join(',')}`
+      // Generate combined invitation link with embedded config
+      const { getConfig } = await import('../lib/config')
+      const { encodeConfigForInvite } = await import('../lib/inviteConfig')
+      const config = getConfig()
+
+      const url = new URL(window.location.origin)
+      url.pathname = '/finance-tracker/invite'
+      url.searchParams.set('tokens', tokens.join(','))
+
+      if (config) {
+        const encodedConfig = encodeConfigForInvite(config)
+        url.searchParams.set('config', encodedConfig)
+      }
+
+      const link = url.toString()
       setInviteLink(link)
       setInviteRecipientEmail(inviteEmail)
       setShowInviteLink(true)
@@ -167,7 +180,7 @@ export default function ProjectsPage() {
                   {projects.some(p => p.userRole === 'owner') && (
                     <button
                       onClick={() => setIsSelectionMode(true)}
-                      className="btn btn-secondary text-sm whitespace-nowrap"
+                      className="btn btn-secondary text-sm whitespace-nowrap hidden sm:inline-flex"
                     >
                       Invite to Multi
                     </button>
@@ -193,11 +206,15 @@ export default function ProjectsPage() {
                   </button>
                 </>
               )}
-              <button onClick={() => { navigate('/config') }} className="btn btn-secondary text-sm whitespace-nowrap" title="Reconfigure Supabase connection">
+              <button onClick={() => { navigate('/config') }} className="btn btn-secondary text-sm whitespace-nowrap sm:hidden" title="Reconfigure Supabase connection">
+                ⚙️
+              </button>
+              <button onClick={() => { navigate('/config') }} className="btn btn-secondary text-sm whitespace-nowrap hidden sm:inline-flex" title="Reconfigure Supabase connection">
                 ⚙️ Settings
               </button>
               <button onClick={handleLogout} className="btn border border-red-200 text-red-600 hover:bg-red-50 text-sm whitespace-nowrap px-4 py-2 rounded-xl font-semibold transition-all">
-                Logout
+                <span className="hidden sm:inline">Logout</span>
+                <span className="sm:hidden">↪</span>
               </button>
             </div>
           </div>
@@ -318,7 +335,7 @@ export default function ProjectsPage() {
       {/* Multi-Project Invite Modal */}
       {showInviteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-bold text-slate-900 mb-2">Invite to Projects</h2>
             <p className="text-slate-500 text-sm mb-6">
               You are inviting someone to join <strong>{selectedProjectIds.length}</strong> project{selectedProjectIds.length > 1 ? 's' : ''}.

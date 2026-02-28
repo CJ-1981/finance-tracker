@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase = getSupabaseClient()
     } catch (error) {
       // Supabase not configured yet - this is OK on first visit
-      console.log('Supabase not configured yet')
+      console.log('Supabase not configured yet - client initialization failed:', error)
       setAuthState({ user: null, session: null, loading: false })
       return
     }
@@ -62,7 +62,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('id', user.id)
         .single()
 
-      if (error) throw error
+      if (error) {
+        // If profile doesn't exist yet (new user), create it
+        if (error.code === 'PGRST116') {
+          const newProfile = {
+            id: user.id,
+            email: user.email || '',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }
+
+          const { data: newProfileData, error: insertError } = await supabase
+            .from('profiles')
+            .insert(newProfile as any)
+            .select()
+            .single()
+
+          if (insertError) throw insertError
+
+          setAuthState({
+            user: newProfileData as AppUser,
+            session: user,
+            loading: false,
+          })
+          return
+        }
+        throw error
+      }
 
       setAuthState({
         user: data as AppUser,
@@ -70,8 +96,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading: false,
       })
     } catch (error) {
-      console.error('Error fetching user profile:', error)
-      setAuthState({ user: null, session: null, loading: false })
+      console.error('Error fetching/creating user profile:', error)
+      // Don't set user to null on profile errors - still authenticated, just no profile data
+      setAuthState({
+        user: { id: user.id, email: user.email || '' } as AppUser,
+        session: user,
+        loading: false,
+      })
     }
   }
 
