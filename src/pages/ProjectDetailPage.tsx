@@ -42,6 +42,9 @@ export default function ProjectDetailPage() {
   // Date filter states
   const [datePeriod, setDatePeriod] = useState<'today' | 'yesterday' | 'last7days' | 'last30days' | 'thisMonth' | 'lastMonth' | 'thisYear' | 'all'>('today')
 
+  // Flag to track if initial preferences have been loaded from project settings
+  const [preferencesLoaded, setPreferencesLoaded] = useState(false)
+
   useEffect(() => {
     if (id) {
       fetchProject()
@@ -73,6 +76,8 @@ export default function ProjectDetailPage() {
       if (project.settings.time_chart_metric) {
         setTimeChartMetric(project.settings.time_chart_metric)
       }
+      // Mark preferences as loaded after setting all chart preferences
+      setPreferencesLoaded(true)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project?.id])
@@ -91,24 +96,26 @@ export default function ProjectDetailPage() {
   // Save category chart preferences when changed (debounced)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (project) {
+      // Only save if preferences have been loaded and project exists
+      if (project && preferencesLoaded) {
         saveCategoryChartPreferences(categoryChartGroupBy, categoryChartMetric)
       }
     }, 500)
     return () => clearTimeout(timeoutId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [categoryChartGroupBy, categoryChartMetric])
+  }, [categoryChartGroupBy, categoryChartMetric, preferencesLoaded])
 
   // Save time chart preferences when changed (debounced)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (project) {
+      // Only save if preferences have been loaded and project exists
+      if (project && preferencesLoaded) {
         saveTimeChartPreferences(timeChartGroupBy, timeChartMetric)
       }
     }, 500)
     return () => clearTimeout(timeoutId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeChartGroupBy, timeChartMetric])
+  }, [timeChartGroupBy, timeChartMetric, preferencesLoaded])
 
   const saveDatePeriodPreference = async (period: typeof datePeriod) => {
     if (!project) return
@@ -688,7 +695,7 @@ export default function ProjectDetailPage() {
             {/* Invite Link */}
             <div className="bg-gray-50 p-3 rounded-md mb-3">
               <p className="text-xs text-gray-500 mb-1">Invite Link:</p>
-              <p className="text-sm text-blue-600 break-words overflow-wrap-anywhere">{inviteLink}</p>
+              <p className="text-sm text-blue-600 break-words">{inviteLink}</p>
             </div>
 
             {/* Actions */}

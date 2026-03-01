@@ -8,24 +8,27 @@ import { test, expect } from '@playwright/test';
 test.describe('Project Management', () => {
 
   test.beforeEach(async ({ page }) => {
-    // Navigate to projects page
-    await page.goto('/projects');
+    // Register pageerror listener before navigation to catch all errors
+    page.on('pageerror', (error) => {
+      (page as any).pageErrors = (page as any).pageErrors || [];
+      (page as any).pageErrors.push(error.toString());
+    });
   });
 
   test('Projects page loads successfully', async ({ page }) => {
+    // Initialize errors array for this test
+    (page as any).pageErrors = [];
+
     // Check page title
     await expect(page).toHaveTitle(/Finance Tracker/);
 
-    // Page should load without JavaScript errors
-    const errors: string[] = [];
-    page.on('pageerror', (error) => {
-      errors.push(error.toString());
-    });
+    // Navigate to projects page
+    await page.goto('/projects');
 
     await page.waitForLoadState('networkidle');
 
     // Should not have critical errors
-    expect(errors.filter(e => e.includes('TypeError') || e.includes('ReferenceError')).length).toBe(0);
+    expect(((page as any).pageErrors || []).filter(e => e.includes('TypeError') || e.includes('ReferenceError')).length).toBe(0);
   });
 
   test('Project cards should display in responsive grid', async ({ page }) => {

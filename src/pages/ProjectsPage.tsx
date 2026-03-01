@@ -24,6 +24,7 @@ export default function ProjectsPage() {
   const [inviteLink, setInviteLink] = useState('')
   const [showInviteLink, setShowInviteLink] = useState(false)
   const [inviteRecipientEmail, setInviteRecipientEmail] = useState('')
+  const [inviteProjectCount, setInviteProjectCount] = useState(0)
 
   useEffect(() => {
     fetchProjects()
@@ -117,8 +118,10 @@ export default function ProjectsPage() {
       const { encodeConfigForInvite } = await import('../lib/inviteConfig')
       const config = getConfig()
 
-      const url = new URL(window.location.origin)
-      url.pathname = '/finance-tracker/invite'
+      // Build invite path using BASE_URL for deployment flexibility
+      const basePath = import.meta.env.BASE_URL || ''
+      const invitePath = basePath.endsWith('/') ? `${basePath}invite` : `${basePath}/invite`
+      const url = new URL(window.location.origin + invitePath)
       url.searchParams.set('tokens', tokens.join(','))
 
       if (config) {
@@ -132,6 +135,7 @@ export default function ProjectsPage() {
       setShowInviteLink(true)
       setShowInviteModal(false)
       setInviteEmail('')
+      setInviteProjectCount(selectedProjectIds.length) // Capture count before clearing
       setSelectedProjectIds([])
       setIsSelectionMode(false)
     } catch (err) {
@@ -389,11 +393,11 @@ export default function ProjectsPage() {
             </div>
             <h2 className="text-2xl font-bold text-slate-900 mb-2">Invitations Created!</h2>
             <p className="text-slate-600 mb-6">
-              A combined invitation link has been generated for {selectedProjectIds.length} projects.
+              A combined invitation link has been generated for {inviteProjectCount} projects.
             </p>
 
             <a
-              href={`mailto:${inviteRecipientEmail}?subject=${encodeURIComponent(`You're invited to join ${selectedProjectIds.length} projects`)}&body=${encodeURIComponent(`You've been invited to join ${selectedProjectIds.length} projects as a ${inviteRole}.\n\nClick the link below to accept all invitations:\n${inviteLink}\n\nThis invitation expires in 7 days.`)}`}
+              href={`mailto:${inviteRecipientEmail}?subject=${encodeURIComponent(`You're invited to join ${inviteProjectCount} projects`)}&body=${encodeURIComponent(`You've been invited to join ${inviteProjectCount} projects as a ${inviteRole}.\n\nClick the link below to accept all invitations:\n${inviteLink}\n\nThis invitation expires in 7 days.`)}`}
               className="block w-full btn btn-primary text-center mb-4 py-3 shadow-lg shadow-primary-200"
             >
               📧 Open Email Client

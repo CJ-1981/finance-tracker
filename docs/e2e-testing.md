@@ -7,7 +7,7 @@ This guide covers the End-to-End (E2E) testing framework implemented for the Fin
 The E2E testing framework provides comprehensive cross-browser testing for the application, with special focus on mobile responsiveness and user interactions.
 
 ### Key Features
-- **Cross-browser testing** (Chrome, Firefox, Safari, Edge)
+- **Cross-browser testing** (Chrome, Firefox, Safari)
 - **Mobile viewport testing** (320px-375px)
 - **Touch interaction testing**
 - **Performance monitoring**
@@ -43,7 +43,7 @@ npm run test:e2e:ci
 
 ### Run Specific Test File
 ```bash
-npx playwright test tests/mobile.spec.ts
+npx playwright test tests/e2e/mobile.spec.ts
 ```
 
 ### Run Tests with Specific Browser

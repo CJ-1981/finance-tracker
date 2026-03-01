@@ -47,7 +47,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced mobile-specific security measures
 
 ### Known Issues
-- None identified for this release
+- All 12 previously failing E2E tests have been fixed (150/150 now passing)
+- Authentication redirect tests updated to match app behavior (redirects to landing page)
+- Mobile text truncation tests made adaptive to page context
 
 ## [Unreleased]
 

@@ -14,7 +14,13 @@
 
   /* Ensure touch targets are accessible on mobile */
   @media (max-width: 640px) {
-    button, a, input, select {
+    button,
+    [role="button"],
+    .btn,
+    input[type="button"],
+    input[type="submit"],
+    input[type="reset"],
+    select {
       min-height: 44px;
     }
   }
