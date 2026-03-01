@@ -635,9 +635,11 @@ export default function ProjectDetailPage() {
               )}
             </div>
             <div className="flex gap-2 flex-shrink-0">
-              <button onClick={() => setShowInviteModal(true)} className="btn btn-secondary border border-blue-600 text-blue-600 hover:bg-blue-50 text-sm whitespace-nowrap">
-                {t('projectDetail.invite')}
-              </button>
+              {project?.owner_id === user?.id && (
+                <button onClick={() => setShowInviteModal(true)} className="btn btn-secondary border border-blue-600 text-blue-600 hover:bg-blue-50 text-sm whitespace-nowrap">
+                  {t('projectDetail.invite')}
+                </button>
+              )}
               <button
                 onClick={() => {
                   const transactionsSection = document.getElementById('recent-transactions')
@@ -664,7 +666,7 @@ export default function ProjectDetailPage() {
         </div>
       </header>
 
-      {showInviteModal && (
+      {showInviteModal && project?.owner_id === user?.id && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h2 className="text-xl font-bold mb-4">{t('projectDetail.inviteToProject')}</h2>
