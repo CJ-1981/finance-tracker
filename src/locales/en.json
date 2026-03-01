@@ -303,12 +303,15 @@
     "cancel": "Cancel",
     "uncategorized": "Uncategorized",
     "subject": "Subject",
+    "invitationEmailSubject": "You're invited to join \"{{project}}\"",
     "invitationEmailBody": "You've been invited to join the project \"{{project}}\" as a {{role}}.\n\nClick the link below to accept the invitation:\n{{link}}\n\nThis invitation expires in 7 days.",
     "fullInvitationCopied": "Full invitation copied to clipboard!",
     "linkCopied": "Link copied to clipboard!",
     "chartDate": "Date",
     "chartCount": "Count",
-    "chartTitleFormat": "{{metric}} by {{groupBy}}"
+    "chartTitleFormat": "{{metric}} by {{groupBy}}",
+    "chartOverTimeTitle": "{{title}} Over Time",
+    "chartYAxisTitle": "{{mode}} {{metric}}"
   },
   "cashCounter": {
     "title": "Cash Counter",

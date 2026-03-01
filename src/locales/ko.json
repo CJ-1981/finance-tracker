@@ -303,12 +303,15 @@
     "cancel": "취소",
     "uncategorized": "미분류",
     "subject": "제목",
+    "invitationEmailSubject": "\"{{project}}\" 프로젝트에 초대되었습니다",
     "invitationEmailBody": "{{project}} 프로젝트에 {{role}} 권한으로 초대되었습니다.\n\n아래 링크를 클릭하여 초대를 수락하세요:\n{{link}}\n\n이 초대는 7일 후에 만료됩니다.",
     "fullInvitationCopied": "전체 초대가 클립보드에 복사되었습니다!",
     "linkCopied": "링크가 클립보드에 복사되었습니다!",
     "chartDate": "날짜",
     "chartCount": "개수",
-    "chartTitleFormat": "{{metric}}별 {{groupBy}}"
+    "chartTitleFormat": "{{metric}}별 {{groupBy}}",
+    "chartOverTimeTitle": "{{title}} 기간별",
+    "chartYAxisTitle": "{{mode}} {{metric}}"
   },
   "cashCounter": {
     "title": "현금 계산기",

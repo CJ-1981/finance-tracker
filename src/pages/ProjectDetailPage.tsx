@@ -644,8 +644,8 @@ export default function ProjectDetailPage() {
                   }
                 }}
                 className="btn btn-secondary text-sm whitespace-nowrap flex"
-                title="View Transactions"
-                aria-label="View Transactions"
+                title={t('projectDetail.viewTransactions')}
+                aria-label={t('projectDetail.viewTransactions')}
               >
                 <span>📋</span>
                 <span className="hidden sm:inline ml-1">{t('projectDetail.viewTransactions')}</span>
@@ -693,7 +693,7 @@ export default function ProjectDetailPage() {
 
             {/* Email Client Button */}
             <a
-              href={`mailto:${inviteRecipientEmail}?subject=${encodeURIComponent(`You're invited to join "${project?.name}"`)}&body=${encodeURIComponent(t('projectDetail.invitationEmailBody', { project: project?.name, role: inviteRole, link: inviteLink }))}`}
+              href={`mailto:${inviteRecipientEmail}?subject=${encodeURIComponent(t('projectDetail.invitationEmailSubject', { project: project?.name }))}&body=${encodeURIComponent(t('projectDetail.invitationEmailBody', { project: project?.name, role: inviteRole, link: inviteLink }))}`}
               className="block w-full btn btn-primary text-center mb-3"
             >
               📧 {t('projectDetail.openEmailClient')}
@@ -710,7 +710,7 @@ export default function ProjectDetailPage() {
               <button
                 onClick={() => {
                   const fullMessage =
-                    `${t('projectDetail.subject')}: You're invited to join "${project?.name}"\n\n` +
+                    `${t('projectDetail.subject')}: ${t('projectDetail.invitationEmailSubject', { project: project?.name })}\n\n` +
                     t('projectDetail.invitationEmailBody', { project: project?.name, role: inviteRole, link: inviteLink })
                   navigator.clipboard.writeText(fullMessage)
                   alert(t('projectDetail.fullInvitationCopied'))
@@ -856,7 +856,7 @@ export default function ProjectDetailPage() {
                 <div className="lg:col-span-3 card border-t-4 border-t-primary-500 overflow-hidden">
                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-4">
                     <h2 className="text-lg font-semibold truncate pr-2">
-                      {getChartTitle(timeChartMetric, timeChartGroupBy)} {t('projectDetail.overTime')}
+                      {t('projectDetail.chartOverTimeTitle', { title: getChartTitle(timeChartMetric, timeChartGroupBy) })}
                     </h2>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <select
@@ -926,7 +926,10 @@ export default function ProjectDetailPage() {
                             stacked: true,
                             title: {
                               display: true,
-                              text: `${chartMode === 'cumulative' ? t('projectDetail.cumulative') : ''} ${timeChartMetric === 'amount' ? t('transactions.amount') : timeChartMetric === 'count' ? t('projectDetail.chartCount') : timeChartMetric}`.trim(),
+                              text: t('projectDetail.chartYAxisTitle', {
+                                mode: chartMode === 'cumulative' ? t('projectDetail.cumulative') : '',
+                                metric: timeChartMetric === 'amount' ? t('transactions.amount') : timeChartMetric === 'count' ? t('projectDetail.chartCount') : timeChartMetric
+                              }).trim(),
                             },
                             beginAtZero: true,
                           },

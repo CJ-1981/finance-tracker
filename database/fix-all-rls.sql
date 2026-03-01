@@ -17,7 +17,7 @@ RETURNS BOOLEAN AS $$
     SELECT 1 FROM public.projects
     WHERE id = p_id AND owner_id = auth.uid()
   );
-$$ LANGUAGE sql SECURITY DEFINER STABLE;
+$$ LANGUAGE sql SECURITY DEFINER STABLE SET search_path = '';
 
 -- Returns true if the current user is a member of the given project
 CREATE OR REPLACE FUNCTION public.is_project_member(p_id UUID)
@@ -26,7 +26,7 @@ RETURNS BOOLEAN AS $$
     SELECT 1 FROM public.project_members
     WHERE project_id = p_id AND user_id = auth.uid()
   );
-$$ LANGUAGE sql SECURITY DEFINER STABLE;
+$$ LANGUAGE sql SECURITY DEFINER STABLE SET search_path = '';
 
 -- Returns true if the current user is a member with a specific role
 CREATE OR REPLACE FUNCTION public.is_project_member_with_role(p_id UUID, allowed_roles TEXT[])
@@ -35,7 +35,7 @@ RETURNS BOOLEAN AS $$
     SELECT 1 FROM public.project_members
     WHERE project_id = p_id AND user_id = auth.uid() AND role = ANY(allowed_roles)
   );
-$$ LANGUAGE sql SECURITY DEFINER STABLE;
+$$ LANGUAGE sql SECURITY DEFINER STABLE SET search_path = '';
 
 
 -- ============================================================
@@ -118,6 +118,18 @@ CREATE POLICY "Owners can delete members"
   USING (
     public.is_project_owner(project_id) OR
     public.is_project_member_with_role(project_id, ARRAY['owner'])
+  );
+
+-- Invitees can insert themselves when they have a valid pending invitation
+CREATE POLICY "Invitees can join project"
+  ON public.project_members FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.invitations
+      WHERE invitations.project_id = project_id
+        AND invitations.email = (SELECT email FROM auth.users WHERE id = auth.uid())
+        AND invitations.status = 'pending'
+    )
   );
 
 
@@ -218,10 +230,13 @@ DROP POLICY IF EXISTS "Owners can insert invitations" ON public.invitations;
 DROP POLICY IF EXISTS "Owners can view project invitations" ON public.invitations;
 DROP POLICY IF EXISTS "Owners can delete invitations" ON public.invitations;
 
--- SELECT: Allow viewing invitations if you own the project OR have the token
+-- SELECT: Allow viewing invitations if you are the recipient, own the project, or are a member
 CREATE POLICY "Users can view project invitations"
   ON public.invitations FOR SELECT
   USING (
+    -- Recipient can view their own invitation
+    email = (SELECT email FROM auth.users WHERE id = auth.uid()) OR
+    -- Project owners and members can view
     public.is_project_owner(project_id) OR
     public.is_project_member_with_role(project_id, ARRAY['owner', 'member'])
   );
