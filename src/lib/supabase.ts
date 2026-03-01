@@ -3,7 +3,9 @@ import type { SupabaseConfig } from '../types'
 import type { Database } from '../types/database'
 import { getConfig, validateConfig } from './config'
 
-let supabaseInstance: SupabaseClient<Database> | null = null
+// Use a global variable to persist the Supabase instance across HMR reloads in development
+const globalRef = (typeof window !== 'undefined' ? window : {}) as any
+let supabaseInstance: SupabaseClient<Database> | null = globalRef.__supabaseInstance || null
 
 export function createSupabaseClient(config: SupabaseConfig): SupabaseClient<Database> {
   // Return existing instance if already created with same config
@@ -20,6 +22,11 @@ export function createSupabaseClient(config: SupabaseConfig): SupabaseClient<Dat
       storage: window.localStorage,
     },
   })
+
+  // Store in global reference
+  if (typeof window !== 'undefined') {
+    ; (window as any).__supabaseInstance = supabaseInstance
+  }
 
   return supabaseInstance
 }
@@ -67,6 +74,9 @@ export function getSupabaseClient(): SupabaseClient<Database> {
 
 export function resetSupabaseClient() {
   supabaseInstance = null
+  if (typeof window !== 'undefined') {
+    delete (window as any).__supabaseInstance
+  }
 }
 
 export async function testConnection(config: SupabaseConfig): Promise<boolean> {
@@ -79,8 +89,16 @@ export async function testConnection(config: SupabaseConfig): Promise<boolean> {
       return false
     }
 
-    // Try to create a client (this will fail if credentials are invalid)
-    const client = createClient<Database>(config.url, config.anonKey)
+    // Try to create a temporary client for connection testing
+    // We disable auth persistence and refresh to avoid "Multiple GoTrueClient instances" warnings
+    // and lock contention with the main client.
+    const client = createClient<Database>(config.url, config.anonKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      }
+    })
 
     // Try a simple query that should work even without auth
     // Just checking if Supabase responds
