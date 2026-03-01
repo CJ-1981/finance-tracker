@@ -15,6 +15,17 @@ export default function LoginPage() {
   const [message, setMessage] = useState('')
   const [isConfigured, setIsConfigured] = useState(true)
 
+  // Helper: navigate to the saved redirect path after login, then clear it
+  const navigateAfterLogin = (fallback = '/projects') => {
+    const saved = sessionStorage.getItem('redirectAfterLogin')
+    if (saved) {
+      sessionStorage.removeItem('redirectAfterLogin')
+      navigate(saved, { replace: true })
+    } else {
+      navigate(fallback, { replace: true })
+    }
+  }
+
   // Check if user was redirected from invite page
   const inviteToken = location.state?.inviteToken || searchParams.get('token')
 
@@ -40,7 +51,7 @@ export default function LoginPage() {
           if (inviteToken) {
             navigate(`/invite?token=${inviteToken}`)
           } else {
-            navigate('/projects')
+            navigateAfterLogin()
           }
         }
       } catch (err) {
@@ -86,12 +97,12 @@ export default function LoginPage() {
         })
         if (error) throw error
 
-        // After successful login, redirect to invite or projects
+        // After successful login, redirect to saved path or projects
         setTimeout(() => {
           if (inviteToken) {
             navigate(`/invite?token=${inviteToken}`)
           } else {
-            navigate('/projects')
+            navigateAfterLogin()
           }
         }, 100)
       }
@@ -116,7 +127,7 @@ export default function LoginPage() {
 
       <div className="max-w-md w-full relative z-10">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">{t('auth.financialTracker')} <span className="text-primary-600">Tracker</span></h1>
+          <h1 className="text-4xl font-black text-slate-900 tracking-tight">{t('auth.financialTrackerFull')}</h1>
           <p className="text-slate-500 mt-2 font-medium">
             {isSignUp ? t('auth.createAccount') : t('auth.welcomeBack')}
           </p>
@@ -160,6 +171,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoComplete="username"
               />
             </div>
 
@@ -176,6 +188,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
+                autoComplete="current-password"
               />
             </div>
 
@@ -209,7 +222,7 @@ export default function LoginPage() {
               }}
               className="text-blue-600 hover:text-blue-700 font-medium"
             >
-              {isSignUp ? t('auth.alreadyHaveAccount') + ' ' + t('auth.signIn') : t('auth.dontHaveAccount') + ' ' + t('auth.signUp')}
+              {isSignUp ? t('auth.toggleToSignIn') : t('auth.toggleToSignUp')}
             </button>
           </div>
 

@@ -13,7 +13,7 @@ import { useAuth } from '../hooks/useAuth'
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Filler)
 
 export default function ProjectDetailPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -313,7 +313,7 @@ export default function ProjectDetailPage() {
 
   const getCategoryName = (categoryId: string) => {
     const category = categories.find((c) => c.id === categoryId)
-    return category?.name || 'Uncategorized'
+    return category?.name || t('projectDetail.uncategorized')
   }
 
   const getCategoryColor = (categoryId: string) => {
@@ -447,16 +447,16 @@ export default function ProjectDetailPage() {
 
   // Get chart title based on metric and grouping
   const getChartTitle = (metric: string, groupBy: string): string => {
-    const metricLabel = metric === 'amount' ? 'Amount' : metric
+    const metricLabel = metric === 'amount' ? t('transactions.amount') : metric === 'count' ? t('projectDetail.chartCount') : metric
     const groupByOption = getGroupingOptions().find(opt => opt.value === groupBy)
     const groupByLabel = groupByOption?.label || groupBy
-    return `${metricLabel} by ${groupByLabel}`
+    return t('projectDetail.chartTitleFormat', { metric: metricLabel, groupBy: groupByLabel })
   }
 
   // Get available grouping options (category + text/select custom fields)
   const getGroupingOptions = () => {
     const standardOptions = [
-      { value: 'category', label: 'Category' },
+      { value: 'category', label: t('transactions.category') },
     ]
 
     // Add custom text and select fields
@@ -649,8 +649,8 @@ export default function ProjectDetailPage() {
                   }
                 }}
                 className="btn btn-secondary text-sm whitespace-nowrap flex"
-                title="View Transactions"
-                aria-label="View Transactions"
+                title={t('projectDetail.viewTransactions')}
+                aria-label={t('projectDetail.viewTransactions')}
               >
                 <span>📋</span>
                 <span className="hidden sm:inline ml-1">{t('projectDetail.viewTransactions')}</span>
@@ -703,7 +703,7 @@ export default function ProjectDetailPage() {
 
             {/* Email Client Button */}
             <a
-              href={`mailto:${inviteRecipientEmail}?subject=${encodeURIComponent(`You're invited to join "${project?.name}"`)}&body=${encodeURIComponent(t('projectDetail.invitationEmailBody', { project: project?.name, role: inviteRole, link: inviteLink }))}`}
+              href={`mailto:${inviteRecipientEmail}?subject=${encodeURIComponent(t('projectDetail.invitationEmailSubject', { project: project?.name }))}&body=${encodeURIComponent(t('projectDetail.invitationEmailBody', { project: project?.name, role: inviteRole, link: inviteLink }))}`}
               className="block w-full btn btn-primary text-center mb-3"
             >
               📧 {t('projectDetail.openEmailClient')}
@@ -720,7 +720,7 @@ export default function ProjectDetailPage() {
               <button
                 onClick={() => {
                   const fullMessage =
-                    `${t('projectDetail.subject')}: You're invited to join "${project?.name}"\n\n` +
+                    `${t('projectDetail.subject')}: ${t('projectDetail.invitationEmailSubject', { project: project?.name })}\n\n` +
                     t('projectDetail.invitationEmailBody', { project: project?.name, role: inviteRole, link: inviteLink })
                   navigator.clipboard.writeText(fullMessage)
                   alert(t('projectDetail.fullInvitationCopied'))
@@ -761,10 +761,10 @@ export default function ProjectDetailPage() {
               </div>
               <div className="flex flex-col">
                 <div className="text-base font-semibold text-slate-900">
-                  {currentDateTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                  {currentDateTime.toLocaleDateString(i18n.language || undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
                 </div>
                 <div className="text-xl font-medium text-slate-900">
-                  {currentDateTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' })}
+                  {currentDateTime.toLocaleTimeString(i18n.language || undefined, { hour: 'numeric', minute: '2-digit', second: '2-digit' })}
                 </div>
               </div>
             </div>
@@ -866,7 +866,7 @@ export default function ProjectDetailPage() {
                 <div className="lg:col-span-3 card border-t-4 border-t-primary-500 overflow-hidden">
                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-4">
                     <h2 className="text-lg font-semibold truncate pr-2">
-                      {getChartTitle(timeChartMetric, timeChartGroupBy)} Over Time
+                      {t('projectDetail.chartOverTimeTitle', { title: getChartTitle(timeChartMetric, timeChartGroupBy) })}
                     </h2>
                     <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
                       <select
@@ -931,14 +931,17 @@ export default function ProjectDetailPage() {
                             stacked: true,
                             title: {
                               display: true,
-                              text: 'Date',
+                              text: t('projectDetail.chartDate'),
                             },
                           },
                           y: {
                             stacked: true,
                             title: {
                               display: true,
-                              text: `${chartMode === 'cumulative' ? 'Cumulative' : ''} ${timeChartMetric === 'amount' ? 'Amount' : timeChartMetric === 'count' ? 'Count' : timeChartMetric}`.trim(),
+                              text: t('projectDetail.chartYAxisTitle', {
+                                mode: chartMode === 'cumulative' ? t('projectDetail.cumulative') : '',
+                                metric: timeChartMetric === 'amount' ? t('transactions.amount') : timeChartMetric === 'count' ? t('projectDetail.chartCount') : timeChartMetric
+                              }).trim(),
                             },
                             beginAtZero: true,
                           },

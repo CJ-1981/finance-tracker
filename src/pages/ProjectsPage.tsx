@@ -34,12 +34,19 @@ export default function ProjectsPage() {
   }, [user])
 
   const fetchProjects = async () => {
+    // If user is not authenticated, clear projects and return early
+    if (!user?.id) {
+      setProjects([])
+      setLoading(false)
+      return
+    }
+
     try {
       const supabase = getSupabaseClient()
       const { data, error } = await supabase
         .from('project_members')
         .select('role, project_id, projects(*)')
-        .eq('user_id', user?.id || '')
+        .eq('user_id', user.id)
 
       if (error) throw error
 
@@ -51,6 +58,7 @@ export default function ProjectsPage() {
       setProjects(projectsWithRoles)
     } catch (error) {
       console.error('Error fetching projects:', error)
+      setProjects([])
     } finally {
       setLoading(false)
     }
@@ -141,7 +149,7 @@ export default function ProjectsPage() {
       setIsSelectionMode(false)
     } catch (err) {
       console.error(err)
-      alert('Failed to send invitations')
+      alert(t('projects.failedInvite'))
     }
   }
 
@@ -168,7 +176,7 @@ export default function ProjectsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20 md:pb-0">
-      <header className="bg-white border-b border-slate-200 shadow-sm relative overflow-hidden">
+      <header className="bg-white border-b border-slate-200 shadow-sm relative">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-primary"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
@@ -320,7 +328,7 @@ export default function ProjectsPage() {
                 <div className="flex justify-between items-start">
                   <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-primary-600 transition-colors">{project.name}</h3>
                   <span className="bg-primary-50 text-primary-700 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border border-primary-100">
-                    {t(`projects.${project.userRole}`)}
+                    {t(`projects.${['owner', 'member', 'viewer'].includes(project.userRole || '') ? project.userRole : 'unknownRole'}`)}
                   </span>
                 </div>
                 {project.description && (

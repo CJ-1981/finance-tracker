@@ -74,7 +74,7 @@ export default function InvitePage() {
       // Verify email matches (if user is logged in)
       if (user && validInvites.some((invite: any) => user.email !== invite.email)) {
         setStatus('wrong-email')
-        setError(`${t('invite.invitationForDifferentEmail')} ${validInvites[0].email}, ${t('invite.wrongEmail')} ${user.email}`)
+        setError(t('invite.inviteMismatch', { expected: validInvites[0].email, actual: user.email }))
         return
       }
 
