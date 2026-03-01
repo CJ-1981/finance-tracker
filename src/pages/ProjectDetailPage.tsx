@@ -45,6 +45,17 @@ export default function ProjectDetailPage() {
   // Flag to track if initial preferences have been loaded from project settings
   const [preferencesLoaded, setPreferencesLoaded] = useState(false)
 
+  // Current date and time state
+  const [currentDateTime, setCurrentDateTime] = useState(new Date())
+
+  // Update time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentDateTime(new Date())
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
+
   useEffect(() => {
     if (id) {
       fetchProject()
@@ -742,12 +753,26 @@ export default function ProjectDetailPage() {
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Summary Cards */}
           <div className="lg:col-span-3 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+            {/* Date & Time Widget */}
+            <div className="card border-t-4 border-t-blue-500 overflow-hidden">
+              <div className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Date & Time</div>
+              <div className="flex flex-col">
+                <div className="text-lg font-bold text-slate-900">
+                  {currentDateTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                </div>
+                <div className="text-2xl font-black text-slate-900">
+                  {currentDateTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' })}
+                </div>
+              </div>
+            </div>
+            {/* Total Amount Widget */}
             <div className="card border-t-4 border-t-primary-500 overflow-hidden">
               <div className="text-xs font-bold text-primary-600 uppercase tracking-wider mb-1">Total Amount</div>
               <div className="text-3xl font-black text-slate-900 break-all">
                 {project.settings?.currency || 'USD'} {totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
+            {/* Transactions Widget */}
             <div className="card border-t-4 border-t-teal-500 overflow-hidden">
               <div className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-1">Transactions</div>
               <div className="text-3xl font-black text-slate-900">{filteredTransactions.length}</div>
