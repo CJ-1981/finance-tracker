@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { getSupabaseClient } from '../lib/supabase'
 import { getPendingInvitation } from '../lib/invitations'
 import type { Project, Transaction, Category } from '../types'
@@ -11,6 +12,7 @@ import { useAuth } from '../hooks/useAuth'
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Filler)
 
 export default function ProjectDetailPage() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -563,9 +565,9 @@ export default function ProjectDetailPage() {
     return (
       <div className="min-h-screen bg-gray-50 p-8">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Project not found</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('projectDetail.projectNotFound')}</h1>
           <Link to="/projects" className="btn btn-secondary">
-            Back to Projects List
+            {t('projectDetail.backToProjectsList')}
           </Link>
         </div>
       </div>
@@ -580,19 +582,19 @@ export default function ProjectDetailPage() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
             <div className="flex-1 min-w-0">
               <Link to="/projects" className="text-sm font-medium text-primary-600 hover:text-primary-700 mb-2 inline-flex items-center gap-1">
-                ← Back to Projects List
+                ← {t('projectDetail.backToProjectsList')}
               </Link>
               {isEditing ? (
                 <form onSubmit={handleEditProject} className="flex flex-col gap-3 mt-1 w-full max-w-md">
-                  <input type="text" className="input" value={editFormData.name} onChange={e => setEditFormData({ ...editFormData, name: e.target.value })} required placeholder="Project Name" />
-                  <textarea className="input" value={editFormData.description} onChange={e => setEditFormData({ ...editFormData, description: e.target.value })} rows={2} placeholder="Project Description (Optional)" />
+                  <input type="text" className="input" value={editFormData.name} onChange={e => setEditFormData({ ...editFormData, name: e.target.value })} required placeholder={t('projectDetail.projectName')} />
+                  <textarea className="input" value={editFormData.description} onChange={e => setEditFormData({ ...editFormData, description: e.target.value })} rows={2} placeholder={t('projectDetail.projectDescription')} />
                   <div className="flex gap-2 items-center">
-                    <label className="text-sm font-medium text-slate-700 whitespace-nowrap">Currency:</label>
+                    <label className="text-sm font-medium text-slate-700 whitespace-nowrap">{t('projectDetail.currencyLabel')}</label>
                     <input type="text" className="input w-24" value={editFormData.currency} onChange={e => setEditFormData({ ...editFormData, currency: e.target.value })} placeholder="USD, EUR, etc." maxLength={5} />
                   </div>
                   <div className="flex gap-2 mt-1">
-                    <button type="submit" className="btn btn-primary px-4 py-1">Save Changes</button>
-                    <button type="button" onClick={() => setIsEditing(false)} className="btn btn-secondary px-4 py-1">Cancel</button>
+                    <button type="submit" className="btn btn-primary px-4 py-1">{t('projectDetail.saveChanges')}</button>
+                    <button type="button" onClick={() => setIsEditing(false)} className="btn btn-secondary px-4 py-1">{t('projectDetail.cancel')}</button>
                   </div>
                 </form>
               ) : (
@@ -602,29 +604,29 @@ export default function ProjectDetailPage() {
                     <button onClick={() => {
                       setIsEditing(true)
                       setEditFormData({ name: project.name, description: project.description || '', currency: project.settings?.currency || 'USD' })
-                    }} className="text-blue-500 hover:text-blue-700 text-sm opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">Edit</button>
+                    }} className="text-blue-500 hover:text-blue-700 text-sm opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">{t('projectDetail.edit')}</button>
                   </div>
                   {project.description && <p className="text-sm text-gray-600 max-w-2xl break-words">{project.description}</p>}
 
                   {/* Date Period Selector */}
                   <div className="mt-3 flex flex-wrap items-center gap-2 min-w-0">
-                    <label className="text-sm font-medium text-gray-700">Period:</label>
+                    <label className="text-sm font-medium text-gray-700">{t('projectDetail.period')}</label>
                     <select
                       value={datePeriod}
                       onChange={(e) => setDatePeriod(e.target.value as any)}
                       className="input py-1 px-2 text-xs sm:py-1 sm:px-3 w-full sm:w-auto sm:min-w-0 flex-1"
                     >
-                      <option value="today">Today</option>
-                      <option value="yesterday">Yesterday</option>
-                      <option value="last7days">Last 7</option>
-                      <option value="last30days">Last 30</option>
-                      <option value="thisMonth">This Month</option>
-                      <option value="lastMonth">Last Month</option>
-                      <option value="thisYear">This Year</option>
-                      <option value="all">All Time</option>
+                      <option value="today">{t('projectDetail.today')}</option>
+                      <option value="yesterday">{t('projectDetail.yesterday')}</option>
+                      <option value="last7days">{t('projectDetail.last7')}</option>
+                      <option value="last30days">{t('projectDetail.last30')}</option>
+                      <option value="thisMonth">{t('projectDetail.thisMonth')}</option>
+                      <option value="lastMonth">{t('projectDetail.lastMonth')}</option>
+                      <option value="thisYear">{t('projectDetail.thisYear')}</option>
+                      <option value="all">{t('projectDetail.allTime')}</option>
                     </select>
                     <span className="text-xs text-gray-500 flex-shrink-0">
-                      ({filteredTransactions.length} transactions)
+                      ({filteredTransactions.length} {t('projectDetail.transactions')})
                     </span>
                   </div>
                 </div>
@@ -632,7 +634,7 @@ export default function ProjectDetailPage() {
             </div>
             <div className="flex gap-2 flex-shrink-0">
               <button onClick={() => setShowInviteModal(true)} className="btn btn-secondary border border-blue-600 text-blue-600 hover:bg-blue-50 text-sm whitespace-nowrap">
-                Invite
+                {t('projectDetail.invite')}
               </button>
               <button
                 onClick={() => {
@@ -646,10 +648,10 @@ export default function ProjectDetailPage() {
                 aria-label="View Transactions"
               >
                 <span>📋</span>
-                <span className="hidden sm:inline ml-1">Transactions</span>
+                <span className="hidden sm:inline ml-1">{t('projectDetail.viewTransactions')}</span>
               </button>
               <button onClick={() => setShowAddTransactionModal(true)} className="btn btn-primary text-sm whitespace-nowrap">
-                + Add Transaction
+                + {t('projectDetail.addTransaction')}
               </button>
             </div>
           </div>
@@ -659,22 +661,22 @@ export default function ProjectDetailPage() {
       {showInviteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h2 className="text-xl font-bold mb-4">Invite to Project</h2>
+            <h2 className="text-xl font-bold mb-4">{t('projectDetail.inviteToProject')}</h2>
             <form onSubmit={handleInvite} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('auth.email')}</label>
                 <input type="email" required className="input" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="colleague@example.com" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('projects.role')}</label>
                 <select className="input" value={inviteRole} onChange={e => setInviteRole(e.target.value as any)}>
-                  <option value="member">Member</option>
-                  <option value="viewer">Viewer</option>
+                  <option value="member">{t('projects.roleMember')}</option>
+                  <option value="viewer">{t('projects.roleViewer')}</option>
                 </select>
               </div>
               <div className="flex gap-2 pt-2">
-                <button type="submit" className="btn btn-primary w-full">Send Invite</button>
-                <button type="button" onClick={() => setShowInviteModal(false)} className="btn btn-secondary w-full">Cancel</button>
+                <button type="submit" className="btn btn-primary w-full">{t('projects.invite')}</button>
+                <button type="button" onClick={() => setShowInviteModal(false)} className="btn btn-secondary w-full">{t('common.cancel')}</button>
               </div>
             </form>
           </div>
@@ -684,22 +686,22 @@ export default function ProjectDetailPage() {
       {showInviteLink && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-6 max-w-lg w-full">
-            <h2 className="text-xl font-bold mb-4">Invitation Created!</h2>
+            <h2 className="text-xl font-bold mb-4">{t('projectDetail.invitationCreated')}</h2>
             <p className="text-sm text-gray-600 mb-4">
-              Choose how you want to send the invitation:
+              {t('projectDetail.chooseSendMethod')}
             </p>
 
             {/* Email Client Button */}
             <a
-              href={`mailto:${inviteRecipientEmail}?subject=${encodeURIComponent(`You're invited to join "${project?.name}"`)}&body=${encodeURIComponent(`You've been invited to join the project "${project?.name}" as a ${inviteRole}.\n\nClick the link below to accept the invitation:\n${inviteLink}\n\nThis invitation expires in 7 days.`)}`}
+              href={`mailto:${inviteRecipientEmail}?subject=${encodeURIComponent(`You're invited to join "${project?.name}"`)}&body=${encodeURIComponent(t('projectDetail.invitationEmailBody', { project: project?.name, role: inviteRole, link: inviteLink }))}`}
               className="block w-full btn btn-primary text-center mb-3"
             >
-              📧 Open Email Client
+              📧 {t('projectDetail.openEmailClient')}
             </a>
 
             {/* Invite Link */}
             <div className="bg-gray-50 p-3 rounded-md mb-3">
-              <p className="text-xs text-gray-500 mb-1">Invite Link:</p>
+              <p className="text-xs text-gray-500 mb-1">{t('projectDetail.inviteLink')}</p>
               <p className="text-sm text-blue-600 break-words">{inviteLink}</p>
             </div>
 
@@ -708,25 +710,23 @@ export default function ProjectDetailPage() {
               <button
                 onClick={() => {
                   const fullMessage =
-                    `Subject: You're invited to join "${project?.name}"\n\n` +
-                    `You've been invited to join the project "${project?.name}" as a ${inviteRole}.\n\n` +
-                    `Click the link below to accept the invitation:\n${inviteLink}\n\n` +
-                    `This invitation expires in 7 days.`
+                    `${t('projectDetail.subject')}: You're invited to join "${project?.name}"\n\n` +
+                    t('projectDetail.invitationEmailBody', { project: project?.name, role: inviteRole, link: inviteLink })
                   navigator.clipboard.writeText(fullMessage)
-                  alert('Full invitation copied to clipboard!')
+                  alert(t('projectDetail.fullInvitationCopied'))
                 }}
                 className="btn btn-secondary"
               >
-                📋 Copy Full Message
+                📋 {t('projectDetail.copyFullMessage')}
               </button>
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(inviteLink)
-                  alert('Link copied to clipboard!')
+                  alert(t('projectDetail.linkCopied'))
                 }}
                 className="btn btn-secondary"
               >
-                🔗 Copy Link Only
+                🔗 {t('projectDetail.copyLinkOnly')}
               </button>
             </div>
 
@@ -734,7 +734,7 @@ export default function ProjectDetailPage() {
               onClick={() => setShowInviteLink(false)}
               className="w-full mt-3 text-sm text-gray-600 hover:text-gray-900"
             >
-              Close
+              {t('projectDetail.close')}
             </button>
           </div>
         </div>
@@ -747,7 +747,7 @@ export default function ProjectDetailPage() {
             {/* Date & Time Widget */}
             <div className="card border-t-4 border-t-blue-500 overflow-hidden">
               <div className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">
-                <span className="mr-1">☀️</span> Date & Time
+                <span className="mr-1">☀️</span> {t('projectDetail.dateTime')}
               </div>
               <div className="flex flex-col">
                 <div className="text-base font-semibold text-slate-900">
@@ -760,14 +760,14 @@ export default function ProjectDetailPage() {
             </div>
             {/* Total Amount Widget */}
             <div className="card border-t-4 border-t-primary-500 overflow-hidden">
-              <div className="text-xs font-bold text-primary-600 uppercase tracking-wider mb-1">Total Amount</div>
+              <div className="text-xs font-bold text-primary-600 uppercase tracking-wider mb-1">{t('projectDetail.totalAmount')}</div>
               <div className="text-3xl font-black text-slate-900 break-all">
                 {project.settings?.currency || 'USD'} {totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
             {/* Transactions Widget */}
             <div className="card border-t-4 border-t-teal-500 overflow-hidden">
-              <div className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-1">Transactions</div>
+              <div className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-1">{t('transactions.transactions')}</div>
               <div className="text-3xl font-black text-slate-900">{filteredTransactions.length}</div>
             </div>
           </div>
@@ -817,10 +817,10 @@ export default function ProjectDetailPage() {
                 <Link to={`/transactions/${id}`} className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-6">
                   <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                     <span className="w-2 h-6 bg-teal-500 rounded-full flex-shrink-0"></span>
-                    Recent
+                    {t('projectDetail.recent')}
                   </h2>
                   <span className="text-sm font-semibold text-primary-600 hover:text-primary-700 whitespace-nowrap">
-                    View All →
+                    {t('projectDetail.viewAll')} →
                   </span>
                 </Link>
                 <div className="space-y-3 flex-1 overflow-auto">
@@ -846,7 +846,7 @@ export default function ProjectDetailPage() {
                   ))}
                   {filteredTransactions.length === 0 && (
                     <div className="text-center py-8 text-sm text-gray-500">
-                      No transactions for selected period
+                      {t('projectDetail.noTransactionsForPeriod')}
                     </div>
                   )}
                 </div>
@@ -886,7 +886,7 @@ export default function ProjectDetailPage() {
                           : 'text-gray-600 hover:bg-gray-100'
                           }`}
                       >
-                        Cumulative
+                        {t('projectDetail.cumulative')}
                       </button>
                       <button
                         onClick={() => setChartMode('absolute')}
@@ -895,7 +895,7 @@ export default function ProjectDetailPage() {
                           : 'text-gray-600 hover:bg-gray-100'
                           }`}
                       >
-                        Absolute
+                        {t('projectDetail.absolute')}
                       </button>
                     </div>
                   </div>
