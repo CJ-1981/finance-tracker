@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { getSupabaseClient } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import type { Project, Transaction, Category } from '../types'
@@ -26,6 +27,7 @@ export default function TransactionModal({
     allTransactions,
     children
 }: TransactionModalProps) {
+    const { t } = useTranslation()
     const { user } = useAuth()
     const [saving, setSaving] = useState(false)
     const [formData, setFormData] = useState({
@@ -78,7 +80,7 @@ export default function TransactionModal({
     const handleGoToSettings = () => {
         const isDirty = formData.amount !== '' || Object.values(customData).some(v => v !== '')
         if (isDirty) {
-            if (!confirm('You have entered some data. Are you sure you want to leave and go to settings? Your changes will be lost.')) {
+            if (!confirm(t('transactions.confirmLeaveSettings'))) {
                 return
             }
         }
@@ -122,7 +124,7 @@ export default function TransactionModal({
             onClose()
         } catch (err) {
             console.error('Error saving transaction:', err)
-            alert('Failed to save transaction. Please try again.')
+            alert(t('transactions.failedSave'))
         } finally {
             setSaving(false)
         }
@@ -150,13 +152,13 @@ export default function TransactionModal({
             <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-black text-slate-900 tracking-tight">
-                        {transaction ? 'Edit Transaction' : 'Add Transaction'}
+                        {transaction ? t('transactions.editTransaction') : t('transactions.addTransaction')}
                     </h2>
                     <button
                         type="button"
                         onClick={handleGoToSettings}
                         className="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all"
-                        title="Configure custom fields and categories"
+                        title={t('transactionModal.configureCustomFields')}
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
@@ -169,7 +171,7 @@ export default function TransactionModal({
                     {/* Income/Expense Segmented Control */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Transaction Type
+                            {t('transactionModal.transactionType')}
                         </label>
                         <div className="flex gap-2">
                             <button
@@ -181,7 +183,7 @@ export default function TransactionModal({
                                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                 }`}
                             >
-                                Income
+                                {t('transactionModal.income')}
                             </button>
                             <button
                                 type="button"
@@ -192,14 +194,14 @@ export default function TransactionModal({
                                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                 }`}
                             >
-                                Expense
+                                {t('transactionModal.expense')}
                             </button>
                         </div>
                     </div>
 
                     <div>
                         <label htmlFor="modal-amount" className="block text-sm font-medium text-gray-700 mb-1">
-                            Amount *
+                            {t('transactions.amount')} *
                         </label>
                         <div className="flex gap-2">
                             <div className="relative flex-1">
@@ -208,7 +210,7 @@ export default function TransactionModal({
                                     type="number"
                                     step="0.01"
                                     min="0"
-                                    placeholder="0.00"
+                                    placeholder={t('transactionModal.amountPlaceholder')}
                                     inputMode="decimal"
                                     className={`input pr-10 w-full ${
                                         formData.transactionType === 'income'
@@ -240,13 +242,14 @@ export default function TransactionModal({
 
                     <div>
                         <label htmlFor="modal-date" className="block text-sm font-medium text-gray-700 mb-1">
-                            Date *
+                            {t('transactions.date')} *
                         </label>
                         <div className="relative">
                             <input
                                 id="modal-date"
                                 type="date"
                                 className="input pr-10"
+                                placeholder={t('transactionModal.datePlaceholder')}
                                 value={formData.date}
                                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                                 required
@@ -257,7 +260,7 @@ export default function TransactionModal({
 
                     <div>
                         <label htmlFor="modal-category" className="block text-sm font-medium text-gray-700 mb-1">
-                            Category
+                            {t('transactions.category')}
                         </label>
                         <select
                             id="modal-category"
@@ -271,7 +274,7 @@ export default function TransactionModal({
                                     {category.name}
                                 </option>
                             ))}
-                            <option value="">Uncategorized</option>
+                            <option value="">{t('projectDetail.uncategorized')}</option>
                         </select>
                     </div>
 
@@ -345,14 +348,14 @@ export default function TransactionModal({
                             className="btn btn-secondary flex-1"
                             disabled={saving}
                         >
-                            Cancel
+                            {t('common.cancel')}
                         </button>
                         <button
                             type="submit"
                             className="btn btn-primary flex-1"
                             disabled={saving}
                         >
-                            {saving ? 'Saving...' : (transaction ? 'Update' : 'Add')}
+                            {saving ? t('transactions.saving') : (transaction ? t('common.save') : t('common.add'))}
                         </button>
                     </div>
                 </form>

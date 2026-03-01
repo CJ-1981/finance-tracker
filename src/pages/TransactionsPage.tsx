@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../hooks/useAuth'
 import { getSupabaseClient } from '../lib/supabase'
 import { exportToCSV } from '../utils/csvExport'
@@ -7,6 +8,7 @@ import type { Project, Transaction, Category } from '../types'
 import TransactionModal from '../components/TransactionModal'
 
 export default function TransactionsPage() {
+  const { t } = useTranslation()
   const { } = useAuth()
   const { projectId } = useParams<{ projectId: string }>()
   const [project, setProject] = useState<Project | null>(null)
@@ -152,7 +154,7 @@ export default function TransactionsPage() {
   }
 
   const handleDelete = async (transactionId: string) => {
-    if (!confirm('Are you sure you want to delete this transaction?')) {
+    if (!confirm(t('transactions.confirmDelete'))) {
       return
     }
 
@@ -191,7 +193,7 @@ export default function TransactionsPage() {
   const handleBulkDelete = async () => {
     if (selectedTransactions.size === 0) return
 
-    if (!confirm(`Are you sure you want to delete ${selectedTransactions.size} selected transaction(s)?`)) {
+    if (!confirm(t('transactions.confirmBulkDelete', { count: selectedTransactions.size }))) {
       return
     }
 
@@ -471,7 +473,7 @@ export default function TransactionsPage() {
   }
 
   const handleDeleteCategory = async (categoryId: string) => {
-    if (!confirm('Are you sure you want to delete this category? Transactions using it will become Uncategorized.')) return;
+    if (!confirm(t('transactions.confirmDeleteCategory'))) return;
     try {
       const supabase = getSupabaseClient()
       const { error } = await supabase.from('categories').delete().eq('id', categoryId)
@@ -700,9 +702,9 @@ export default function TransactionsPage() {
     return (
       <div className="min-h-screen bg-gray-50 p-8">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Project not found</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('transactions.projectNotFound')}</h1>
           <Link to="/projects" className="btn btn-secondary">
-            Back to Projects
+            {t('transactions.backToProjects')}
           </Link>
         </div>
       </div>
@@ -725,19 +727,19 @@ export default function TransactionsPage() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
             <div className="min-w-0">
               <Link to={`/projects/${projectId}`} className="text-sm font-medium text-primary-600 hover:text-primary-700 mb-2 inline-flex items-center gap-1">
-                ← Back to Project Dashboard
+                {t('transactions.backToDashboard')}
               </Link>
-              <h1 className="text-2xl font-bold text-slate-900 mt-1">Transactions</h1>
+              <h1 className="text-2xl font-bold text-slate-900 mt-1">{t('transactions.transactions')}</h1>
             </div>
             <div className="flex gap-2 flex-wrap">
               <button onClick={() => setShowSettings(!showSettings)} className="btn btn-secondary text-sm whitespace-nowrap">
-                {showSettings ? 'Close Settings' : '⚙️ Settings'}
+                {showSettings ? t('transactions.closeSettings') : `⚙️ ${t('common.settings')}`}
               </button>
               <button onClick={() => {
                 setEditingTransactionId(null)
                 setShowAddForm(true)
               }} className="btn btn-primary text-sm whitespace-nowrap">
-                + Add Transaction
+                {t('transactions.addTransaction')}
               </button>
             </div>
           </div>
@@ -750,7 +752,7 @@ export default function TransactionsPage() {
             <div className="card border-t-4 border-t-primary-500">
               <h2 className="text-xl font-extrabold text-slate-900 mb-6 flex items-center gap-2">
                 <span className="p-1.5 bg-primary-100 text-primary-600 rounded-lg">🏷️</span>
-                Manage Categories
+                {t('transactions.manageCategories')}
               </h2>
               <form onSubmit={handleAddCategory} className="flex gap-2 mb-6 bg-slate-50 p-3 rounded-xl border border-slate-100">
                 <input
@@ -838,7 +840,7 @@ export default function TransactionsPage() {
             <div className="card border-t-4 border-t-teal-500" id="manage-custom-fields">
               <h2 className="text-xl font-extrabold text-slate-900 mb-6 flex items-center gap-2">
                 <span className="p-1.5 bg-teal-100 text-teal-600 rounded-lg">📋</span>
-                Custom Fields
+                {t('transactions.customFields')}
               </h2>
               <form onSubmit={handleAddField} className="flex flex-col gap-3 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
                 <div className="flex gap-2">
@@ -1035,10 +1037,10 @@ export default function TransactionsPage() {
 
         {transactions.length === 0 ? (
           <div className="text-center py-12">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">No transactions yet</h2>
-            <p className="text-gray-600 mb-6">Add your first transaction to get started</p>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('transactions.noTransactionsYet')}</h2>
+            <p className="text-gray-600 mb-6">{t('transactions.addFirstTransaction')}</p>
             <button onClick={() => setShowAddForm(true)} className="btn btn-primary">
-              Add Transaction
+              {t('transactions.addTransaction')}
             </button>
           </div>
         ) : (

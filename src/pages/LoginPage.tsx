@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 export default function LoginPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()
@@ -12,6 +14,17 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [isConfigured, setIsConfigured] = useState(true)
+
+  // Helper: navigate to the saved redirect path after login, then clear it
+  const navigateAfterLogin = (fallback = '/projects') => {
+    const saved = sessionStorage.getItem('redirectAfterLogin')
+    if (saved) {
+      sessionStorage.removeItem('redirectAfterLogin')
+      navigate(saved, { replace: true })
+    } else {
+      navigate(fallback, { replace: true })
+    }
+  }
 
   // Check if user was redirected from invite page
   const inviteToken = location.state?.inviteToken || searchParams.get('token')
@@ -38,7 +51,7 @@ export default function LoginPage() {
           if (inviteToken) {
             navigate(`/invite?token=${inviteToken}`)
           } else {
-            navigate('/projects')
+            navigateAfterLogin()
           }
         }
       } catch (err) {
@@ -75,7 +88,7 @@ export default function LoginPage() {
           }
         })
         if (error) throw error
-        setMessage('Registration successful! Please check your email for a confirmation link.')
+        setMessage(t('auth.registrationSuccess'))
       } else {
         // Sign in
         const { error } = await supabase.auth.signInWithPassword({
@@ -84,21 +97,21 @@ export default function LoginPage() {
         })
         if (error) throw error
 
-        // After successful login, redirect to invite or projects
+        // After successful login, redirect to saved path or projects
         setTimeout(() => {
           if (inviteToken) {
             navigate(`/invite?token=${inviteToken}`)
           } else {
-            navigate('/projects')
+            navigateAfterLogin()
           }
         }, 100)
       }
     } catch (err: any) {
-      const errorMessage = err.message || 'Authentication failed'
+      const errorMessage = err.message || t('auth.authenticationFailed')
       if (errorMessage.includes('Invalid login credentials')) {
-        setError('Invalid email or password. Please check your credentials and try again.')
+        setError(t('auth.invalidCredentials'))
       } else if (errorMessage.includes('Email not confirmed')) {
-        setError('Please confirm your email address. Check your inbox for the confirmation link.')
+        setError(t('auth.emailNotConfirmed'))
       } else {
         setError(errorMessage)
       }
@@ -114,9 +127,9 @@ export default function LoginPage() {
 
       <div className="max-w-md w-full relative z-10">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">Financial <span className="text-primary-600">Tracker</span></h1>
+          <h1 className="text-4xl font-black text-slate-900 tracking-tight">{t('auth.financialTrackerFull')}</h1>
           <p className="text-slate-500 mt-2 font-medium">
-            {isSignUp ? 'Create your new account' : 'Welcome back! Please sign in'}
+            {isSignUp ? t('auth.createAccount') : t('auth.welcomeBack')}
           </p>
         </div>
 
@@ -128,16 +141,16 @@ export default function LoginPage() {
                   <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-amber-800">Database Not Configured</p>
+                  <p className="text-sm font-medium text-amber-800">{t('auth.databaseNotConfigured')}</p>
                   <p className="text-xs text-amber-700 mt-2">
-                    Please configure your Supabase connection first.
+                    {t('auth.configureSupabaseFirst')}
                   </p>
                   <button
                     type="button"
                     onClick={() => navigate('/config')}
                     className="mt-2 w-full btn btn-secondary text-xs py-2"
                   >
-                    Go to Configuration
+                    {t('auth.goToConfiguration')}
                   </button>
                 </div>
               </div>
@@ -148,7 +161,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email
+                {t('auth.email')}
               </label>
               <input
                 id="email"
@@ -158,12 +171,13 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoComplete="username"
               />
             </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
+                {t('auth.password')}
               </label>
               <input
                 id="password"
@@ -174,6 +188,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
+                autoComplete="current-password"
               />
             </div>
 
@@ -194,7 +209,7 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Loading...' : (isSignUp ? 'Sign Up' : 'Sign In')}
+              {loading ? t('common.loading') : (isSignUp ? t('auth.signUp') : t('auth.signIn'))}
             </button>
           </form>
 
@@ -207,12 +222,12 @@ export default function LoginPage() {
               }}
               className="text-blue-600 hover:text-blue-700 font-medium"
             >
-              {isSignUp ? 'Already have an account? Sign In' : 'Don\'t have an account? Sign Up'}
+              {isSignUp ? t('auth.toggleToSignIn') : t('auth.toggleToSignUp')}
             </button>
           </div>
 
           <p className="mt-4 text-xs text-gray-500 text-center">
-            Your data is secured with Supabase Auth
+            {t('auth.securedWithSupabase')}
           </p>
         </div>
       </div>

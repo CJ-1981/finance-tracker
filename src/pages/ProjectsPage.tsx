@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../hooks/useAuth'
 import { getSupabaseClient } from '../lib/supabase'
 import type { Project } from '../types'
+import LanguageSelector from '../components/LanguageSelector'
 
 export default function ProjectsPage() {
+  const { t } = useTranslation()
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
   const [projects, setProjects] = useState<(Project & { userRole: string })[]>([])
@@ -31,12 +34,19 @@ export default function ProjectsPage() {
   }, [user])
 
   const fetchProjects = async () => {
+    // If user is not authenticated, clear projects and return early
+    if (!user?.id) {
+      setProjects([])
+      setLoading(false)
+      return
+    }
+
     try {
       const supabase = getSupabaseClient()
       const { data, error } = await supabase
         .from('project_members')
         .select('role, project_id, projects(*)')
-        .eq('user_id', user?.id || '')
+        .eq('user_id', user.id)
 
       if (error) throw error
 
@@ -48,6 +58,7 @@ export default function ProjectsPage() {
       setProjects(projectsWithRoles)
     } catch (error) {
       console.error('Error fetching projects:', error)
+      setProjects([])
     } finally {
       setLoading(false)
     }
@@ -138,7 +149,7 @@ export default function ProjectsPage() {
       setIsSelectionMode(false)
     } catch (err) {
       console.error(err)
-      alert('Failed to send invitations')
+      alert(t('projects.failedInvite'))
     }
   }
 
@@ -165,26 +176,27 @@ export default function ProjectsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20 md:pb-0">
-      <header className="bg-white border-b border-slate-200 shadow-sm relative overflow-hidden">
+      <header className="bg-white border-b border-slate-200 shadow-sm relative">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-primary"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Financial Tracker</h1>
-              <p className="text-slate-500 text-sm mt-1">Manage your projects and transactions</p>
+              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{t('projects.title')}</h1>
+              <p className="text-slate-500 text-sm mt-1">{t('projects.subtitle')}</p>
             </div>
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              <LanguageSelector />
               {!isSelectionMode ? (
                 <>
                   <button onClick={() => setShowCreateForm(true)} className="btn btn-primary text-sm whitespace-nowrap">
-                    + New Project
+                    {t('projects.newProject')}
                   </button>
                   {projects.some(p => p.userRole === 'owner') && (
                     <button
                       onClick={() => setIsSelectionMode(true)}
                       className="btn btn-secondary text-sm whitespace-nowrap hidden sm:inline-flex"
                     >
-                      Invite to Multi
+                      {t('projects.inviteToMulti')}
                     </button>
                   )}
                 </>
@@ -195,7 +207,7 @@ export default function ProjectsPage() {
                     disabled={selectedProjectIds.length === 0}
                     className="btn btn-primary text-sm whitespace-nowrap disabled:opacity-50"
                   >
-                    Invite ({selectedProjectIds.length})
+                    {t('projects.invite')} ({selectedProjectIds.length})
                   </button>
                   <button
                     onClick={() => {
@@ -204,24 +216,24 @@ export default function ProjectsPage() {
                     }}
                     className="btn btn-secondary text-sm whitespace-nowrap"
                   >
-                    Cancel
+                    {t('projects.cancelSelection')}
                   </button>
                 </>
               )}
               <button
                 onClick={() => { navigate('/config') }}
                 className="btn btn-secondary text-sm whitespace-nowrap sm:hidden"
-                title="Reconfigure Supabase connection"
-                aria-label="Reconfigure Supabase connection"
+                title={t('projects.reconfigure')}
+                aria-label={t('projects.reconfigure')}
               >
                 ⚙️
               </button>
-              <button onClick={() => { navigate('/config') }} className="btn btn-secondary text-sm whitespace-nowrap hidden sm:inline-flex" title="Reconfigure Supabase connection">
-                ⚙️ Settings
+              <button onClick={() => { navigate('/config') }} className="btn btn-secondary text-sm whitespace-nowrap hidden sm:inline-flex" title={t('projects.reconfigure')}>
+                ⚙️ {t('common.settings')}
               </button>
               <button onClick={handleLogout} className="btn border border-red-200 text-red-600 hover:bg-red-50 text-sm whitespace-nowrap px-4 py-2 rounded-xl font-semibold transition-all">
-                <span className="hidden sm:inline">Logout</span>
-                <span className="sm:hidden">Log Out</span>
+                <span className="hidden sm:inline">{t('common.logout')}</span>
+                <span className="sm:hidden">{t('common.logOut')}</span>
               </button>
             </div>
           </div>
@@ -231,11 +243,11 @@ export default function ProjectsPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {showCreateForm && (
           <div className="card mb-6">
-            <h2 className="text-lg font-semibold mb-4">Create New Project</h2>
+            <h2 className="text-lg font-semibold mb-4">{t('projects.createNewProject')}</h2>
             <form onSubmit={handleCreateProject} className="space-y-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Project Name
+                  {t('projects.projectName')}
                 </label>
                 <input
                   id="name"
@@ -248,7 +260,7 @@ export default function ProjectsPage() {
               </div>
               <div>
                 <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
+                  {t('projects.description')}
                 </label>
                 <textarea
                   id="description"
@@ -260,14 +272,14 @@ export default function ProjectsPage() {
               </div>
               <div className="flex gap-2">
                 <button type="submit" className="btn btn-primary">
-                  Create
+                  {t('common.create')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowCreateForm(false)}
                   className="btn btn-secondary"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
               </div>
             </form>
@@ -276,10 +288,10 @@ export default function ProjectsPage() {
 
         {projects.length === 0 ? (
           <div className="text-center py-12">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">No projects yet</h2>
-            <p className="text-gray-600 mb-6">Create your first project to get started</p>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('projects.noProjectsYet')}</h2>
+            <p className="text-gray-600 mb-6">{t('projects.createFirstProject')}</p>
             <button onClick={() => setShowCreateForm(true)} className="btn btn-primary">
-              Create Project
+              {t('projects.createProject')}
             </button>
           </div>
         ) : (
@@ -316,7 +328,7 @@ export default function ProjectsPage() {
                 <div className="flex justify-between items-start">
                   <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-primary-600 transition-colors">{project.name}</h3>
                   <span className="bg-primary-50 text-primary-700 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border border-primary-100">
-                    {project.userRole}
+                    {t(`projects.${['owner', 'member', 'viewer'].includes(project.userRole || '') ? project.userRole : 'unknownRole'}`)}
                   </span>
                 </div>
                 {project.description && (
@@ -329,7 +341,7 @@ export default function ProjectsPage() {
                   </span>
                   {!isSelectionMode && (
                     <span className="text-primary-600 text-xs font-semibold group-hover:translate-x-1 transition-transform">
-                      View Details →
+                      {t('projects.viewDetails')}
                     </span>
                   )}
                 </div>
@@ -343,13 +355,13 @@ export default function ProjectsPage() {
       {showInviteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Invite to Projects</h2>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">{t('projects.inviteToProjects')}</h2>
             <p className="text-slate-500 text-sm mb-6">
-              You are inviting someone to join <strong>{selectedProjectIds.length}</strong> project{selectedProjectIds.length > 1 ? 's' : ''}.
+              {t('projects.invitingProjects', { count: selectedProjectIds.length })}
             </p>
             <form onSubmit={handleMultiInvite} className="space-y-5">
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Email Address</label>
+                <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">{t('projects.emailAddress')}</label>
                 <input
                   type="email"
                   required
@@ -360,24 +372,24 @@ export default function ProjectsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Role</label>
+                <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">{t('projects.role')}</label>
                 <select
                   className="input bg-slate-50 focus:bg-white"
                   value={inviteRole}
                   onChange={e => setInviteRole(e.target.value as any)}
                 >
-                  <option value="member">Member (Can add/edit)</option>
-                  <option value="viewer">Viewer (Read-only)</option>
+                  <option value="member">{t('projects.roleMember')}</option>
+                  <option value="viewer">{t('projects.roleViewer')}</option>
                 </select>
               </div>
               <div className="flex gap-3 pt-4">
-                <button type="submit" className="btn btn-primary flex-1 py-3">Send Bundle Invite</button>
+                <button type="submit" className="btn btn-primary flex-1 py-3">{t('projects.sendBundleInvite')}</button>
                 <button
                   type="button"
                   onClick={() => setShowInviteModal(false)}
                   className="btn btn-secondary flex-1 py-3"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
               </div>
             </form>
@@ -394,20 +406,20 @@ export default function ProjectsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Invitations Created!</h2>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">{t('projects.invitationsCreated')}</h2>
             <p className="text-slate-600 mb-6">
-              A combined invitation link has been generated for {inviteProjectCount} projects.
+              {t('projects.invitationLinkGenerated', { count: inviteProjectCount })}
             </p>
 
             <a
-              href={`mailto:${inviteRecipientEmail}?subject=${encodeURIComponent(`You're invited to join ${inviteProjectCount} projects`)}&body=${encodeURIComponent(`You've been invited to join ${inviteProjectCount} projects as a ${inviteRole}.\n\nClick the link below to accept all invitations:\n${inviteLink}\n\nThis invitation expires in 7 days.`)}`}
+              href={`mailto:${inviteRecipientEmail}?subject=${encodeURIComponent(t('projects.invitationEmailSubject', { count: inviteProjectCount }))}&body=${encodeURIComponent(t('projects.invitationEmailBody', { count: inviteProjectCount, role: inviteRole, link: inviteLink }))}`}
               className="block w-full btn btn-primary text-center mb-4 py-3 shadow-lg shadow-primary-200"
             >
-              📧 Open Email Client
+              {t('projects.openEmailClient')}
             </a>
 
             <div className="bg-slate-50 p-4 rounded-xl mb-6 border border-slate-100">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Combined Invite Link:</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{t('projects.combinedInviteLink')}</p>
               <p className="text-sm text-primary-600 break-all font-medium">{inviteLink}</p>
             </div>
 
@@ -415,25 +427,23 @@ export default function ProjectsPage() {
               <button
                 onClick={() => {
                   const fullMessage =
-                    `Subject: You're invited to join ${inviteProjectCount} projects\n\n` +
-                    `You've been invited to join ${inviteProjectCount} projects as a ${inviteRole}.\n\n` +
-                    `Click the link below to accept all invitations:\n${inviteLink}\n\n` +
-                    `This invitation expires in 7 days.`
+                    `Subject: ${t('projects.invitationEmailSubject', { count: inviteProjectCount })}\n\n` +
+                    `${t('projects.invitationEmailBody', { count: inviteProjectCount, role: inviteRole, link: inviteLink })}`
                   navigator.clipboard.writeText(fullMessage)
-                  alert('Full invitation message copied to clipboard!')
+                  alert(t('projects.messageCopied'))
                 }}
                 className="btn btn-secondary py-2.5"
               >
-                📋 Copy Message
+                {t('projects.copyMessage')}
               </button>
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(inviteLink)
-                  alert('Link copied to clipboard!')
+                  alert(t('projects.linkCopied'))
                 }}
                 className="btn btn-secondary py-2.5"
               >
-                🔗 Copy Link Only
+                {t('projects.copyLinkOnly')}
               </button>
             </div>
 
@@ -441,7 +451,7 @@ export default function ProjectsPage() {
               onClick={() => setShowInviteLink(false)}
               className="w-full text-slate-400 font-bold text-sm hover:text-slate-600 transition-colors"
             >
-              CLOSE
+              {t('common.close')}
             </button>
           </div>
         </div>

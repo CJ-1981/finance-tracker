@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 export default function LandingPage() {
+  const { t } = useTranslation()
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 relative overflow-hidden">
       {/* Background blobs for flair */}
@@ -13,19 +15,19 @@ export default function LandingPage() {
             Financial <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-indigo-600">Tracker</span>
           </h1>
           <p className="text-xl text-slate-600 mb-4 max-w-xl mx-auto leading-relaxed">
-            Track expenses, manage budgets, and analyze spending patterns with ease and elegance.
+            {t('landing.tagline')}
           </p>
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-50 text-primary-700 text-xs font-bold rounded-full border border-primary-100">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
             </span>
-            COLLABORATIVE & SECURE
+            {t('landing.collaborativeSecure')}
           </div>
         </div>
 
         <div className="card p-8 mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Features</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">{t('landing.features')}</h2>
           <div className="grid md:grid-cols-2 gap-4 text-left">
             <div className="flex items-start gap-3">
               <div className="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -34,8 +36,8 @@ export default function LandingPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">Multi-Currency Support</h3>
-                <p className="text-sm text-slate-600">Track expenses in USD, EUR, GBP, JPY, KRW, CNY, INR</p>
+                <h3 className="font-semibold text-slate-900">{t('landing.multiCurrencySupport')}</h3>
+                <p className="text-sm text-slate-600">{t('landing.multiCurrencyDesc')}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -45,8 +47,8 @@ export default function LandingPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">Custom Categories</h3>
-                <p className="text-sm text-slate-600">Create and organize categories your way</p>
+                <h3 className="font-semibold text-slate-900">{t('landing.customCategories')}</h3>
+                <p className="text-sm text-slate-600">{t('landing.customCategoriesDesc')}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -56,8 +58,8 @@ export default function LandingPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">Visual Charts</h3>
-                <p className="text-sm text-slate-600">Pie charts and area plots for insights</p>
+                <h3 className="font-semibold text-slate-900">{t('landing.visualCharts')}</h3>
+                <p className="text-sm text-slate-600">{t('landing.visualChartsDesc')}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -67,8 +69,8 @@ export default function LandingPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">Team Collaboration</h3>
-                <p className="text-sm text-slate-600">Share projects with team members</p>
+                <h3 className="font-semibold text-slate-900">{t('landing.teamCollaboration')}</h3>
+                <p className="text-sm text-slate-600">{t('landing.teamCollaborationDesc')}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -78,8 +80,8 @@ export default function LandingPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">Custom Fields</h3>
-                <p className="text-sm text-slate-600">Add dropdown lists and custom data fields</p>
+                <h3 className="font-semibold text-slate-900">{t('landing.customFields')}</h3>
+                <p className="text-sm text-slate-600">{t('landing.customFieldsDesc')}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -89,8 +91,8 @@ export default function LandingPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">CSV Export</h3>
-                <p className="text-sm text-slate-600">Export your data for analysis</p>
+                <h3 className="font-semibold text-slate-900">{t('landing.csvExport')}</h3>
+                <p className="text-sm text-slate-600">{t('landing.csvExportDesc')}</p>
               </div>
             </div>
           </div>
@@ -101,18 +103,18 @@ export default function LandingPage() {
             to="/login"
             className="btn btn-primary px-8 py-3 text-lg"
           >
-            Get Started
+            {t('landing.getStarted')}
           </Link>
           <Link
             to="/config"
             className="btn btn-secondary px-8 py-3 text-lg"
           >
-            Configure Database
+            {t('landing.configureDatabase')}
           </Link>
         </div>
 
         <p className="mt-8 text-sm text-gray-500">
-          Your data is secured with Supabase Auth and stored in your own project
+          {t('landing.dataSecured')}
         </p>
       </div>
     </div>

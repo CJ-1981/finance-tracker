@@ -20,16 +20,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   })
 
   useEffect(() => {
-    // Timeout fallback to ensure loading is never stuck
-    const timeoutId = setTimeout(() => {
-      setAuthState(prev => {
-        if (prev.loading) {
-          console.warn('Auth initialization timed out, forcing loading to false')
-          return { ...prev, loading: false }
-        }
-        return prev
-      })
-    }, 5000) // 5 second timeout
+    let cancelled = false
 
     // Try to get Supabase client - it might not be initialized yet
     let supabase
@@ -37,41 +28,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase = getSupabaseClient()
     } catch (error) {
       // Supabase not configured yet - this is OK on first visit
-      console.log('Supabase not configured yet - client initialization failed:', error)
+      console.log('Supabase not configured yet:', error)
       setAuthState({ user: null, session: null, loading: false })
-      clearTimeout(timeoutId)
       return
     }
 
-    // Check active session
-    supabase.auth.getSession()
-      .then(({ data: { session } }) => {
-        clearTimeout(timeoutId)
-        if (session?.user) {
-          // Await to prevent race conditions
-          fetchUserProfile(session.user, supabase).catch(err => {
-            console.error('Error fetching user profile:', err)
-            setAuthState({ user: null, session: null, loading: false })
-          })
-        } else {
-          setAuthState({ user: null, session: null, loading: false })
-        }
-      })
-      .catch(err => {
-        clearTimeout(timeoutId)
-        console.error('Error getting session:', err)
-        setAuthState({ user: null, session: null, loading: false })
-      })
+    // Dead-man fallback: if onAuthStateChange never fires (network issue, etc.),
+    // unblock the UI after 8 seconds.
+    const timeoutId = setTimeout(() => {
+      if (!cancelled) {
+        console.warn('Auth initialization timed out after 8s — forcing loading to false.')
+        setAuthState(prev => prev.loading ? { ...prev, loading: false } : prev)
+      }
+    }, 8000)
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    // ── WHY NO getSession() ────────────────────────────────────────────────────
+    // When the Supabase client is created (in initSupabase.ts), it immediately
+    // starts an internal _recoverAndRefresh() that acquires the Navigator
+    // LockManager lock (named "lock:sb-<project-ref>-auth-token").
+    //
+    // Calling getSession() at the same moment tries to acquire the SAME lock
+    // and reliably blocks for 6–15 seconds until the internal init finishes.
+    //
+    // Solution: rely solely on onAuthStateChange. Supabase v2 fires this
+    // callback with the initial session state (INITIAL_SESSION / SIGNED_IN /
+    // SIGNED_OUT) during client boot — without competing for the same lock.
+    // This gives instant auth resolution on every page load.
+    // ──────────────────────────────────────────────────────────────────────────
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (cancelled) return
+      clearTimeout(timeoutId)
+
       if (session?.user) {
-        // Await to prevent race conditions from concurrent inserts
         await fetchUserProfile(session.user, supabase).catch(err => {
           console.error('Error fetching user profile:', err)
-          setAuthState({ user: null, session: null, loading: false })
+          if (!cancelled) setAuthState({ user: null, session: null, loading: false })
         })
       } else {
         setAuthState({ user: null, session: null, loading: false })
@@ -79,6 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     return () => {
+      cancelled = true
       clearTimeout(timeoutId)
       subscription.unsubscribe()
     }
@@ -113,7 +105,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Handle duplicate-key error (race condition from concurrent inserts)
             if (insertError.code === '23505' || (insertError as any).message?.includes('duplicate key')) {
               console.warn('Profile already exists (race condition), re-fetching...')
-              // Re-fetch the existing profile instead of throwing
               const { data: existingProfile, error: fetchError } = await supabase
                 .from('profiles')
                 .select('*')
@@ -161,7 +152,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email?: string, password?: string) => {
     const supabase = getSupabaseClient()
 
-    // If email and password provided, use email/password sign in
     if (email && password) {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -172,7 +162,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error }
       }
 
-      // Fetch user profile after successful sign in
+      // onAuthStateChange will fire and load the profile automatically;
+      // but call fetchUserProfile here too so the caller awaits completion.
       if (data.user) {
         await fetchUserProfile(data.user, supabase)
       }
@@ -180,7 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: null }
     }
 
-    // Otherwise, use OAuth (for backward compatibility, though not used anymore)
+    // OAuth fallback (not actively used)
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {

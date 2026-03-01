@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { getSupabaseClient } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 
 export default function InvitePage() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -21,7 +23,7 @@ export default function InvitePage() {
 
     if (!tokenParam && !tokensParam) {
       setStatus('invalid')
-      setError('Invalid invitation link')
+      setError(t('invite.invalidInvitationLink'))
       return
     }
 
@@ -41,7 +43,7 @@ export default function InvitePage() {
 
       if (!data || data.length === 0) {
         setStatus('invalid')
-        setError('Invitation not found')
+        setError(t('invite.invitationNotFoundError'))
         return
       }
 
@@ -65,14 +67,14 @@ export default function InvitePage() {
           return
         }
         setStatus('expired')
-        setError('These invitations have expired')
+        setError(t('invite.invitationsExpired'))
         return
       }
 
       // Verify email matches (if user is logged in)
       if (user && validInvites.some((invite: any) => user.email !== invite.email)) {
         setStatus('wrong-email')
-        setError(`This invitation is for ${validInvites[0].email}, but you're signed in as ${user.email}`)
+        setError(t('invite.inviteMismatch', { expected: validInvites[0].email, actual: user.email }))
         return
       }
 
@@ -81,7 +83,7 @@ export default function InvitePage() {
     } catch (err: any) {
       console.error('Error validating invite:', err)
       setStatus('invalid')
-      setError(err.message || 'Failed to validate invitation')
+      setError(err.message || t('invite.failedToValidate'))
     }
   }
 
@@ -127,7 +129,7 @@ export default function InvitePage() {
       }
     } catch (err: any) {
       console.error('Error accepting invite:', err)
-      setError(err.message || 'Failed to accept invitation')
+      setError(err.message || t('invite.failedToAccept'))
     }
   }
 
@@ -138,7 +140,7 @@ export default function InvitePage() {
           {status === 'loading' && (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Validating invitation...</p>
+              <p className="text-gray-600">{t('invite.validatingInvitation')}</p>
             </div>
           )}
 
@@ -150,15 +152,15 @@ export default function InvitePage() {
                 </svg>
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                {Array.isArray(inviteData) && inviteData.length > 1 ? "You're Invited to Multiple Projects!" : "You're Invited!"}
+                {Array.isArray(inviteData) && inviteData.length > 1 ? t('invite.youreInvitedMultiple') : t('invite.youreInvited')}
               </h2>
               <p className="text-gray-600 mb-6">
                 {Array.isArray(inviteData) ? (
                   inviteData.length === 1 ? (
-                    <>You've been invited to join <strong>{inviteData[0].projects?.name}</strong> as a <strong>{inviteData[0].role}</strong></>
+                    <>{t('invite.invitedToJoin')} <strong>{inviteData[0].projects?.name}</strong> {t('invite.as')} <strong>{inviteData[0].role}</strong></>
                   ) : (
                     <div className="text-left bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-2 mt-4 max-h-48 overflow-y-auto">
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Projects you'll join:</p>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t('invite.projectsYoullJoin')}</p>
                       {inviteData.map((invite: any) => (
                         <div key={invite.id} className="flex justify-between items-center text-sm">
                           <span className="font-semibold text-slate-700">{invite.projects?.name}</span>
@@ -168,20 +170,20 @@ export default function InvitePage() {
                     </div>
                   )
                 ) : (
-                  <>You've been invited to join <strong>{inviteData?.projects?.name}</strong> as a <strong>{inviteData?.role}</strong></>
+                  <>{t('invite.invitedToJoin')} <strong>{inviteData?.projects?.name}</strong> {t('invite.as')} <strong>{inviteData?.role}</strong></>
                 )}
               </p>
 
               {!user ? (
                 <div className="space-y-3">
                   <p className="text-sm text-gray-500 mb-4">
-                    Please sign in to accept {Array.isArray(inviteData) && inviteData.length > 1 ? 'these invitations' : 'this invitation'}
+                    {t('invite.signInToAccept')} {Array.isArray(inviteData) && inviteData.length > 1 ? t('invite.acceptAllInvitations') : t('invite.acceptInvitationButton')}
                   </p>
                   <button
                     onClick={() => navigate('/login', { state: { inviteToken: searchParams.get('tokens') || searchParams.get('token') } })}
                     className="btn btn-primary w-full"
                   >
-                    Sign In to Accept
+                    {t('invite.signInToAcceptInvitation')}
                   </button>
                 </div>
               ) : (
@@ -189,7 +191,7 @@ export default function InvitePage() {
                   onClick={handleAcceptInvite}
                   className="btn btn-primary w-full"
                 >
-                  Accept {Array.isArray(inviteData) && inviteData.length > 1 ? 'All Invitations' : 'Invitation'}
+                  {t('invite.acceptInvitation')} {Array.isArray(inviteData) && inviteData.length > 1 ? t('invite.acceptAllInvitations') : t('invite.acceptInvitationButton')}
                 </button>
               )}
             </div>
@@ -202,10 +204,10 @@ export default function InvitePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.932-3L13.065 4.94A2 2 0 0011.909 3H6.09a2 2 0 00-1.932-3L2.065 6.94A2 2 0 004 9v9a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2z" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Wrong Email Account</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('invite.wrongEmail')}</h2>
               <p className="text-gray-600 mb-2">{error}</p>
               <p className="text-sm text-gray-500 mb-6">
-                This invitation is meant for a different email address.
+                {t('invite.invitationForDifferentEmail')}
               </p>
               <div className="space-y-3">
                 <button
@@ -216,13 +218,13 @@ export default function InvitePage() {
                   }}
                   className="btn btn-primary w-full"
                 >
-                  Sign Out & Sign In with Correct Email
+                  {t('invite.signOutCorrectEmail')}
                 </button>
                 <button
                   onClick={() => navigate('/projects')}
                   className="btn btn-secondary w-full"
                 >
-                  Go to Dashboard
+                  {t('invite.goToDashboard')}
                 </button>
               </div>
             </div>
@@ -235,7 +237,7 @@ export default function InvitePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Invalid Invitation</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('invite.invalidInvitation')}</h2>
               <p className="text-gray-600">{error}</p>
             </div>
           )}
@@ -247,13 +249,13 @@ export default function InvitePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Invitation Expired</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('invite.invitationExpiredTitle')}</h2>
               <p className="text-gray-600 mb-6">{error}</p>
               <button
                 onClick={() => navigate('/projects')}
                 className="btn btn-secondary"
               >
-                Go to Projects
+                {t('invite.goToProjects')}
               </button>
             </div>
           )}
@@ -265,15 +267,15 @@ export default function InvitePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Already Accepted</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('invite.alreadyAccepted')}</h2>
               <p className="text-gray-600 mb-6">
-                You've already accepted this invitation
+                {t('invite.alreadyAcceptedMessage')}
               </p>
               <button
                 onClick={() => navigate(`/projects/${Array.isArray(inviteData) ? inviteData[0].project_id : inviteData?.project_id}`)}
                 className="btn btn-primary"
               >
-                Go to Project
+                {t('invite.goToProject')}
               </button>
             </div>
           )}
