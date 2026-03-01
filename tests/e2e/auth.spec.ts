@@ -82,16 +82,15 @@ test.describe('Authentication', () => {
     // Check current URL after navigation
     const currentUrl = page.url();
 
-    // Unauthenticated users accessing protected routes are redirected to:
+    // Unauthenticated users accessing protected routes should be redirected to:
     // - Landing page (/) - default behavior
-    // - Login page (/login) - explicit auth redirect
-    // - Projects page (/projects) - if already authenticated via cookies
+    // - Login page (/login) or auth page (/auth) - explicit auth redirect
     const isLandingPage = currentUrl.endsWith('/') || currentUrl.includes('/#');
     const isLoginPage = currentUrl.includes('/login') || currentUrl.includes('/auth');
-    const isProjectsPage = currentUrl.includes('/projects');
 
-    // At least one of these should be true
-    expect(isLandingPage || isLoginPage || isProjectsPage).toBe(true);
+    // Should NOT stay on /projects when unauthenticated
+    expect(isLandingPage || isLoginPage).toBe(true);
+    expect(currentUrl).not.toContain('/projects');
   });
 
   test('Login form inputs should be accessible on mobile', async ({ page }) => {

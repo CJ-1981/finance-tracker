@@ -13,7 +13,7 @@ test.describe('Mobile Responsiveness', () => {
   });
 
   test('Mobile viewport (375px) should display correctly', async ({ page }) => {
-    await page.goto('/projects');
+    await page.goto('/');
 
     // Check page loads without errors
     await expect(page).toHaveTitle(/Finance Tracker/);
@@ -26,7 +26,7 @@ test.describe('Mobile Responsiveness', () => {
 
   test('Small mobile viewport (320px) should display correctly', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 568 });
-    await page.goto('/projects');
+    await page.goto('/');
 
     // Check page loads
     await expect(page).toHaveTitle(/Finance Tracker/);
@@ -37,8 +37,8 @@ test.describe('Mobile Responsiveness', () => {
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
   });
 
-  test('Should not have horizontal overflow on mobile project pages', async ({ page }) => {
-    await page.goto('/projects');
+  test('Should not have horizontal overflow on mobile', async ({ page }) => {
+    await page.goto('/');
 
     // Check for horizontal scrollbar
     const hasHorizontalScroll = await page.evaluate(() => {
@@ -52,37 +52,28 @@ test.describe('Mobile Responsiveness', () => {
   test('All buttons meet minimum 44px touch target on mobile', async ({ page }) => {
     await page.goto('/');
 
-    // Check button sizes
-    const buttonSizes = await page.$$eval('button, a[href]', elements =>
-      elements.map(el => {
-        const htmlEl = el as HTMLElement;
-        return {
-          tagName: el.tagName,
-          height: htmlEl.offsetHeight,
-          width: htmlEl.offsetWidth,
-          text: el.textContent?.trim().substring(0, 30)
-        };
-      })
-    );
+    // Check button sizes for visible buttons only
+    const buttons = await page.$$('button, a[href]');
+    const undersizedButtons: any[] = [];
 
-    // Filter for visible buttons only
-    const visibleButtons = buttonSizes.filter(b => b.height > 0 && b.width > 0);
+    for (const btn of buttons) {
+      const isVisible = await btn.isVisible().catch(() => false);
+      if (!isVisible) continue;
 
-    // Log any buttons that don't meet touch target requirements
-    const undersizedButtons = visibleButtons.filter(b => b.height < 44 || b.width < 44);
-
-    if (undersizedButtons.length > 0) {
-      console.log('Buttons below 44px touch target:', undersizedButtons);
-    }
-
-    // At minimum, primary action buttons should be 44px
-    const primaryButtons = await page.$$('button[class*="btn"]');
-    for (const btn of primaryButtons) {
       const box = await btn.boundingBox();
-      if (box) {
-        expect(box.height).toBeGreaterThanOrEqual(44);
+      if (box && (box.height < 44 || box.width < 44)) {
+        const text = await btn.textContent();
+        undersizedButtons.push({
+          tagName: await btn.evaluate(el => el.tagName),
+          height: box.height,
+          width: box.width,
+          text: text?.trim().substring(0, 30)
+        });
       }
     }
+
+    // Fail test if any interactive element is below 44x44
+    expect(undersizedButtons.length).toBe(0);
   });
 
   test('Mobile form inputs should be accessible', async ({ page }) => {
@@ -108,11 +99,11 @@ test.describe('Mobile Responsiveness', () => {
   });
 
   test('Mobile cards should stack properly', async ({ page }) => {
-    await page.goto('/projects');
+    await page.goto('/');
 
-    // Wait for project cards to load
+    // Wait for cards to load
     await page.waitForSelector('.card, [class*="card"]', { timeout: 5000 }).catch(() => {
-      // Cards might not exist if no projects, that's ok
+      // Cards might not exist on landing page, that's ok
     });
 
     // Check if cards exist and are responsive
@@ -129,15 +120,18 @@ test.describe('Mobile Responsiveness', () => {
 
     // Check if navigation exists and is accessible
     const navButtons = await page.$$('nav button, nav a[href]');
+
+    // Assert that navigation elements exist (if page has nav)
     if (navButtons.length > 0) {
-      // At least one nav element should exist on mobile
+      // At least one nav element should be visible on mobile
       const navVisible = await Promise.all(navButtons.map(btn => btn.isVisible().catch(() => false)));
       expect(navVisible.some(v => v)).toBe(true);
     }
+    // Note: If page has no navigation (single-page app), this is acceptable
   });
 
   test('Mobile text should be readable (not too small)', async ({ page }) => {
-    await page.goto('/projects');
+    await page.goto('/');
 
     // Check text sizes
     const textElements = await page.$$eval('p, span, div', elements =>
@@ -169,11 +163,10 @@ test.describe('Mobile Responsiveness', () => {
   });
 
   test('Mobile viewport should handle long text with truncation', async ({ page }) => {
-    // Navigate to projects - may redirect to landing page if not authenticated
-    await page.goto('/projects');
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    // Verify no horizontal overflow on mobile (regardless of which page is shown)
+    // Verify no horizontal overflow on mobile
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
