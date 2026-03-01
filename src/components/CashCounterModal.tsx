@@ -27,8 +27,8 @@ const DENOMINATIONS: Array<{
   { value: 20, label: '20', type: 'bill' },
   { value: 10, label: '10', type: 'bill' },
   { value: 5, label: '5', type: 'bill' },
-  { value: 2, label: '2', type: 'bill' },
-  { value: 1, label: '1', type: 'bill' },
+  { value: 2, label: '2', type: 'coin' },
+  { value: 1, label: '1', type: 'coin' },
   { value: 0.50, label: '0.50', type: 'coin' },
   { value: 0.20, label: '0.20', type: 'coin' },
   { value: 0.10, label: '0.10', type: 'coin' },
@@ -98,6 +98,22 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
     setTotalCashCounted(total)
   }, [counts])
 
+  // Helper function to calculate bills and coins breakdown
+  const calculateBreakdown = (denomCounts: Record<number, number>) => {
+    return DENOMINATIONS.reduce(
+      (acc, denom) => {
+        const amount = (denomCounts[denom.value] || 0) * denom.value
+        if (denom.type === 'bill') {
+          acc.bills += amount
+        } else {
+          acc.coins += amount
+        }
+        return acc
+      },
+      { bills: 0, coins: 0 }
+    )
+  }
+
   // Calculate total from all entries
   const totalFromEntries = entries.reduce((sum, entry) => {
     const entryTotal = DENOMINATIONS.reduce((s, d) => s + (entry.denominations[d.value] || 0) * d.value, 0)
@@ -105,6 +121,25 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
   }, 0)
 
   const grandTotal = totalCashCounted + totalFromEntries
+
+  // Calculate current entry breakdown
+  const currentBreakdown = calculateBreakdown(counts)
+
+  // Calculate grand total breakdown from all entries
+  const entriesBreakdown = entries.reduce(
+    (acc, entry) => {
+      const breakdown = calculateBreakdown(entry.denominations)
+      acc.bills += breakdown.bills
+      acc.coins += breakdown.coins
+      return acc
+    },
+    { bills: 0, coins: 0 }
+  )
+
+  const grandBreakdown = {
+    bills: currentBreakdown.bills + entriesBreakdown.bills,
+    coins: currentBreakdown.coins + entriesBreakdown.coins,
+  }
 
   const handleCountChange = (denomination: number, delta: number) => {
     setCounts(prev => ({
@@ -360,16 +395,27 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
 
           {/* Current Entry Total */}
           <div className="mt-4 p-4 bg-slate-50 rounded-lg">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center mb-3">
               <span className="font-medium text-gray-700">{t('cashCounter.currentEntry')}:</span>
               <span className="text-2xl font-bold">
                 {currency} {totalCashCounted.toFixed(2)}
               </span>
             </div>
+            {/* Breakdown */}
+            <div className="grid grid-cols-2 gap-3 mb-3 text-sm">
+              <div className="flex items-center justify-between bg-yellow-50 p-2 rounded">
+                <span className="text-gray-600">💵 {t('cashCounter.bills', { defaultValue: 'Bills' })}:</span>
+                <span className="font-bold">{currency} {currentBreakdown.bills.toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between bg-gray-100 p-2 rounded">
+                <span className="text-gray-600">🪙 {t('cashCounter.coins', { defaultValue: 'Coins' })}:</span>
+                <span className="font-bold">{currency} {currentBreakdown.coins.toFixed(2)}</span>
+              </div>
+            </div>
             <button
               type="button"
               onClick={handleAddEntry}
-              className="w-full mt-3 btn btn-primary"
+              className="w-full btn btn-primary"
             >
               + {t('cashCounter.addEntry')}
             </button>
@@ -391,6 +437,18 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
               }`}>
                 {currency} {grandTotal.toFixed(2)}
               </span>
+            </div>
+
+            {/* Grand Total Breakdown */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="flex items-center justify-between bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                <span className="text-gray-700 font-medium">💵 {t('cashCounter.bills', { defaultValue: 'Bills' })}:</span>
+                <span className="font-bold text-lg">{currency} {grandBreakdown.bills.toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg border border-gray-200">
+                <span className="text-gray-700 font-medium">🪙 {t('cashCounter.coins', { defaultValue: 'Coins' })}:</span>
+                <span className="font-bold text-lg">{currency} {grandBreakdown.coins.toFixed(2)}</span>
+              </div>
             </div>
 
             {/* Transaction Total */}
