@@ -17,19 +17,21 @@ export default function LoginPage() {
   const inviteToken = location.state?.inviteToken || searchParams.get('token')
 
   useEffect(() => {
-    // Check if Supabase is configured
+    // Check if Supabase is configured and handle session
     const checkConfig = async () => {
+      const { getSupabaseClient } = await import('../lib/supabase')
+
+      // Check if Supabase is configured
       try {
-        const { getSupabaseClient } = await import('../lib/supabase')
         getSupabaseClient()
         setIsConfigured(true)
       } catch (err) {
         setIsConfigured(false)
+        return
       }
 
       // If user is already logged in and has invite token, redirect to invite
       try {
-        const { getSupabaseClient } = await import('../lib/supabase')
         const supabase = getSupabaseClient()
         const { data } = await supabase.auth.getSession()
         if (data.session) {

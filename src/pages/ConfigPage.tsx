@@ -5,6 +5,18 @@ import { testConnection } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import type { SupabaseConfig } from '../types'
 
+/**
+ * Truncate a string in the middle for security (show prefix...suffix)
+ * @param str - String to truncate
+ * @param showChars - Number of characters to show on each end
+ * @returns Truncated string or original if short enough
+ */
+function truncateMiddle(str: string | undefined, showChars: number): string {
+  if (!str) return 'Not configured'
+  if (str.length <= showChars * 2) return str
+  return `${str.substring(0, showChars)}...${str.slice(-showChars)}`
+}
+
 export default function ConfigPage() {
   const { updateConfig } = useSupabase()
   const { user, signIn, signOut } = useAuth()
@@ -324,8 +336,8 @@ export default function ConfigPage() {
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
                 <p className="font-medium mb-2">Current Configuration:</p>
-                <p className="text-xs">URL: {config.url?.substring(0, 30)}{config.url?.length > 30 ? '...' : ''}</p>
-                <p className="text-xs">Key: {config.anonKey?.substring(0, 10)}...{config.anonKey?.slice(-10)}</p>
+                <p className="text-xs">URL: {truncateMiddle(config.url, 30)}</p>
+                <p className="text-xs">Key: {truncateMiddle(config.anonKey, 10)}</p>
               </div>
             </div>
           )}

@@ -9,9 +9,19 @@ description: |
   JA: ドキュメント, README, APIドキュメント, Nextra, マークダウン, 技術文書
   ZH: 文档, README, API文档, Nextra, markdown, 技术写作
 tools: Read, Write, Edit, Grep, Glob, Bash, WebFetch, WebSearch, TodoWrite, Task, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
-model: haiku
+model: sonnet
 permissionMode: acceptEdits
-skills: moai-foundation-claude, moai-foundation-core, moai-docs-generation, moai-workflow-jit-docs, moai-workflow-templates, moai-library-mermaid, moai-library-nextra, moai-formats-data, moai-foundation-context
+memory: project
+skills:
+  - moai-foundation-claude
+  - moai-foundation-core
+  - moai-docs-generation
+  - moai-workflow-jit-docs
+  - moai-workflow-templates
+  - moai-library-mermaid
+  - moai-library-nextra
+  - moai-formats-data
+  - moai-foundation-context
 hooks:
   PostToolUse:
     - matcher: "Write|Edit"
@@ -45,7 +55,7 @@ checkpoint_strategy:
   enabled: true
   interval: every_phase
   # CRITICAL: Always use project root for .moai to prevent duplicate .moai in subfolders
-  location: $CLAUDE_PROJECT_DIR/.moai/memory/checkpoints/docs/
+  location: $CLAUDE_PROJECT_DIR/.moai/state/checkpoints/docs/
   resume_capability: true
 
 memory_management:
@@ -186,7 +196,7 @@ To prevent V8 heap memory overflow during large documentation generation session
 
 **Checkpoint Strategy**:
 - Checkpoint after each phase completion (Source Analysis, Architecture Design, Content Generation, Quality Assurance)
-- Checkpoint location: `.moai/memory/checkpoints/docs/`
+- Checkpoint location: `.moai/state/checkpoints/docs/`
 - Auto-checkpoint on memory pressure detection
 
 **Checkpoint Content**:

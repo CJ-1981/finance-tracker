@@ -45,7 +45,7 @@ export function getSupabaseClient(): SupabaseClient<Database> {
     } else {
       console.log('No config found in localStorage')
     }
-    throw new Error('Supabase client not initialized. Call createSupabaseClient first.')
+    throw new Error('Supabase client not initialized and automatic initialization failed; call createSupabaseClient to initialize explicitly.')
   }
   return supabaseInstance
 }

@@ -54,8 +54,8 @@ test.describe('Authentication', () => {
     // Submit form
     await submitButton.click();
 
-    // Wait for navigation or error message
-    await page.waitForTimeout(1000);
+    // Wait for response - either navigation or error message
+    await page.waitForLoadState('networkidle');
 
     // Either we get an error message or we stay on login page
     const currentUrl = page.url();
@@ -75,7 +75,7 @@ test.describe('Authentication', () => {
     await page.goto('/projects');
 
     // Wait for potential redirect
-    await page.waitForTimeout(1000);
+    await page.waitForLoadState('networkidle');
 
     // Check current URL after navigation
     const currentUrl = page.url();
@@ -134,8 +134,8 @@ test.describe('Authentication', () => {
     const submitButton = page.locator('button[type="submit"]').first();
     await submitButton.click();
 
-    // Wait for validation
-    await page.waitForTimeout(500);
+    // Wait for validation state to settle
+    await page.waitForLoadState('domcontentloaded');
 
     // Check for HTML5 validation or custom validation
     const emailInput = page.locator('input[type="email"], input[name="email"]').first();

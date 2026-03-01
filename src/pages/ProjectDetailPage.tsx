@@ -98,7 +98,7 @@ export default function ProjectDetailPage() {
     const timeoutId = setTimeout(() => {
       // Only save if preferences have been loaded and project exists
       if (project && preferencesLoaded) {
-        saveCategoryChartPreferences(categoryChartGroupBy, categoryChartMetric)
+        saveChartPreferences('category', categoryChartGroupBy, categoryChartMetric)
       }
     }, 500)
     return () => clearTimeout(timeoutId)
@@ -110,7 +110,7 @@ export default function ProjectDetailPage() {
     const timeoutId = setTimeout(() => {
       // Only save if preferences have been loaded and project exists
       if (project && preferencesLoaded) {
-        saveTimeChartPreferences(timeChartGroupBy, timeChartMetric)
+        saveChartPreferences('time', timeChartGroupBy, timeChartMetric)
       }
     }, 500)
     return () => clearTimeout(timeoutId)
@@ -135,33 +135,18 @@ export default function ProjectDetailPage() {
     }
   }
 
-  const saveCategoryChartPreferences = async (groupBy: string, metric: string) => {
+  const saveChartPreferences = async (chartType: 'category' | 'time', groupBy: string, metric: string) => {
     if (!project) return
     try {
       const supabase = getSupabaseClient()
-      const updatedSettings = {
-        ...project.settings,
-        category_chart_group_by: groupBy,
-        category_chart_metric: metric
-      }
-      await (supabase
-        .from('projects') as any)
-        .update({ settings: updatedSettings })
-        .eq('id', id)
-      setProject({ ...project, settings: updatedSettings as any })
-    } catch (err) {
-      console.error('Error saving category chart preferences:', err)
-    }
-  }
+      const settingsKey = chartType === 'category'
+        ? { group_by: 'category_chart_group_by', metric: 'category_chart_metric' }
+        : { group_by: 'time_chart_group_by', metric: 'time_chart_metric' }
 
-  const saveTimeChartPreferences = async (groupBy: string, metric: string) => {
-    if (!project) return
-    try {
-      const supabase = getSupabaseClient()
       const updatedSettings = {
         ...project.settings,
-        time_chart_group_by: groupBy,
-        time_chart_metric: metric
+        [settingsKey.group_by]: groupBy,
+        [settingsKey.metric]: metric
       }
       await (supabase
         .from('projects') as any)
@@ -169,7 +154,7 @@ export default function ProjectDetailPage() {
         .eq('id', id)
       setProject({ ...project, settings: updatedSettings as any })
     } catch (err) {
-      console.error('Error saving time chart preferences:', err)
+      console.error(`Error saving ${chartType} chart preferences:`, err)
     }
   }
 

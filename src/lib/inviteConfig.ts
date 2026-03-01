@@ -1,22 +1,31 @@
 // Invite link configuration encoding/decoding
 import type { SupabaseConfig } from '../types'
+import { validateConfig } from './config'
 
 /**
- * Encode Supabase config for invite link
+ * Validate and encode Supabase config for invite link
  * Uses Unicode-safe base64 encoding to obfuscate the credentials
  * Note: This is NOT encryption, just encoding. For production, consider using JWT.
+ * @throws Error if config is invalid
  */
 export function encodeConfigForInvite(config: SupabaseConfig): string {
+  // Validate config before encoding
+  const validation = validateConfig(config)
+  if (!validation.valid) {
+    throw new Error(`Invalid config: ${validation.errors.join(', ')}`)
+  }
+
   const jsonString = JSON.stringify(config)
   // Unicode-safe Base64 encoding for browser environments
   const utf8Bytes = encodeURIComponent(jsonString).replace(/%([0-9A-F]{2})/g,
-    (match, p1) => String.fromCharCode(parseInt(p1, 16)))
+    (_match, p1) => String.fromCharCode(parseInt(p1, 16)))
   return btoa(utf8Bytes)
 }
 
 /**
- * Decode Supabase config from invite link
+ * Decode and validate Supabase config from invite link
  * Uses Unicode-safe base64 decoding
+ * @returns Validated config or null if decoding/validation fails
  */
 export function decodeConfigFromInvite(encoded: string): SupabaseConfig | null {
   try {
@@ -27,7 +36,16 @@ export function decodeConfigFromInvite(encoded: string): SupabaseConfig | null {
       bytes[i] = binaryString.charCodeAt(i)
     }
     const decodedString = new TextDecoder().decode(bytes)
-    return JSON.parse(decodedString)
+    const config = JSON.parse(decodedString) as SupabaseConfig
+
+    // Validate decoded config
+    const validation = validateConfig(config)
+    if (!validation.valid) {
+      console.error('Decoded config validation failed:', validation.errors)
+      return null
+    }
+
+    return config
   } catch (error) {
     console.error('Failed to decode config from invite:', error)
     return null
