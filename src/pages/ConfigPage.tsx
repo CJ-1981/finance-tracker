@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useSupabase } from '../hooks/useSupabase'
 import { testConnection } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
@@ -18,6 +19,7 @@ function truncateMiddle(str: string | undefined, showChars: number): string {
 }
 
 export default function ConfigPage() {
+  const { t } = useTranslation()
   const { updateConfig } = useSupabase()
   const { user, signIn, signOut } = useAuth()
   const navigate = useNavigate()
@@ -65,7 +67,7 @@ export default function ConfigPage() {
     setErrors([])
 
     if (!config.url || !config.anonKey) {
-      setErrors(['Please fill in all fields'])
+      setErrors([t('config.fillAllFields')])
       return
     }
 
@@ -82,7 +84,7 @@ export default function ConfigPage() {
           setMode('signin')
         }
       } else {
-        setErrors(['Failed to connect to Supabase. Please check your credentials.'])
+        setErrors([t('config.failedConnection')])
       }
     } catch (error) {
       setErrors([error instanceof Error ? error.message : 'Connection failed'])
@@ -96,7 +98,7 @@ export default function ConfigPage() {
     setErrors([])
 
     if (!signInData.email || !signInData.password) {
-      setErrors(['Please fill in all fields'])
+      setErrors([t('config.fillAllFields')])
       return
     }
 
@@ -128,11 +130,11 @@ export default function ConfigPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Finance Tracker</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{t('auth.financialTracker')}</h1>
           <p className="text-gray-600 mt-2">
-            {mode === 'configure' ? 'Setup your Supabase configuration' :
-              mode === 'signin' ? 'Sign in to your account' :
-                'Supabase Configuration'}
+            {mode === 'configure' ? t('config.setupConfiguration') :
+              mode === 'signin' ? t('auth.signInToAccount') :
+                t('config.supabaseConfig')}
           </p>
         </div>
 
@@ -141,7 +143,7 @@ export default function ConfigPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-2">
-                  Supabase URL
+                  {t('config.projectUrl')}
                 </label>
                 <input
                   id="url"
@@ -156,7 +158,7 @@ export default function ConfigPage() {
 
               <div>
                 <label htmlFor="anonKey" className="block text-sm font-medium text-gray-700 mb-2">
-                  Anon Key
+                  {t('config.anonKey')}
                 </label>
                 <input
                   id="anonKey"
@@ -186,15 +188,15 @@ export default function ConfigPage() {
                 disabled={testing}
                 className="w-full btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {testing ? 'Testing connection...' : 'Save Configuration'}
+                {testing ? t('config.testingConnection') : t('config.saveConfig')}
               </button>
 
               <div className="text-sm text-gray-500 max-w-full">
-                <p className="font-medium mb-2 text-xs sm:text-sm">Where to find these credentials:</p>
+                <p className="font-medium mb-2 text-xs sm:text-sm">{t('config.whereToFindCredentials')}</p>
                 <ol className="list-decimal list-inside space-y-1 text-xs sm:text-sm">
-                  <li>Go to your Supabase project</li>
-                  <li> Navigate to Project Settings → API</li>
-                  <li>Copy the Project URL and anon key</li>
+                  <li>{t('config.goToProject')}</li>
+                  <li>{t('config.navigateToAPI')}</li>
+                  <li>{t('config.copyURLandKey')}</li>
                 </ol>
               </div>
 
@@ -205,7 +207,7 @@ export default function ConfigPage() {
                     onClick={() => setMode('signin')}
                     className="w-full btn btn-secondary"
                   >
-                    Already configured? Sign In
+                    {t('config.alreadyConfiguredSignIn')}
                   </button>
                 </div>
               )}
@@ -216,7 +218,7 @@ export default function ConfigPage() {
             <form onSubmit={handleSignIn} className="space-y-6">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  Email
+                  {t('auth.email')}
                 </label>
                 <input
                   id="email"
@@ -231,7 +233,7 @@ export default function ConfigPage() {
 
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                  Password
+                  {t('auth.password')}
                 </label>
                 <input
                   id="password"
@@ -261,7 +263,7 @@ export default function ConfigPage() {
                 disabled={signingIn}
                 className="w-full btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {signingIn ? 'Signing in...' : 'Sign In'}
+                {signingIn ? t('common.loading') : t('auth.signIn')}
               </button>
 
               <div className="pt-4 border-t border-gray-200 space-y-4">
@@ -270,7 +272,7 @@ export default function ConfigPage() {
                   onClick={handleReconfigure}
                   className="w-full btn btn-secondary text-sm"
                 >
-                  Edit Configuration
+                  {t('config.editConfiguration')}
                 </button>
 
                 <div className="space-y-2">
@@ -279,11 +281,10 @@ export default function ConfigPage() {
                     onClick={handleResetConfig}
                     className="w-full btn btn-secondary text-sm text-red-600 hover:text-red-700"
                   >
-                    Clear App Configuration
+                    {t('config.clearAppConfig')}
                   </button>
                   <p className="text-xs text-gray-500 text-center px-2">
-                    This will only remove your Supabase URL and key from this browser.
-                    Your data in Supabase will NOT be affected.
+                    {t('config.clearConfigWarning')}
                   </p>
                 </div>
               </div>
@@ -293,7 +294,7 @@ export default function ConfigPage() {
           {mode === 'authenticated' && (
             <div className="space-y-6">
               <div className="text-center pb-4 border-b border-gray-200">
-                <p className="text-sm text-gray-600">Signed in as</p>
+                <p className="text-sm text-gray-600">{t('config.signedInAs')}</p>
                 <p className="font-semibold text-gray-900">{user?.email}</p>
               </div>
 
@@ -302,13 +303,13 @@ export default function ConfigPage() {
                   onClick={() => navigate('/projects')}
                   className="w-full btn btn-primary"
                 >
-                  ← Back to Projects List
+                  {t('config.backToProjectsList')}
                 </button>
                 <button
                   onClick={handleReconfigure}
                   className="w-full btn btn-secondary"
                 >
-                  Edit Supabase Configuration
+                  {t('config.editSupabaseConfig')}
                 </button>
                 <button
                   onClick={async () => {
@@ -317,7 +318,7 @@ export default function ConfigPage() {
                   }}
                   className="w-full btn btn-secondary"
                 >
-                  Sign Out
+                  {t('auth.signOut')}
                 </button>
 
                 <div className="space-y-2">
@@ -325,17 +326,16 @@ export default function ConfigPage() {
                     onClick={handleResetConfig}
                     className="w-full btn btn-secondary text-red-600 hover:text-red-700"
                   >
-                    Clear App Configuration
+                    {t('config.clearAppConfig')}
                   </button>
                   <p className="text-xs text-gray-500 text-center px-2">
-                    This will only remove your Supabase URL and key from this browser.
-                    Your data in Supabase will NOT be affected.
+                    {t('config.clearConfigWarning')}
                   </p>
                 </div>
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-                <p className="font-medium mb-2">Current Configuration:</p>
+                <p className="font-medium mb-2">{t('config.currentConfiguration')}</p>
                 <p className="text-xs">URL: {truncateMiddle(config.url, 30)}</p>
                 <p className="text-xs">Key: {truncateMiddle(config.anonKey, 10)}</p>
               </div>

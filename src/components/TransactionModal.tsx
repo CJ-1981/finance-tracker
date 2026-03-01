@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { getSupabaseClient } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import type { Project, Transaction, Category } from '../types'
@@ -26,6 +27,7 @@ export default function TransactionModal({
     allTransactions,
     children
 }: TransactionModalProps) {
+    const { t } = useTranslation()
     const { user } = useAuth()
     const [saving, setSaving] = useState(false)
     const [formData, setFormData] = useState({
@@ -78,7 +80,7 @@ export default function TransactionModal({
     const handleGoToSettings = () => {
         const isDirty = formData.amount !== '' || Object.values(customData).some(v => v !== '')
         if (isDirty) {
-            if (!confirm('You have entered some data. Are you sure you want to leave and go to settings? Your changes will be lost.')) {
+            if (!confirm(t('transactions.confirmLeaveSettings'))) {
                 return
             }
         }
@@ -122,7 +124,7 @@ export default function TransactionModal({
             onClose()
         } catch (err) {
             console.error('Error saving transaction:', err)
-            alert('Failed to save transaction. Please try again.')
+            alert(t('transactions.failedSave'))
         } finally {
             setSaving(false)
         }
@@ -150,7 +152,7 @@ export default function TransactionModal({
             <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-black text-slate-900 tracking-tight">
-                        {transaction ? 'Edit Transaction' : 'Add Transaction'}
+                        {transaction ? t('transactions.editTransaction') : t('transactions.addTransaction')}
                     </h2>
                     <button
                         type="button"
@@ -345,14 +347,14 @@ export default function TransactionModal({
                             className="btn btn-secondary flex-1"
                             disabled={saving}
                         >
-                            Cancel
+                            {t('common.cancel')}
                         </button>
                         <button
                             type="submit"
                             className="btn btn-primary flex-1"
                             disabled={saving}
                         >
-                            {saving ? 'Saving...' : (transaction ? 'Update' : 'Add')}
+                            {saving ? t('transactions.saving') : (transaction ? t('common.save') : t('common.add'))}
                         </button>
                     </div>
                 </form>

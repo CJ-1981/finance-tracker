@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../hooks/useAuth'
 import { getSupabaseClient } from '../lib/supabase'
 import type { Project } from '../types'
 
 export default function DashboardPage() {
+  const { t } = useTranslation()
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
   const [projects, setProjects] = useState<Project[]>([])
@@ -104,31 +106,31 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
         <header className="bg-white shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <h1 className="text-2xl font-bold text-gray-900">Database Setup Required</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t('dashboardPage.databaseSetupRequired')}</h1>
           </div>
         </header>
         <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="card">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Database Tables Not Found</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('dashboardPage.databaseTablesNotFound')}</h2>
             <p className="text-gray-600 mb-6">
-              Your Supabase project is connected, but the database tables haven't been created yet.
+              {t('dashboardPage.databaseNotCreated')}
             </p>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <h3 className="font-medium text-blue-900 mb-2">To fix this:</h3>
+              <h3 className="font-medium text-blue-900 mb-2">{t('dashboardPage.toFixThis')}</h3>
               <ol className="list-decimal list-inside space-y-2 text-blue-800">
-                <li>Open your Supabase project dashboard</li>
-                <li>Go to <strong>SQL Editor</strong> in the left sidebar</li>
-                <li>Click <strong>New Query</strong></li>
-                <li>Copy the contents of the <code>database/schema.sql</code> file from this project</li>
-                <li>Paste it into the SQL Editor and click <strong>Run</strong></li>
-                <li>Refresh this page when done</li>
+                <li>{t('dashboardPage.step1')}</li>
+                <li>{t('dashboardPage.step2')}</li>
+                <li>{t('dashboardPage.step3')}</li>
+                <li>{t('dashboardPage.step4')}</li>
+                <li>{t('dashboardPage.step5')}</li>
+                <li>{t('dashboardPage.step6')}</li>
               </ol>
             </div>
             <button
               onClick={() => window.location.reload()}
               className="btn btn-primary"
             >
-              Refresh Page
+              {t('dashboardPage.refreshPage')}
             </button>
           </div>
         </main>
@@ -141,14 +143,14 @@ export default function DashboardPage() {
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t('dashboardPage.title')}</h1>
             <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
               <span className="text-xs sm:text-sm text-gray-600 truncate max-w-[150px] sm:max-w-none">{user?.email}</span>
               <button onClick={() => { navigate('/config') }} className="btn btn-secondary text-sm whitespace-nowrap" title="Reconfigure Supabase connection">
-                ⚙️ Settings
+                ⚙️ {t('common.settings')}
               </button>
               <button onClick={() => { signOut(); window.location.reload() }} className="btn btn-secondary text-sm whitespace-nowrap">
-                Logout
+                {t('common.logout')}
               </button>
             </div>
           </div>
@@ -158,10 +160,10 @@ export default function DashboardPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {projects.length === 0 ? (
           <div className="text-center py-12">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">No projects yet</h2>
-            <p className="text-gray-600 mb-6">Create your first project to get started</p>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('dashboardPage.noProjectsYet')}</h2>
+            <p className="text-gray-600 mb-6">{t('dashboardPage.createFirstProject')}</p>
             <Link to="/projects" className="btn btn-primary">
-              Create Project
+              {t('dashboardPage.createProject')}
             </Link>
           </div>
         ) : (
@@ -177,7 +179,7 @@ export default function DashboardPage() {
                   <p className="text-sm text-gray-600 mb-4">{project.description}</p>
                 )}
                 <div className="text-xs text-gray-500">
-                  Currency: {project.settings?.currency || 'USD'}
+                  {t('dashboardPage.currency')}: {project.settings?.currency || 'USD'}
                 </div>
               </Link>
             ))}
@@ -192,13 +194,13 @@ export default function DashboardPage() {
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
-            <span className="text-xs mt-1">Home</span>
+            <span className="text-xs mt-1">{t('dashboardPage.home')}</span>
           </Link>
           <Link to="/projects" className="flex flex-col items-center p-2 text-gray-600">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
             </svg>
-            <span className="text-xs mt-1">Projects</span>
+            <span className="text-xs mt-1">{t('dashboardPage.projects')}</span>
           </Link>
         </div>
       </nav>
