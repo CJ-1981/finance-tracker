@@ -27,23 +27,38 @@ export function createSupabaseClient(config: SupabaseConfig): SupabaseClient<Dat
 export function getSupabaseClient(): SupabaseClient<Database> {
   // If instance doesn't exist, try to initialize from localStorage
   if (!supabaseInstance) {
-    console.log('Supabase instance is null, attempting auto-initialization from localStorage...')
+    if (import.meta.env.DEV) {
+      console.log('Supabase instance is null, attempting auto-initialization from localStorage...')
+    }
     const config = getConfig()
     if (config) {
-      console.log('Found config in localStorage, validating...')
+      if (import.meta.env.DEV) {
+        console.log('Found config in localStorage, validating...')
+      }
       const validation = validateConfig(config)
       if (validation.valid) {
-        console.log('Config is valid, creating Supabase client...')
+        if (import.meta.env.DEV) {
+          console.log('Config is valid, creating Supabase client...')
+        }
         createSupabaseClient(config)
         if (supabaseInstance) {
-          console.log('Supabase client auto-initialized successfully')
+          if (import.meta.env.DEV) {
+            console.log('Supabase client auto-initialized successfully')
+          }
           return supabaseInstance
         }
       } else {
-        console.warn('Stored config validation failed:', validation.errors)
+        // Only log validation errors in development
+        if (import.meta.env.DEV) {
+          console.warn('Stored config validation failed:', validation.errors)
+        } else {
+          console.warn('Stored config validation failed')
+        }
       }
     } else {
-      console.log('No config found in localStorage')
+      if (import.meta.env.DEV) {
+        console.log('No config found in localStorage')
+      }
     }
     throw new Error('Supabase client not initialized and automatic initialization failed; call createSupabaseClient to initialize explicitly.')
   }

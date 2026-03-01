@@ -5,14 +5,30 @@ import { saveConfig } from './config'
 import { createSupabaseClient } from './supabase'
 import { decodeConfigFromInvite } from './inviteConfig'
 
+function hasInviteToken(): boolean {
+  const urlParams = new URLSearchParams(window.location.search)
+  return urlParams.has('token') || urlParams.has('tokens')
+}
+
+function isInviteRoute(): boolean {
+  // Check if current path is /invite or ends with /invite
+  const path = window.location.pathname
+  return path === '/invite' || path.endsWith('/invite')
+}
+
 export function initializeInviteConfig() {
   try {
-    // Check if we're on an invite page with config
+    // Only apply config if we're on an invite route AND have a valid invite token
+    if (!isInviteRoute() || !hasInviteToken()) {
+      return false
+    }
+
+    // Check if we have config in URL parameters
     const urlParams = new URLSearchParams(window.location.search)
     const configParam = urlParams.get('config')
 
     if (configParam) {
-      console.log('Found config in URL parameters, applying...')
+      console.log('Invite link contains Supabase configuration, applying...')
       const config = decodeConfigFromInvite(configParam)
 
       if (config) {

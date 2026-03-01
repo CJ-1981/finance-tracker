@@ -57,16 +57,18 @@ test.describe('Authentication', () => {
     // Wait for response - either navigation or error message
     await page.waitForLoadState('networkidle');
 
-    // Either we get an error message or we stay on login page
+    // Check current URL after login attempt
     const currentUrl = page.url();
     const isLoginPage = currentUrl.includes('/login');
 
-    // If we're still on login page, there should be some feedback
     if (isLoginPage) {
-      // Check for error message or toast
+      // We're still on login page - verify error feedback exists
       const errorMessage = page.locator('[role="alert"], .error, [class*="error"], [class*="toast"]').first();
-      const hasError = await errorMessage.count().then(count => count > 0);
-      // Error message is optional - form might just not submit
+      const errorCount = await errorMessage.count();
+      expect(errorCount).toBeGreaterThan(0); // Should have error message when login fails
+    } else {
+      // Navigation occurred - verify we moved away from login page
+      expect(currentUrl).not.toContain('/login');
     }
   });
 
