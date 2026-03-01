@@ -98,6 +98,8 @@
     "searchTransactions": "거래 검색...",
     "filterByCategory": "카테고리로 필터링",
     "confirmDelete": "이 거래를 삭제하시겠습니까?",
+    "confirmRestore": "이 거래를 복원하시겠습니까?",
+    "confirmPermanentDelete": "이 거래를 영구적으로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
     "closeSettings": "설정 닫기",
     "manageCategories": "카테고리 관리",
     "selectCategory": "카테고리 선택",
@@ -116,7 +118,13 @@
     "noTransactionsYet": "아직 거래 내역이 없습니다",
     "addFirstTransaction": "첫 번째 거래를 추가하여 시작하세요",
     "projectNotFound": "프로젝트를 찾을 수 없습니다",
-    "backToProjects": "프로젝트로 돌아가기"
+    "backToProjects": "프로젝트로 돌아가기",
+    "showDeleted": "삭제된 항목 표시",
+    "hideDeleted": "삭제된 항목 숨기기",
+    "deletedTransactions": "삭제된 거래",
+    "restore": "복원",
+    "deleteForever": "영구 삭제",
+    "noDeletedTransactions": "삭제된 거래가 없습니다."
   },
   "dashboard": {
     "totalBalance": "총 잔액",

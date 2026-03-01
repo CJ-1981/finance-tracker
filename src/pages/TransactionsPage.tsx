@@ -3,16 +3,20 @@ import { Link, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../hooks/useAuth'
 import { getSupabaseClient } from '../lib/supabase'
+import { softDeleteTransaction, restoreTransaction, permanentlyDeleteTransaction } from '../lib/supabase'
 import { exportToCSV } from '../utils/csvExport'
 import type { Project, Transaction, Category } from '../types'
 import TransactionModal from '../components/TransactionModal'
 
 export default function TransactionsPage() {
   const { t } = useTranslation()
-  const { } = useAuth()
+  const { user } = useAuth()
   const { projectId } = useParams<{ projectId: string }>()
   const [project, setProject] = useState<Project | null>(null)
   const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [deletedTransactions, setDeletedTransactions] = useState<Transaction[]>([])
+  const [showDeleted, setShowDeleted] = useState(false)
+  const [userRole, setUserRole] = useState<string>('')
   const [categories, setCategories] = useState<Category[]>([])
   const [showAddForm, setShowAddForm] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -76,6 +80,20 @@ export default function TransactionsPage() {
 
       if (error) throw error
       setProject(data)
+
+      // Fetch user role for this project
+      if (user?.id) {
+        const { data: memberData } = await supabase
+          .from('project_members')
+          .select('role')
+          .eq('project_id', projectId)
+          .eq('user_id', user.id)
+          .single()
+
+        if (memberData) {
+          setUserRole(memberData.role)
+        }
+      }
     } catch (error) {
       console.error('Error fetching project:', error)
     } finally {
@@ -159,16 +177,62 @@ export default function TransactionsPage() {
     }
 
     try {
-      const supabase = getSupabaseClient()
-      const { error } = await supabase
-        .from('transactions')
-        .delete()
-        .eq('id', transactionId)
-
-      if (error) throw error
-      fetchTransactions()
+      const success = await softDeleteTransaction(transactionId)
+      if (success) {
+        fetchTransactions()
+      }
     } catch (error) {
       console.error('Error deleting transaction:', error)
+    }
+  }
+
+  const fetchDeletedTransactions = async () => {
+    if (!projectId || userRole !== 'owner') return
+
+    try {
+      const supabase = getSupabaseClient()
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*, profiles!transactions_deleted_by_fkey(name)')
+        .eq('project_id', projectId)
+        .not('deleted_at', 'is', null)
+        .order('deleted_at', { ascending: false })
+
+      if (error) throw error
+      setDeletedTransactions(data || [])
+    } catch (error) {
+      console.error('Error fetching deleted transactions:', error)
+    }
+  }
+
+  const handleRestore = async (transactionId: string) => {
+    if (!confirm(t('transactions.confirmRestore'))) {
+      return
+    }
+
+    try {
+      const success = await restoreTransaction(transactionId)
+      if (success) {
+        fetchDeletedTransactions()
+        fetchTransactions()
+      }
+    } catch (error) {
+      console.error('Error restoring transaction:', error)
+    }
+  }
+
+  const handlePermanentDelete = async (transactionId: string) => {
+    if (!confirm(t('transactions.confirmPermanentDelete'))) {
+      return
+    }
+
+    try {
+      const success = await permanentlyDeleteTransaction(transactionId)
+      if (success) {
+        setDeletedTransactions(prev => prev.filter(t => t.id !== transactionId))
+      }
+    } catch (error) {
+      console.error('Error permanently deleting transaction:', error)
     }
   }
 
@@ -1151,19 +1215,102 @@ export default function TransactionsPage() {
                     )}
                   </>
                 ) : (
-                  <button
-                    onClick={() => {
-                      if (project) {
-                        exportToCSV({ transactions: getFilteredAndSortedTransactions(), project, categories })
-                      }
-                    }}
-                    className="btn btn-secondary text-sm whitespace-nowrap"
-                  >
-                    Export CSV
-                  </button>
+                  <>
+                    <button
+                      onClick={() => {
+                        if (project) {
+                          exportToCSV({ transactions: getFilteredAndSortedTransactions(), project, categories })
+                        }
+                      }}
+                      className="btn btn-secondary text-sm whitespace-nowrap"
+                    >
+                      Export CSV
+                    </button>
+                    {userRole === 'owner' && (
+                      <button
+                        onClick={() => {
+                          if (showDeleted) {
+                            setShowDeleted(false)
+                          } else {
+                            setShowDeleted(true)
+                            fetchDeletedTransactions()
+                          }
+                        }}
+                        className={`btn text-sm whitespace-nowrap ${
+                          showDeleted
+                            ? 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-300'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                        }`}
+                      >
+                        {showDeleted ? 'Hide Deleted' : 'Show Deleted'}
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             </div>
+
+            {/* Deleted Transactions Section - Owner Only */}
+            {showDeleted && userRole === 'owner' && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <h3 className="text-lg font-semibold text-red-900 mb-4 flex items-center gap-2">
+                  <span>🗑️</span>
+                  Deleted Transactions ({deletedTransactions.length})
+                </h3>
+                {deletedTransactions.length === 0 ? (
+                  <p className="text-gray-600 text-sm">No deleted transactions found.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {deletedTransactions.map((transaction) => (
+                      <div
+                        key={transaction.id}
+                        className="flex items-center justify-between p-3 bg-white border border-red-100 rounded"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3">
+                            <div className="text-sm">
+                              <div className="font-semibold text-gray-900">
+                                {transaction.category_id || 'Uncategorized'}
+                              </div>
+                              <div className="text-gray-600">
+                                {new Date(transaction.date).toLocaleDateString()} • {transaction.amount.toFixed(2)}
+                              </div>
+                              {transaction.description && (
+                                <div className="text-xs text-gray-500 truncate max-w-xs">
+                                  {transaction.description}
+                                </div>
+                              )}
+                              {transaction.deleted_at && (
+                                <div className="text-xs text-red-600 mt-1">
+                                  Deleted {new Date(transaction.deleted_at).toLocaleString()}
+                                  {(transaction as any).profiles && (
+                                    <span> by {(transaction as any).profiles.name}</span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 ml-4">
+                          <button
+                            onClick={() => handleRestore(transaction.id)}
+                            className="btn bg-green-600 hover:bg-green-700 text-white text-xs py-1 px-3"
+                          >
+                            Restore
+                          </button>
+                          <button
+                            onClick={() => handlePermanentDelete(transaction.id)}
+                            className="btn bg-red-600 hover:bg-red-700 text-white text-xs py-1 px-3"
+                          >
+                            Delete Forever
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
               <table className="w-full">

@@ -68,12 +68,15 @@ export interface Transaction {
   currency_code: string
   category_id: string
   date: string
+  description?: string
   receipt_url?: string
   created_by: string
   status: 'pending' | 'approved' | 'rejected'
   custom_data?: Record<string, any>
   created_at: string
   updated_at: string
+  deleted_at?: string
+  deleted_by?: string
 }
 
 export interface Invitation {
