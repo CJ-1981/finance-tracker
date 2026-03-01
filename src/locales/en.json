@@ -329,6 +329,8 @@
     "delete": "Delete",
     "clearAll": "Clear All",
     "confirmClearAll": "Are you sure you want to clear all entries? This cannot be undone.",
-    "pleaseEnterName": "Please enter a name for this entry."
+    "pleaseEnterName": "Please enter a name for this entry.",
+    "bills": "Bills",
+    "coins": "Coins"
   }
 }

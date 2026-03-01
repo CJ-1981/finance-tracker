@@ -329,6 +329,8 @@
     "delete": "삭제",
     "clearAll": "모두 지우기",
     "confirmClearAll": "모든 항목을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
-    "pleaseEnterName": "이 항목의 이름을 입력해주세요."
+    "pleaseEnterName": "이 항목의 이름을 입력해주세요.",
+    "bills": "지폐",
+    "coins": "동전"
   }
 }

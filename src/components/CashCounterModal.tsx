@@ -265,48 +265,97 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
 
         {/* Denominations Grid */}
         <div className="px-6 py-4">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {DENOMINATIONS.map((denom) => (
-              <div
-                key={denom.value}
-                className={`p-3 rounded-lg border-2 ${
-                  denom.type === 'bill'
-                    ? 'border-yellow-200 bg-yellow-50'
-                    : 'border-gray-300 bg-gray-50'
-                }`}
-              >
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-lg font-bold">{currency}</span>
-                  <span className="text-lg font-black">
-                    {getCurrencyEmoji(currency, denom.type)} {denom.label}
-                  </span>
+          {/* Bills Section */}
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">
+              💵 {t('cashCounter.bills', { defaultValue: 'Bills' })}
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {DENOMINATIONS.filter(d => d.type === 'bill').map((denom) => (
+                <div
+                  key={denom.value}
+                  className="p-3 rounded-lg border-2 border-yellow-200 bg-yellow-50"
+                >
+                  <div className="flex justify-center items-center mb-2">
+                    <span className="text-lg font-black">
+                      {getCurrencyEmoji(currency, denom.type)} {denom.label}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleCountChange(denom.value, -1)}
+                      className="w-10 h-10 rounded-full bg-red-500 text-white font-bold text-xl hover:bg-red-600 disabled:opacity-30"
+                      disabled={(counts[denom.value] || 0) === 0}
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      min="0"
+                      className="flex-1 text-center font-semibold text-lg min-w-[40px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={counts[denom.value] || 0}
+                      onChange={(e) => handleDirectInput(denom.value, parseInt(e.target.value) || 0)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleCountChange(denom.value, 1)}
+                      className="w-10 h-10 rounded-full bg-green-500 text-white font-bold text-xl hover:bg-green-600"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleCountChange(denom.value, -1)}
-                    className="w-10 h-10 rounded-full bg-red-500 text-white font-bold text-xl hover:bg-red-600 disabled:opacity-30"
-                    disabled={(counts[denom.value] || 0) === 0}
-                  >
-                    −
-                  </button>
-                  <input
-                    type="number"
-                    min="0"
-                    className="flex-1 text-center font-semibold text-lg min-w-[40px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={counts[denom.value] || 0}
-                    onChange={(e) => handleDirectInput(denom.value, parseInt(e.target.value) || 0)}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleCountChange(denom.value, 1)}
-                    className="w-10 h-10 rounded-full bg-green-500 text-white font-bold text-xl hover:bg-green-600"
-                  >
-                    +
-                  </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Separator */}
+          <div className="border-t-2 border-dashed border-gray-300 my-4"></div>
+
+          {/* Coins Section */}
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">
+              🪙 {t('cashCounter.coins', { defaultValue: 'Coins' })}
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {DENOMINATIONS.filter(d => d.type === 'coin').map((denom) => (
+                <div
+                  key={denom.value}
+                  className="p-3 rounded-lg border-2 border-gray-300 bg-gray-50"
+                >
+                  <div className="flex justify-center items-center mb-2">
+                    <span className="text-lg font-black">
+                      {getCurrencyEmoji(currency, denom.type)} {denom.label}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleCountChange(denom.value, -1)}
+                      className="w-10 h-10 rounded-full bg-red-500 text-white font-bold text-xl hover:bg-red-600 disabled:opacity-30"
+                      disabled={(counts[denom.value] || 0) === 0}
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      min="0"
+                      className="flex-1 text-center font-semibold text-lg min-w-[40px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={counts[denom.value] || 0}
+                      onChange={(e) => handleDirectInput(denom.value, parseInt(e.target.value) || 0)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleCountChange(denom.value, 1)}
+                      className="w-10 h-10 rounded-full bg-green-500 text-white font-bold text-xl hover:bg-green-600"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
           {/* Current Entry Total */}
