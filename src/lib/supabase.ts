@@ -20,7 +20,15 @@ export function createSupabaseClient(config: SupabaseConfig): SupabaseClient<Dat
       autoRefreshToken: true,
       detectSessionInUrl: true,
       storage: window.localStorage,
-    },
+      // Bypass Navigator.locks entirely.
+      // Chrome's LockManager blocks getSession() and the INITIAL_SESSION event
+      // when a lock is already held during client initialization. Safari handles
+      // this gracefully; Chrome does not — causing 6-15s hangs on every page load.
+      // This no-op lock runs auth operations immediately without acquiring any lock.
+      // Trade-off: no cross-tab token-refresh coordination, which is acceptable
+      // for a single-user personal finance app.
+      lock: async (_name: string, _acquireTimeout: number, fn: () => Promise<any>) => fn(),
+    } as any,
   })
 
   // Store in global reference
