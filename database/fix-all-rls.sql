@@ -37,6 +37,12 @@ RETURNS BOOLEAN AS $$
   );
 $$ LANGUAGE sql SECURITY DEFINER STABLE SET search_path = '';
 
+-- Returns the current user's email from auth.users
+CREATE OR REPLACE FUNCTION public.current_user_email()
+RETURNS TEXT AS $$
+  SELECT email FROM auth.users WHERE id = auth.uid();
+$$ LANGUAGE sql SECURITY DEFINER STABLE SET search_path = '';
+
 
 -- ============================================================
 -- STEP 2: PROFILES TABLE
@@ -127,7 +133,7 @@ CREATE POLICY "Invitees can join project"
     EXISTS (
       SELECT 1 FROM public.invitations
       WHERE invitations.project_id = project_id
-        AND invitations.email = (SELECT email FROM auth.users WHERE id = auth.uid())
+        AND invitations.email = public.current_user_email()
         AND invitations.status = 'pending'
     )
   );
@@ -235,7 +241,7 @@ CREATE POLICY "Users can view project invitations"
   ON public.invitations FOR SELECT
   USING (
     -- Recipient can view their own invitation
-    email = (SELECT email FROM auth.users WHERE id = auth.uid()) OR
+    email = public.current_user_email() OR
     -- Project owners and members can view
     public.is_project_owner(project_id) OR
     public.is_project_member_with_role(project_id, ARRAY['owner', 'member'])
@@ -246,7 +252,7 @@ CREATE POLICY "Users can update invitation status to accepted"
   ON public.invitations FOR UPDATE
   USING (
     -- Recipient can update their own invitation
-    email = (SELECT email FROM auth.users WHERE id = auth.uid()) OR
+    email = public.current_user_email() OR
     -- Project owners can update
     public.is_project_owner(project_id) OR
     public.is_project_member_with_role(project_id, ARRAY['owner'])
