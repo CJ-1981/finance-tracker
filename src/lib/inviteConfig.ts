@@ -70,7 +70,8 @@ export function generateInviteLink(
   const basePath = import.meta.env.BASE_URL || ''
   const fullInvitePath = basePath.endsWith('/') ? `${basePath}${invitePath.replace(/^\//, '')}` : `${basePath}/${invitePath.replace(/^\//, '')}`
 
-  const url = new URL(baseUrl + fullInvitePath)
+  // Use URL constructor with base to properly resolve paths
+  const url = new URL(fullInvitePath, baseUrl)
 
   // Handle single token or multiple tokens
   if (Array.isArray(token)) {

@@ -115,21 +115,19 @@ export default function ProjectsPage() {
 
       // Generate combined invitation link with embedded config
       const { getConfig } = await import('../lib/config')
-      const { encodeConfigForInvite } = await import('../lib/inviteConfig')
+      const { generateInviteLink } = await import('../lib/inviteConfig')
       const config = getConfig()
 
       // Build invite path using BASE_URL for deployment flexibility
       const basePath = import.meta.env.BASE_URL || ''
       const invitePath = basePath.endsWith('/') ? `${basePath}invite` : `${basePath}/invite`
-      const url = new URL(window.location.origin + invitePath)
-      url.searchParams.set('tokens', tokens.join(','))
 
-      if (config) {
-        const encodedConfig = encodeConfigForInvite(config)
-        url.searchParams.set('config', encodedConfig)
-      }
-
-      const link = url.toString()
+      const link = generateInviteLink(
+        window.location.origin,
+        tokens,
+        config || undefined,
+        invitePath
+      )
       setInviteLink(link)
       setInviteRecipientEmail(inviteEmail)
       setShowInviteLink(true)
@@ -412,8 +410,8 @@ export default function ProjectsPage() {
               <button
                 onClick={() => {
                   const fullMessage =
-                    `Subject: You're invited to join ${selectedProjectIds.length} projects\n\n` +
-                    `You've been invited to join ${selectedProjectIds.length} projects as a ${inviteRole}.\n\n` +
+                    `Subject: You're invited to join ${inviteProjectCount} projects\n\n` +
+                    `You've been invited to join ${inviteProjectCount} projects as a ${inviteRole}.\n\n` +
                     `Click the link below to accept all invitations:\n${inviteLink}\n\n` +
                     `This invitation expires in 7 days.`
                   navigator.clipboard.writeText(fullMessage)
