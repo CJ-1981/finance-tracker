@@ -641,10 +641,12 @@ export default function ProjectDetailPage() {
                     transactionsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
                   }
                 }}
-                className="btn btn-secondary text-sm whitespace-nowrap hidden sm:flex"
+                className="btn btn-secondary text-sm whitespace-nowrap flex"
                 title="View Transactions"
+                aria-label="View Transactions"
               >
-                📋 Transactions
+                <span>📋</span>
+                <span className="hidden sm:inline ml-1">Transactions</span>
               </button>
               <button onClick={() => setShowAddTransactionModal(true)} className="btn btn-primary text-sm whitespace-nowrap">
                 + Add Transaction
@@ -811,16 +813,16 @@ export default function ProjectDetailPage() {
               </div>
 
               {/* Recent Transactions */}
-              <div id="recent-transactions" className="lg:col-span-1 card border-t-4 border-t-teal-500 flex flex-col overflow-hidden">
-                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-6">
+              <div id="recent-transactions" className="lg:col-span-1 card border-t-4 border-t-teal-500 flex flex-col overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
+                <Link to={`/transactions/${id}`} className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-6">
                   <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                     <span className="w-2 h-6 bg-teal-500 rounded-full flex-shrink-0"></span>
                     Recent
                   </h2>
-                  <Link to={`/transactions/${id}`} className="text-sm font-semibold text-primary-600 hover:text-primary-700 whitespace-nowrap">
+                  <span className="text-sm font-semibold text-primary-600 hover:text-primary-700 whitespace-nowrap">
                     View All →
-                  </Link>
-                </div>
+                  </span>
+                </Link>
                 <div className="space-y-3 flex-1 overflow-auto">
                   {filteredTransactions.slice(0, 6).map((transaction) => (
                     <Link key={transaction.id} to={`/transactions/${id}`} className="flex justify-between items-center gap-2 p-3 hover:bg-slate-50 rounded-xl transition-all border border-transparent hover:border-slate-100 group">
