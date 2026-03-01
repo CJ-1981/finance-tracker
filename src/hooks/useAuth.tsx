@@ -20,6 +20,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   })
 
   useEffect(() => {
+    // Timeout fallback to ensure loading is never stuck
+    const timeoutId = setTimeout(() => {
+      setAuthState(prev => {
+        if (prev.loading) {
+          console.warn('Auth initialization timed out, forcing loading to false')
+          return { ...prev, loading: false }
+        }
+        return prev
+      })
+    }, 5000) // 5 second timeout
+
     // Try to get Supabase client - it might not be initialized yet
     let supabase
     try {
@@ -28,21 +39,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Supabase not configured yet - this is OK on first visit
       console.log('Supabase not configured yet - client initialization failed:', error)
       setAuthState({ user: null, session: null, loading: false })
+      clearTimeout(timeoutId)
       return
     }
 
     // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        // Await to prevent race conditions
-        fetchUserProfile(session.user, supabase).catch(err => {
-          console.error('Error fetching user profile:', err)
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        clearTimeout(timeoutId)
+        if (session?.user) {
+          // Await to prevent race conditions
+          fetchUserProfile(session.user, supabase).catch(err => {
+            console.error('Error fetching user profile:', err)
+            setAuthState({ user: null, session: null, loading: false })
+          })
+        } else {
           setAuthState({ user: null, session: null, loading: false })
-        })
-      } else {
+        }
+      })
+      .catch(err => {
+        clearTimeout(timeoutId)
+        console.error('Error getting session:', err)
         setAuthState({ user: null, session: null, loading: false })
-      }
-    })
+      })
 
     // Listen for auth changes
     const {
@@ -59,7 +78,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      clearTimeout(timeoutId)
+      subscription.unsubscribe()
+    }
   }, [])
 
   const fetchUserProfile = async (user: User, supabase: ReturnType<typeof getSupabaseClient>) => {
