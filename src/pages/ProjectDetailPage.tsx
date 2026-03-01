@@ -134,29 +134,6 @@ export default function ProjectDetailPage() {
     }
   }
 
-  const saveChartPreferences = async (chartType: 'category' | 'time', groupBy: string, metric: string) => {
-    if (!project) return
-    try {
-      const supabase = getSupabaseClient()
-      const settingsKey = chartType === 'category'
-        ? { group_by: 'category_chart_group_by', metric: 'category_chart_metric' }
-        : { group_by: 'time_chart_group_by', metric: 'time_chart_metric' }
-
-      const updatedSettings = {
-        ...project.settings,
-        [settingsKey.group_by]: groupBy,
-        [settingsKey.metric]: metric
-      }
-      await (supabase
-        .from('projects') as any)
-        .update({ settings: updatedSettings })
-        .eq('id', id)
-      setProject({ ...project, settings: updatedSettings as any })
-    } catch (err) {
-      console.error(`Error saving ${chartType} chart preferences:`, err)
-    }
-  }
-
   const saveConsolidatedChartPreferences = async () => {
     if (!project) return
     try {
