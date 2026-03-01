@@ -636,8 +636,9 @@ export default function ProjectDetailPage() {
             </div>
             <div className="flex gap-2 flex-shrink-0">
               {project?.owner_id === user?.id && (
-                <button onClick={() => setShowInviteModal(true)} className="btn btn-secondary border border-blue-600 text-blue-600 hover:bg-blue-50 text-sm whitespace-nowrap">
-                  {t('projectDetail.invite')}
+                <button onClick={() => setShowInviteModal(true)} className="btn btn-secondary border border-blue-600 text-blue-600 hover:bg-blue-50 text-sm whitespace-nowrap flex" title="Invite">
+                  <span>✉️</span>
+                  <span className="hidden sm:inline ml-1">{t('projectDetail.invite')}</span>
                 </button>
               )}
               <button
@@ -654,8 +655,9 @@ export default function ProjectDetailPage() {
                 <span>📋</span>
                 <span className="hidden sm:inline ml-1">{t('projectDetail.viewTransactions')}</span>
               </button>
-              <button onClick={() => setShowAddTransactionModal(true)} className="btn btn-primary text-sm whitespace-nowrap">
-                + {t('projectDetail.addTransaction')}
+              <button onClick={() => setShowAddTransactionModal(true)} className="btn btn-primary text-sm whitespace-nowrap flex" title="Add Transaction">
+                <span>+</span>
+                <span className="hidden sm:inline ml-1">{t('projectDetail.addTransaction')}</span>
               </button>
               <button onClick={() => setShowCashCounterModal(true)} className="btn btn-secondary text-sm whitespace-nowrap flex" title="Cash Counter">
                 <span>🧮</span>
@@ -790,7 +792,7 @@ export default function ProjectDetailPage() {
                     <span className="w-2 h-6 bg-primary-500 rounded-full"></span>
                     {getChartTitle(categoryChartMetric, categoryChartGroupBy)}
                   </h2>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <select
                       value={categoryChartGroupBy}
                       onChange={(e) => setCategoryChartGroupBy(e.target.value)}
@@ -866,7 +868,7 @@ export default function ProjectDetailPage() {
                     <h2 className="text-lg font-semibold truncate pr-2">
                       {getChartTitle(timeChartMetric, timeChartGroupBy)} Over Time
                     </h2>
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
                       <select
                         value={timeChartGroupBy}
                         onChange={(e) => setTimeChartGroupBy(e.target.value)}
@@ -889,21 +891,23 @@ export default function ProjectDetailPage() {
                       </select>
                       <button
                         onClick={() => setChartMode('cumulative')}
-                        className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded transition-colors ${chartMode === 'cumulative'
+                        className={`px-1.5 sm:px-3 py-1 text-xs sm:text-sm rounded transition-colors ${chartMode === 'cumulative'
                           ? 'bg-blue-100 text-blue-700 font-medium'
                           : 'text-gray-600 hover:bg-gray-100'
                           }`}
                       >
-                        {t('projectDetail.cumulative')}
+                        <span className="hidden sm:inline">{t('projectDetail.cumulative')}</span>
+                        <span className="inline sm:hidden">Cumul.</span>
                       </button>
                       <button
                         onClick={() => setChartMode('absolute')}
-                        className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded transition-colors ${chartMode === 'absolute'
+                        className={`px-1.5 sm:px-3 py-1 text-xs sm:text-sm rounded transition-colors ${chartMode === 'absolute'
                           ? 'bg-blue-100 text-blue-700 font-medium'
                           : 'text-gray-600 hover:bg-gray-100'
                           }`}
                       >
-                        {t('projectDetail.absolute')}
+                        <span className="hidden sm:inline">{t('projectDetail.absolute')}</span>
+                        <span className="inline sm:hidden">Abs.</span>
                       </button>
                     </div>
                   </div>
