@@ -657,6 +657,18 @@ export default function ProjectDetailPage() {
               <button onClick={() => setShowInviteModal(true)} className="btn btn-secondary border border-blue-600 text-blue-600 hover:bg-blue-50 text-sm whitespace-nowrap">
                 Invite
               </button>
+              <button
+                onClick={() => {
+                  const transactionsSection = document.getElementById('recent-transactions')
+                  if (transactionsSection) {
+                    transactionsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  }
+                }}
+                className="btn btn-secondary text-sm whitespace-nowrap hidden sm:flex"
+                title="View Transactions"
+              >
+                📋 Transactions
+              </button>
               <button onClick={() => setShowAddTransactionModal(true)} className="btn btn-primary text-sm whitespace-nowrap">
                 + Add Transaction
               </button>
@@ -755,12 +767,14 @@ export default function ProjectDetailPage() {
           <div className="lg:col-span-3 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
             {/* Date & Time Widget */}
             <div className="card border-t-4 border-t-blue-500 overflow-hidden">
-              <div className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Date & Time</div>
+              <div className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">
+                <span className="mr-1">☀️</span> Date & Time
+              </div>
               <div className="flex flex-col">
-                <div className="text-lg font-bold text-slate-900">
-                  {currentDateTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                <div className="text-base font-semibold text-slate-900">
+                  {currentDateTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                 </div>
-                <div className="text-2xl font-black text-slate-900">
+                <div className="text-xl font-medium text-slate-900">
                   {currentDateTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' })}
                 </div>
               </div>
@@ -820,7 +834,7 @@ export default function ProjectDetailPage() {
               </div>
 
               {/* Recent Transactions */}
-              <div className="lg:col-span-1 card border-t-4 border-t-teal-500 flex flex-col overflow-hidden">
+              <div id="recent-transactions" className="lg:col-span-1 card border-t-4 border-t-teal-500 flex flex-col overflow-hidden">
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-6">
                   <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                     <span className="w-2 h-6 bg-teal-500 rounded-full flex-shrink-0"></span>
