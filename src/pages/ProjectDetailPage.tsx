@@ -93,29 +93,17 @@ export default function ProjectDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [datePeriod])
 
-  // Save category chart preferences when changed (debounced)
+  // Save all chart preferences when changed (consolidated debounced saver)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       // Only save if preferences have been loaded and project exists
       if (project && preferencesLoaded) {
-        saveChartPreferences('category', categoryChartGroupBy, categoryChartMetric)
+        saveConsolidatedChartPreferences()
       }
     }, 500)
     return () => clearTimeout(timeoutId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [categoryChartGroupBy, categoryChartMetric, preferencesLoaded])
-
-  // Save time chart preferences when changed (debounced)
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      // Only save if preferences have been loaded and project exists
-      if (project && preferencesLoaded) {
-        saveChartPreferences('time', timeChartGroupBy, timeChartMetric)
-      }
-    }, 500)
-    return () => clearTimeout(timeoutId)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeChartGroupBy, timeChartMetric, preferencesLoaded])
+  }, [categoryChartGroupBy, categoryChartMetric, timeChartGroupBy, timeChartMetric, preferencesLoaded])
 
   const saveDatePeriodPreference = async (period: typeof datePeriod) => {
     if (!project) return
@@ -155,6 +143,27 @@ export default function ProjectDetailPage() {
       setProject({ ...project, settings: updatedSettings as any })
     } catch (err) {
       console.error(`Error saving ${chartType} chart preferences:`, err)
+    }
+  }
+
+  const saveConsolidatedChartPreferences = async () => {
+    if (!project) return
+    try {
+      const supabase = getSupabaseClient()
+      const updatedSettings = {
+        ...project.settings,
+        category_chart_group_by: categoryChartGroupBy,
+        category_chart_metric: categoryChartMetric,
+        time_chart_group_by: timeChartGroupBy,
+        time_chart_metric: timeChartMetric,
+      }
+      await (supabase
+        .from('projects') as any)
+        .update({ settings: updatedSettings })
+        .eq('id', id)
+      setProject({ ...project, settings: updatedSettings as any })
+    } catch (err) {
+      console.error('Error saving consolidated chart preferences:', err)
     }
   }
 
@@ -422,7 +431,8 @@ export default function ProjectDetailPage() {
     } else {
       // Custom field - get the value
       const customValue = transaction.custom_data?.[groupBy]
-      return customValue ? String(customValue) : '(empty)'
+      // Only treat null/undefined as empty, preserve valid falsy values like 0 or false
+      return (customValue ?? null) !== null ? String(customValue) : '(empty)'
     }
   }
 
@@ -441,6 +451,14 @@ export default function ProjectDetailPage() {
       const hue = Math.abs(hash) % 360
       return `hsl(${hue}, 70%, 50%)`
     }
+  }
+
+  // Get chart title based on metric and grouping
+  const getChartTitle = (metric: string, groupBy: string): string => {
+    const metricLabel = metric === 'amount' ? 'Amount' : metric
+    const groupByOption = getGroupingOptions().find(opt => opt.value === groupBy)
+    const groupByLabel = groupByOption?.label || groupBy
+    return `${metricLabel} by ${groupByLabel}`
   }
 
   // Get available grouping options (category + text/select custom fields)
@@ -744,7 +762,7 @@ export default function ProjectDetailPage() {
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-6">
                   <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                     <span className="w-2 h-6 bg-primary-500 rounded-full"></span>
-                    Amount by Category
+                    {getChartTitle(categoryChartMetric, categoryChartGroupBy)}
                   </h2>
                   <div className="flex items-center gap-2">
                     <select
@@ -819,7 +837,9 @@ export default function ProjectDetailPage() {
               {datePeriod !== 'today' && (
                 <div className="lg:col-span-3 card border-t-4 border-t-primary-500 overflow-hidden">
                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-4">
-                    <h2 className="text-lg font-semibold truncate pr-2">Amount Over Time by Category</h2>
+                    <h2 className="text-lg font-semibold truncate pr-2">
+                      {getChartTitle(timeChartMetric, timeChartGroupBy)} Over Time
+                    </h2>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <select
                         value={timeChartGroupBy}

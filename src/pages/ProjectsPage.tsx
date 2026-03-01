@@ -208,7 +208,12 @@ export default function ProjectsPage() {
                   </button>
                 </>
               )}
-              <button onClick={() => { navigate('/config') }} className="btn btn-secondary text-sm whitespace-nowrap sm:hidden" title="Reconfigure Supabase connection">
+              <button
+                onClick={() => { navigate('/config') }}
+                className="btn btn-secondary text-sm whitespace-nowrap sm:hidden"
+                title="Reconfigure Supabase connection"
+                aria-label="Reconfigure Supabase connection"
+              >
                 ⚙️
               </button>
               <button onClick={() => { navigate('/config') }} className="btn btn-secondary text-sm whitespace-nowrap hidden sm:inline-flex" title="Reconfigure Supabase connection">

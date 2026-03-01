@@ -58,7 +58,7 @@ npx playwright test --headed
 
 ## Test Structure
 
-### Mobile Tests (`tests/mobile.spec.ts`)
+### Mobile Tests (`tests/e2e/mobile.spec.ts`)
 Tests mobile-specific functionality including:
 - Mobile viewport responsiveness
 - Touch target sizes (≥44px)
@@ -66,14 +66,14 @@ Tests mobile-specific functionality including:
 - Icon button interactions
 - Mobile form inputs
 
-### Authentication Tests (`tests/auth.spec.ts`)
+### Authentication Tests (`tests/e2e/auth.spec.ts`)
 Tests authentication flows:
 - Login page functionality
 - Sign up process
 - Session management
 - Error handling
 
-### Project Tests (`tests/projects.spec.ts`)
+### Project Tests (`tests/e2e/projects.spec.ts`)
 Tests project management features:
 - Project creation
 - Project switching
