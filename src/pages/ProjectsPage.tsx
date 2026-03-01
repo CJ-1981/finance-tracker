@@ -320,7 +320,7 @@ export default function ProjectsPage() {
                 <div className="flex justify-between items-start">
                   <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-primary-600 transition-colors">{project.name}</h3>
                   <span className="bg-primary-50 text-primary-700 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border border-primary-100">
-                    {t(`projects.${project.userRole}`)}
+                    {t(`projects.${['owner', 'member', 'viewer'].includes(project.userRole || '') ? project.userRole : 'unknown'}`)}
                   </span>
                 </div>
                 {project.description && (

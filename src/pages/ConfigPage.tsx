@@ -87,7 +87,7 @@ export default function ConfigPage() {
         setErrors([t('config.failedConnection')])
       }
     } catch (error) {
-      setErrors([error instanceof Error ? error.message : 'Connection failed'])
+      setErrors([error instanceof Error ? error.message : t('config.connectionFailed')])
     } finally {
       setTesting(false)
     }
@@ -113,7 +113,7 @@ export default function ConfigPage() {
         setMode('authenticated')
       }
     } catch (error) {
-      setErrors([error instanceof Error ? error.message : 'Sign in failed'])
+      setErrors([error instanceof Error ? error.message : t('config.signInFailed')])
     } finally {
       setSigningIn(false)
     }

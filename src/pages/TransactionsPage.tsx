@@ -193,7 +193,7 @@ export default function TransactionsPage() {
   const handleBulkDelete = async () => {
     if (selectedTransactions.size === 0) return
 
-    if (!confirm(`Are you sure you want to delete ${selectedTransactions.size} selected transaction(s)?`)) {
+    if (!confirm(t('transactions.confirmBulkDelete', { count: selectedTransactions.size }))) {
       return
     }
 
@@ -473,7 +473,7 @@ export default function TransactionsPage() {
   }
 
   const handleDeleteCategory = async (categoryId: string) => {
-    if (!confirm('Are you sure you want to delete this category? Transactions using it will become Uncategorized.')) return;
+    if (!confirm(t('transactions.confirmDeleteCategory'))) return;
     try {
       const supabase = getSupabaseClient()
       const { error } = await supabase.from('categories').delete().eq('id', categoryId)
@@ -702,9 +702,9 @@ export default function TransactionsPage() {
     return (
       <div className="min-h-screen bg-gray-50 p-8">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Project not found</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('transactions.projectNotFound')}</h1>
           <Link to="/projects" className="btn btn-secondary">
-            Back to Projects
+            {t('transactions.backToProjects')}
           </Link>
         </div>
       </div>
@@ -1037,10 +1037,10 @@ export default function TransactionsPage() {
 
         {transactions.length === 0 ? (
           <div className="text-center py-12">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">No transactions yet</h2>
-            <p className="text-gray-600 mb-6">Add your first transaction to get started</p>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('transactions.noTransactionsYet')}</h2>
+            <p className="text-gray-600 mb-6">{t('transactions.addFirstTransaction')}</p>
             <button onClick={() => setShowAddForm(true)} className="btn btn-primary">
-              Add Transaction
+              {t('transactions.addTransaction')}
             </button>
           </div>
         ) : (

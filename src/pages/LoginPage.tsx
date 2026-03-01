@@ -116,7 +116,7 @@ export default function LoginPage() {
 
       <div className="max-w-md w-full relative z-10">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">{t('auth.financialTracker')} <span className="text-primary-600">Tracker</span></h1>
+          <h1 className="text-4xl font-black text-slate-900 tracking-tight">{t('auth.financialTrackerFull')}</h1>
           <p className="text-slate-500 mt-2 font-medium">
             {isSignUp ? t('auth.createAccount') : t('auth.welcomeBack')}
           </p>
@@ -209,7 +209,7 @@ export default function LoginPage() {
               }}
               className="text-blue-600 hover:text-blue-700 font-medium"
             >
-              {isSignUp ? t('auth.alreadyHaveAccount') + ' ' + t('auth.signIn') : t('auth.dontHaveAccount') + ' ' + t('auth.signUp')}
+              {isSignUp ? t('auth.toggleToSignIn') : t('auth.toggleToSignUp')}
             </button>
           </div>
 

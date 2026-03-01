@@ -13,8 +13,17 @@
     "next": "Next",
     "submit": "Submit",
     "settings": "Settings",
+    "settingsTooltip": "Reconfigure Supabase connection",
     "logout": "Logout",
     "logOut": "Log Out"
+  },
+  "transactionModal": {
+    "configureCustomFields": "Configure custom fields and categories",
+    "transactionType": "Transaction Type",
+    "income": "Income",
+    "expense": "Expense",
+    "amountPlaceholder": "0.00",
+    "datePlaceholder": "Select date"
   },
   "projects": {
     "title": "Financial Tracker",
@@ -24,6 +33,8 @@
     "invite": "Invite",
     "cancelSelection": "Cancel",
     "reconfigure": "Reconfigure Supabase connection",
+    "reconfigureConnection": "Reconfigure Supabase connection",
+    "unknownRole": "Unknown",
     "createNewProject": "Create New Project",
     "projectName": "Project Name",
     "description": "Description",
@@ -36,7 +47,8 @@
     "viewer": "viewer",
     "inviteToProjects": "Invite to Projects",
     "invitingProjects": "You are inviting someone to join {{count}} project.",
-    "invitingProjects_plural": "You are inviting someone to join {{count}} projects.",
+    "invitingProjects_one": "You are inviting someone to join {{count}} project.",
+    "invitingProjects_other": "You are inviting someone to join {{count}} projects.",
     "emailAddress": "Email Address",
     "role": "Role",
     "roleMember": "Member (Can add/edit)",
@@ -99,7 +111,13 @@
     "noTransactionsFound": "No transactions found matching your criteria.",
     "confirmLeaveSettings": "You have entered some data. Are you sure you want to leave and go to settings? Your changes will be lost.",
     "saving": "Saving...",
-    "failedSave": "Failed to save transaction. Please try again."
+    "failedSave": "Failed to save transaction. Please try again.",
+    "confirmBulkDelete": "Are you sure you want to delete {{count}} selected transaction(s)?",
+    "confirmDeleteCategory": "Are you sure you want to delete this category? Transactions using it will become Uncategorized.",
+    "noTransactionsYet": "No transactions yet",
+    "addFirstTransaction": "Add your first transaction to get started",
+    "projectNotFound": "Project not found",
+    "backToProjects": "Back to Projects"
   },
   "dashboard": {
     "totalBalance": "Total Balance",
@@ -116,6 +134,8 @@
     "dontHaveAccount": "Don't have an account?",
     "signUp": "Sign Up",
     "alreadyHaveAccount": "Already have an account?",
+    "toggleToSignIn": "Already have an account? Sign In",
+    "toggleToSignUp": "Don't have an account? Sign Up",
     "signInWithGoogle": "Sign in with Google",
     "signInWithGitHub": "Sign in with GitHub",
     "registrationSuccess": "Registration successful! Please check your email for a confirmation link.",
@@ -128,7 +148,8 @@
     "configureSupabaseFirst": "Please configure your Supabase connection first.",
     "goToConfiguration": "Go to Configuration",
     "securedWithSupabase": "Your data is secured with Supabase Auth",
-    "financialTracker": "Financial Tracker"
+    "financialTracker": "Financial Tracker",
+    "financialTrackerFull": "Financial Tracker"
   },
   "config": {
     "supabaseConfig": "Supabase Configuration",
@@ -153,7 +174,10 @@
     "clearConfigWarning": "This will only remove your Supabase URL and key from this browser. Your data in Supabase will NOT be affected.",
     "backToProjectsList": "← Back to Projects List",
     "signedInAs": "Signed in as",
-    "currentConfiguration": "Current Configuration:"
+    "currentConfiguration": "Current Configuration:",
+    "notConfigured": "Not configured",
+    "connectionFailed": "Connection failed",
+    "signInFailed": "Sign in failed"
   },
   "invite": {
     "acceptInvitation": "Accept Invitation",
@@ -184,7 +208,8 @@
     "invitationsExpired": "These invitations have expired",
     "invitationNotFoundError": "Invitation not found",
     "failedToValidate": "Failed to validate invitation",
-    "failedToAccept": "Failed to accept invitation"
+    "failedToAccept": "Failed to accept invitation",
+    "inviteMismatch": "This invitation is meant for {{expected}}, but you're signed in as {{actual}}."
   },
   "errors": {
     "somethingWentWrong": "Something went wrong",
@@ -279,8 +304,28 @@
     "cancel": "Cancel",
     "uncategorized": "Uncategorized",
     "subject": "Subject",
-    "invitationEmailBody": "You've been invited to join the project \"{project}\" as a {role}.\n\nClick the link below to accept the invitation:\n{link}\n\nThis invitation expires in 7 days.",
+    "invitationEmailBody": "You've been invited to join the project \"{{project}}\" as a {{role}}.\n\nClick the link below to accept the invitation:\n{{link}}\n\nThis invitation expires in 7 days.",
     "fullInvitationCopied": "Full invitation copied to clipboard!",
-    "linkCopied": "Link copied to clipboard!"
+    "linkCopied": "Link copied to clipboard!",
+    "chartDate": "Date",
+    "chartCount": "Count"
+  },
+  "cashCounter": {
+    "title": "Cash Counter",
+    "anonymous": "Anonymous",
+    "withNames": "With Names",
+    "enterName": "Enter name",
+    "currentEntry": "Current Entry",
+    "addEntry": "Add Entry",
+    "totalCounted": "Total Counted",
+    "transactionsTotal": "Transactions Total",
+    "match": "Match",
+    "excess": "Excess",
+    "shortage": "Shortage",
+    "entries": "Entries",
+    "delete": "Delete",
+    "clearAll": "Clear All",
+    "confirmClearAll": "Are you sure you want to clear all entries? This cannot be undone.",
+    "pleaseEnterName": "Please enter a name for this entry."
   }
 }

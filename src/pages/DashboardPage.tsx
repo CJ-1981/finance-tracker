@@ -146,7 +146,7 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-bold text-gray-900">{t('dashboardPage.title')}</h1>
             <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
               <span className="text-xs sm:text-sm text-gray-600 truncate max-w-[150px] sm:max-w-none">{user?.email}</span>
-              <button onClick={() => { navigate('/config') }} className="btn btn-secondary text-sm whitespace-nowrap" title="Reconfigure Supabase connection">
+              <button onClick={() => { navigate('/config') }} className="btn btn-secondary text-sm whitespace-nowrap" title={t('common.settingsTooltip')}>
                 ⚙️ {t('common.settings')}
               </button>
               <button onClick={() => { signOut(); window.location.reload() }} className="btn btn-secondary text-sm whitespace-nowrap">

@@ -12,7 +12,7 @@ import { useAuth } from '../hooks/useAuth'
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Filler)
 
 export default function ProjectDetailPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -445,7 +445,7 @@ export default function ProjectDetailPage() {
 
   // Get chart title based on metric and grouping
   const getChartTitle = (metric: string, groupBy: string): string => {
-    const metricLabel = metric === 'amount' ? 'Amount' : metric
+    const metricLabel = metric === 'amount' ? t('transactions.amount') : metric === 'count' ? t('projectDetail.chartCount') : metric
     const groupByOption = getGroupingOptions().find(opt => opt.value === groupBy)
     const groupByLabel = groupByOption?.label || groupBy
     return `${metricLabel} by ${groupByLabel}`
@@ -454,7 +454,7 @@ export default function ProjectDetailPage() {
   // Get available grouping options (category + text/select custom fields)
   const getGroupingOptions = () => {
     const standardOptions = [
-      { value: 'category', label: 'Category' },
+      { value: 'category', label: t('transactions.category') },
     ]
 
     // Add custom text and select fields
@@ -751,10 +751,10 @@ export default function ProjectDetailPage() {
               </div>
               <div className="flex flex-col">
                 <div className="text-base font-semibold text-slate-900">
-                  {currentDateTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                  {currentDateTime.toLocaleDateString(i18n.language || undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
                 </div>
                 <div className="text-xl font-medium text-slate-900">
-                  {currentDateTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' })}
+                  {currentDateTime.toLocaleTimeString(i18n.language || undefined, { hour: 'numeric', minute: '2-digit', second: '2-digit' })}
                 </div>
               </div>
             </div>
@@ -919,14 +919,14 @@ export default function ProjectDetailPage() {
                             stacked: true,
                             title: {
                               display: true,
-                              text: 'Date',
+                              text: t('projectDetail.chartDate'),
                             },
                           },
                           y: {
                             stacked: true,
                             title: {
                               display: true,
-                              text: `${chartMode === 'cumulative' ? 'Cumulative' : ''} ${timeChartMetric === 'amount' ? 'Amount' : timeChartMetric === 'count' ? 'Count' : timeChartMetric}`.trim(),
+                              text: `${chartMode === 'cumulative' ? t('projectDetail.cumulative') : ''} ${timeChartMetric === 'amount' ? t('transactions.amount') : timeChartMetric === 'count' ? t('projectDetail.chartCount') : timeChartMetric}`.trim(),
                             },
                             beginAtZero: true,
                           },
