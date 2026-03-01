@@ -18,14 +18,18 @@ RETURNS TEXT AS $$
 $$ LANGUAGE sql SECURITY DEFINER STABLE SET search_path = '';
 
 -- Recreate project_members policies with proper email access
+-- Note: Duplicate owner checks (is_project_owner + is_project_member_with_role with 'owner')
+-- are intentional for defense-in-depth and to tolerate drift between projects.owner_id
+-- and project_members.role entries.
 CREATE POLICY "Invitees can join project"
   ON public.project_members FOR INSERT
   WITH CHECK (
     EXISTS (
-      SELECT 1 FROM public.invitations
-      WHERE invitations.project_id = project_id
-        AND invitations.email = public.current_user_email()
-        AND invitations.status = 'pending'
+      SELECT 1
+      FROM public.invitations AS inv
+      WHERE inv.project_id = project_members.project_id
+        AND inv.email = public.current_user_email()
+        AND inv.status = 'pending'
     )
   );
 

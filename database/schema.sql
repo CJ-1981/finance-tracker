@@ -268,6 +268,10 @@ CREATE POLICY "Members can view project members"
   );
 
 -- Project Members: Owners can insert members
+-- Project Members: Owners can insert members
+-- Note: Duplicate owner checks (is_project_owner + is_project_member_with_role with 'owner')
+-- are intentional for defense-in-depth and to tolerate drift between projects.owner_id
+-- and project_members.role entries. See is_project_owner and is_project_member_with_role functions.
 CREATE POLICY "Owners can insert members"
   ON public.project_members FOR INSERT
   WITH CHECK (
@@ -287,10 +291,11 @@ CREATE POLICY "Invitees can join project"
   ON public.project_members FOR INSERT
   WITH CHECK (
     EXISTS (
-      SELECT 1 FROM public.invitations
-      WHERE invitations.project_id = project_id
-        AND invitations.email = public.current_user_email()
-        AND invitations.status = 'pending'
+      SELECT 1
+      FROM public.invitations AS inv
+      WHERE inv.project_id = project_members.project_id
+        AND inv.email = public.current_user_email()
+        AND inv.status = 'pending'
     )
   );
 
