@@ -216,18 +216,42 @@ DROP POLICY IF EXISTS "Anyone can view invitation by token" ON public.invitation
 DROP POLICY IF EXISTS "Anyone can update invitation status to accepted" ON public.invitations;
 DROP POLICY IF EXISTS "Owners can insert invitations" ON public.invitations;
 DROP POLICY IF EXISTS "Owners can view project invitations" ON public.invitations;
+DROP POLICY IF EXISTS "Owners can delete invitations" ON public.invitations;
 
-CREATE POLICY "Anyone can view invitation by token"
-  ON public.invitations FOR SELECT USING (true);
+-- SELECT: Allow viewing invitations if you own the project OR have the token
+CREATE POLICY "Users can view project invitations"
+  ON public.invitations FOR SELECT
+  USING (
+    public.is_project_owner(project_id) OR
+    public.is_project_member_with_role(project_id, ARRAY['owner', 'member'])
+  );
 
-CREATE POLICY "Anyone can update invitation status to accepted"
+-- UPDATE: Allow invitation recipient to accept, or project owners to update
+CREATE POLICY "Users can update invitation status to accepted"
   ON public.invitations FOR UPDATE
-  USING (true)
+  USING (
+    -- Recipient can update their own invitation
+    email = (SELECT email FROM auth.users WHERE id = auth.uid()) OR
+    -- Project owners can update
+    public.is_project_owner(project_id) OR
+    public.is_project_member_with_role(project_id, ARRAY['owner'])
+  )
   WITH CHECK (status = 'accepted');
 
+-- INSERT: Project owners can create invitations
 CREATE POLICY "Owners can insert invitations"
   ON public.invitations FOR INSERT
   WITH CHECK (
+    public.is_project_owner(project_id) OR
+    -- Note: is_project_member_with_role check included for redundancy
+    -- to handle cases where project.owner_id might differ from project_members entries
+    public.is_project_member_with_role(project_id, ARRAY['owner'])
+  );
+
+-- DELETE: Project owners can revoke pending invitations
+CREATE POLICY "Owners can delete invitations"
+  ON public.invitations FOR DELETE
+  USING (
     public.is_project_owner(project_id) OR
     public.is_project_member_with_role(project_id, ARRAY['owner'])
   );

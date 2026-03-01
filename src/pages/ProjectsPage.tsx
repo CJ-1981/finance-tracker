@@ -141,7 +141,7 @@ export default function ProjectsPage() {
       setIsSelectionMode(false)
     } catch (err) {
       console.error(err)
-      alert('Failed to send invitations')
+      alert(t('projects.failedInvite'))
     }
   }
 

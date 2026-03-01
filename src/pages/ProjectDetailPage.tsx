@@ -311,7 +311,7 @@ export default function ProjectDetailPage() {
 
   const getCategoryName = (categoryId: string) => {
     const category = categories.find((c) => c.id === categoryId)
-    return category?.name || 'Uncategorized'
+    return category?.name || t('projectDetail.uncategorized')
   }
 
   const getCategoryColor = (categoryId: string) => {
@@ -448,7 +448,7 @@ export default function ProjectDetailPage() {
     const metricLabel = metric === 'amount' ? t('transactions.amount') : metric === 'count' ? t('projectDetail.chartCount') : metric
     const groupByOption = getGroupingOptions().find(opt => opt.value === groupBy)
     const groupByLabel = groupByOption?.label || groupBy
-    return `${metricLabel} by ${groupByLabel}`
+    return t('projectDetail.chartTitleFormat', { metric: metricLabel, groupBy: groupByLabel })
   }
 
   // Get available grouping options (category + text/select custom fields)
@@ -856,7 +856,7 @@ export default function ProjectDetailPage() {
                 <div className="lg:col-span-3 card border-t-4 border-t-primary-500 overflow-hidden">
                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-4">
                     <h2 className="text-lg font-semibold truncate pr-2">
-                      {getChartTitle(timeChartMetric, timeChartGroupBy)} Over Time
+                      {getChartTitle(timeChartMetric, timeChartGroupBy)} {t('projectDetail.overTime')}
                     </h2>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <select

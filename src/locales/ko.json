@@ -71,7 +71,6 @@
     "addTransaction": "거래 추가",
     "editTransaction": "거래 편집",
     "noTransactions": "아직 거래 내역이 없습니다",
-    "addFirstTransaction": "첫 번째 거래를 추가하여 시작하세요",
     "amount": "금액",
     "date": "날짜",
     "category": "카테고리",
@@ -308,7 +307,8 @@
     "fullInvitationCopied": "전체 초대가 클립보드에 복사되었습니다!",
     "linkCopied": "링크가 클립보드에 복사되었습니다!",
     "chartDate": "날짜",
-    "chartCount": "개수"
+    "chartCount": "개수",
+    "chartTitleFormat": "{{metric}}별 {{groupBy}}"
   },
   "cashCounter": {
     "title": "현금 계산기",

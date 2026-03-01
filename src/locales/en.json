@@ -71,7 +71,6 @@
     "addTransaction": "Add Transaction",
     "editTransaction": "Edit Transaction",
     "noTransactions": "No transactions yet",
-    "addFirstTransaction": "Add your first transaction to get started",
     "amount": "Amount",
     "date": "Date",
     "category": "Category",
@@ -308,7 +307,8 @@
     "fullInvitationCopied": "Full invitation copied to clipboard!",
     "linkCopied": "Link copied to clipboard!",
     "chartDate": "Date",
-    "chartCount": "Count"
+    "chartCount": "Count",
+    "chartTitleFormat": "{{metric}} by {{groupBy}}"
   },
   "cashCounter": {
     "title": "Cash Counter",
