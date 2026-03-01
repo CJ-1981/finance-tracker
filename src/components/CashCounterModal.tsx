@@ -2,8 +2,25 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Project } from '../types'
 
+// Get emoji for currency and denomination type
+const getCurrencyEmoji = (currency: string, type: 'bill' | 'coin'): string => {
+  const currencyEmojis: Record<string, { bill: string; coin: string }> = {
+    'EUR': { bill: '💶', coin: '🪙' },
+    'USD': { bill: '💵', coin: '🪙' },
+    'GBP': { bill: '💷', coin: '🪙' },
+    'JPY': { bill: '💴', coin: '🪙' },
+    'KRW': { bill: '💴', coin: '🪙' }, // Won uses same visual style as Yen
+  }
+
+  return currencyEmojis[currency]?.[type] || (type === 'bill' ? '💵' : '🪙')
+}
+
 // Denominations for EUR (can be extended for other currencies)
-const DENOMINATIONS = [
+const DENOMINATIONS: Array<{
+  value: number
+  label: string
+  type: 'bill' | 'coin'
+}> = [
   { value: 200, label: '200', type: 'bill' },
   { value: 100, label: '100', type: 'bill' },
   { value: 50, label: '50', type: 'bill' },
@@ -260,7 +277,9 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
               >
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-lg font-bold">{currency}</span>
-                  <span className="text-lg font-black">{denom.label}</span>
+                  <span className="text-lg font-black">
+                    {getCurrencyEmoji(currency, denom.type)} {denom.label}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
