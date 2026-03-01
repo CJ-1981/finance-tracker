@@ -315,9 +315,9 @@
   },
   "cashCounter": {
     "title": "현금 계산기",
-    "anonymous": "익명",
-    "withNames": "이름 포함",
-    "enterName": "이름 입력",
+    "anonymous": "무명",
+    "withNames": "기명",
+    "enterName": "기명",
     "currentEntry": "현재 항목",
     "addEntry": "항목 추가",
     "totalCounted": "계산된 총액",

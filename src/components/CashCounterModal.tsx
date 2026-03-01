@@ -62,11 +62,21 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
   const { t } = useTranslation()
   const [category, setCategory] = useState<'named' | 'anonymous'>('anonymous')
   const [entryName, setEntryName] = useState('')
-  const [counts, setCounts] = useState<Record<number, number>>(() =>
+
+  // Separate counts for anonymous and named entries
+  const [anonymousCounts, setAnonymousCounts] = useState<Record<number, number>>(() =>
     DENOMINATIONS.reduce((acc, d) => ({ ...acc, [d.value]: 0 }), {} as Record<number, number>)
   )
+  const [namedCounts, setNamedCounts] = useState<Record<number, number>>(() =>
+    DENOMINATIONS.reduce((acc, d) => ({ ...acc, [d.value]: 0 }), {} as Record<number, number>)
+  )
+
   const [entries, setEntries] = useState<CashEntry[]>([])
   const [totalCashCounted, setTotalCashCounted] = useState(0)
+
+  // Get current counts based on selected category
+  const counts = category === 'anonymous' ? anonymousCounts : namedCounts
+  const setCounts = category === 'anonymous' ? setAnonymousCounts : setNamedCounts
 
   // Load saved data from localStorage
   useEffect(() => {
@@ -83,6 +93,9 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
           // Clear old data
           localStorage.removeItem(storageKey)
           setEntries([])
+          // Reset both counts
+          setAnonymousCounts(DENOMINATIONS.reduce((acc, d) => ({ ...acc, [d.value]: 0 }), {} as Record<number, number>))
+          setNamedCounts(DENOMINATIONS.reduce((acc, d) => ({ ...acc, [d.value]: 0 }), {} as Record<number, number>))
         } else {
           setEntries(data.entries)
         }

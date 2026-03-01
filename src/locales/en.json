@@ -317,7 +317,7 @@
     "title": "Cash Counter",
     "anonymous": "Anonymous",
     "withNames": "With Names",
-    "enterName": "Enter name",
+    "enterName": "Name",
     "currentEntry": "Current Entry",
     "addEntry": "Add Entry",
     "totalCounted": "Total Counted",
