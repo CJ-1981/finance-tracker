@@ -124,7 +124,7 @@ BEGIN
   );
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Trigger to create profile on signup
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
@@ -140,7 +140,7 @@ BEGIN
   VALUES (NEW.id, NEW.owner_id, 'owner');
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Trigger to create project owner membership on project creation
 DROP TRIGGER IF EXISTS on_project_created ON public.projects;
@@ -155,7 +155,25 @@ RETURNS BOOLEAN AS $$
     SELECT 1 FROM public.project_members
     WHERE project_id = p_id AND user_id = auth.uid()
   );
-$$ LANGUAGE sql SECURITY DEFINER;
+$$ LANGUAGE sql SECURITY DEFINER STABLE SET search_path = '';
+
+-- Returns true if the current user owns the given project
+CREATE OR REPLACE FUNCTION public.is_project_owner(p_id UUID)
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.projects
+    WHERE id = p_id AND owner_id = auth.uid()
+  );
+$$ LANGUAGE sql SECURITY DEFINER STABLE SET search_path = '';
+
+-- Returns true if the current user is a member with a specific role
+CREATE OR REPLACE FUNCTION public.is_project_member_with_role(p_id UUID, allowed_roles TEXT[])
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.project_members
+    WHERE project_id = p_id AND user_id = auth.uid() AND role = ANY(allowed_roles)
+  );
+$$ LANGUAGE sql SECURITY DEFINER STABLE SET search_path = '';
 
 -- RLS Policies
 
@@ -174,6 +192,7 @@ DROP POLICY IF EXISTS "Owners can delete own projects" ON public.projects;
 DROP POLICY IF EXISTS "Members can view project members" ON public.project_members;
 DROP POLICY IF EXISTS "Owners can insert members" ON public.project_members;
 DROP POLICY IF EXISTS "Owners can delete members" ON public.project_members;
+DROP POLICY IF EXISTS "Anyone with valid invitation can join project" ON public.project_members;
 
 DROP POLICY IF EXISTS "Members can view project categories" ON public.categories;
 DROP POLICY IF EXISTS "Members can insert categories" ON public.categories;
@@ -182,7 +201,10 @@ DROP POLICY IF EXISTS "Members can view project transactions" ON public.transact
 DROP POLICY IF EXISTS "Members and owners can insert transactions" ON public.transactions;
 
 DROP POLICY IF EXISTS "Owners can view project invitations" ON public.invitations;
+DROP POLICY IF EXISTS "Anyone can view invitation by token" ON public.invitations;
+DROP POLICY IF EXISTS "Anyone can update invitation status to accepted" ON public.invitations;
 DROP POLICY IF EXISTS "Owners can insert invitations" ON public.invitations;
+DROP POLICY IF EXISTS "Owners can delete invitations" ON public.invitations;
 
 -- Profiles: Users can view their own profile
 CREATE POLICY "Users can view own profile"
@@ -234,36 +256,35 @@ CREATE POLICY "Users can insert projects"
 -- Project Members: Members can view membership for their projects
 CREATE POLICY "Members can view project members"
   ON public.project_members FOR SELECT
-  USING ( public.is_project_member(project_id) );
+  USING (
+    public.is_project_member(project_id) OR
+    public.is_project_owner(project_id)
+  );
 
 -- Project Members: Owners can insert members
 CREATE POLICY "Owners can insert members"
   ON public.project_members FOR INSERT
   WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.projects
-      WHERE id = project_id AND owner_id = auth.uid()
-    )
+    public.is_project_owner(project_id) OR
+    public.is_project_member_with_role(project_id, ARRAY['owner'])
   );
 
 CREATE POLICY "Owners can delete members"
   ON public.project_members FOR DELETE
   USING (
-    EXISTS (
-      SELECT 1 FROM public.projects
-      WHERE id = project_id AND owner_id = auth.uid()
-    )
+    public.is_project_owner(project_id) OR
+    public.is_project_member_with_role(project_id, ARRAY['owner'])
   );
 
-CREATE POLICY "Anyone with valid invitation can join project"
+-- Invitees can insert themselves when they have a valid pending invitation
+CREATE POLICY "Invitees can join project"
   ON public.project_members FOR INSERT
   WITH CHECK (
-    auth.uid() = user_id AND
     EXISTS (
       SELECT 1 FROM public.invitations
-      WHERE project_id = project_members.project_id
-      AND email = (auth.jwt() ->> 'email')
-      AND status = 'pending'
+      WHERE invitations.project_id = project_id
+        AND invitations.email = (SELECT email FROM auth.users WHERE id = auth.uid())
+        AND invitations.status = 'pending'
     )
   );
 
@@ -271,60 +292,48 @@ CREATE POLICY "Anyone with valid invitation can join project"
 CREATE POLICY "Members can view project categories"
   ON public.categories FOR SELECT
   USING (
-    project_id IN (
-      SELECT project_id FROM public.project_members
-      WHERE user_id = auth.uid()
-    )
+    public.is_project_owner(project_id) OR
+    public.is_project_member(project_id)
   );
 
 -- Categories: Members can insert categories
 CREATE POLICY "Members can insert categories"
   ON public.categories FOR INSERT
   WITH CHECK (
-    project_id IN (
-      SELECT project_id FROM public.project_members
-      WHERE user_id = auth.uid() AND role IN ('member', 'owner')
-    )
+    public.is_project_owner(project_id) OR
+    public.is_project_member_with_role(project_id, ARRAY['owner', 'member'])
   );
 
 -- Categories: Members can update categories
 CREATE POLICY "Members can update categories"
   ON public.categories FOR UPDATE
   USING (
-    project_id IN (
-      SELECT project_id FROM public.project_members
-      WHERE user_id = auth.uid() AND role IN ('member', 'owner')
-    )
+    public.is_project_owner(project_id) OR
+    public.is_project_member_with_role(project_id, ARRAY['owner', 'member'])
   );
 
 -- Categories: Members can delete categories
 CREATE POLICY "Members can delete categories"
   ON public.categories FOR DELETE
   USING (
-    project_id IN (
-      SELECT project_id FROM public.project_members
-      WHERE user_id = auth.uid() AND role IN ('member', 'owner')
-    )
+    public.is_project_owner(project_id) OR
+    public.is_project_member_with_role(project_id, ARRAY['owner', 'member'])
   );
 
 -- Transactions: Members can view transactions from their projects
 CREATE POLICY "Members can view project transactions"
   ON public.transactions FOR SELECT
   USING (
-    project_id IN (
-      SELECT project_id FROM public.project_members
-      WHERE user_id = auth.uid()
-    )
+    public.is_project_owner(project_id) OR
+    public.is_project_member(project_id)
   );
 
 -- Transactions: Members and owners can insert transactions
 CREATE POLICY "Members can insert transactions"
   ON public.transactions FOR INSERT
   WITH CHECK (
-    project_id IN (
-      SELECT project_id FROM public.project_members
-      WHERE user_id = auth.uid() AND role IN ('member', 'owner')
-    )
+    public.is_project_owner(project_id) OR
+    public.is_project_member_with_role(project_id, ARRAY['owner', 'member'])
   );
 
 -- Transactions: Creators and owners can update transactions
@@ -332,10 +341,7 @@ CREATE POLICY "Creators can update own transactions"
   ON public.transactions FOR UPDATE
   USING (
     created_by = auth.uid() OR
-    project_id IN (
-      SELECT project_id FROM public.project_members
-      WHERE user_id = auth.uid() AND role = 'owner'
-    )
+    public.is_project_owner(project_id)
   );
 
 -- Transactions: Creators and owners can delete transactions
@@ -343,30 +349,48 @@ CREATE POLICY "Creators can delete own transactions"
   ON public.transactions FOR DELETE
   USING (
     created_by = auth.uid() OR
-    project_id IN (
-      SELECT project_id FROM public.project_members
-      WHERE user_id = auth.uid() AND role = 'owner'
-    )
+    public.is_project_owner(project_id)
   );
 
--- Invitations: Owners can view invitations for their projects
-CREATE POLICY "Anyone can view invitation by token"
+-- Invitations: Recipients, owners, and members can view invitations
+CREATE POLICY "Users can view project invitations"
   ON public.invitations FOR SELECT
-  USING ( true );
+  USING (
+    -- Recipient can view their own invitation
+    email = (SELECT email FROM auth.users WHERE id = auth.uid()) OR
+    -- Project owners and members can view
+    public.is_project_owner(project_id) OR
+    public.is_project_member_with_role(project_id, ARRAY['owner', 'member'])
+  );
 
-CREATE POLICY "Anyone can update invitation status to accepted"
+-- Invitations: Recipient or project owners can update
+CREATE POLICY "Users can update invitation status to accepted"
   ON public.invitations FOR UPDATE
-  USING ( true )
-  WITH CHECK ( status = 'accepted' );
+  USING (
+    -- Recipient can update their own invitation
+    email = (SELECT email FROM auth.users WHERE id = auth.uid()) OR
+    -- Project owners can update
+    public.is_project_owner(project_id) OR
+    public.is_project_member_with_role(project_id, ARRAY['owner'])
+  )
+  WITH CHECK (status = 'accepted');
 
--- Invitations: Owners can insert invitations
+-- Invitations: Project owners can create invitations
 CREATE POLICY "Owners can insert invitations"
   ON public.invitations FOR INSERT
   WITH CHECK (
-    project_id IN (
-      SELECT project_id FROM public.project_members
-      WHERE user_id = auth.uid() AND role = 'owner'
-    )
+    public.is_project_owner(project_id) OR
+    -- Note: is_project_member_with_role check included for redundancy
+    -- to handle cases where project.owner_id might differ from project_members entries
+    public.is_project_member_with_role(project_id, ARRAY['owner'])
+  );
+
+-- Invitations: Project owners can revoke pending invitations
+CREATE POLICY "Owners can delete invitations"
+  ON public.invitations FOR DELETE
+  USING (
+    public.is_project_owner(project_id) OR
+    public.is_project_member_with_role(project_id, ARRAY['owner'])
   );
 
 -- Grant necessary permissions
