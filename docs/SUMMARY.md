@@ -7,12 +7,12 @@ The comprehensive documentation suite for SPEC-FINANCE-001 has been successfully
 ## Generated Documentation Files
 
 ### Core Documentation
-1. **[README.md](README.md)** - Main project README with updated documentation links
-2. **[CHANGELOG.md](CHANGELOG.md)** - Version history and release notes
-3. **[docs/README.md](docs/README.md)** - Documentation index and navigation guide
+1. **[README.md](../README.md)** - Main project README with updated documentation links
+2. **[CHANGELOG.md](../CHANGELOG.md)** - Version history and release notes
+3. **[docs/README.md](README.md)** - Documentation index and navigation guide
 
 ### User Documentation
-4. **[docs/user-guide.md](docs/user-guide.md)** - Comprehensive user instructions
+4. **[docs/user-guide.md](user-guide.md)** - Comprehensive user instructions
    - Getting Started Guide
    - Account Setup
    - Project Management
@@ -23,7 +23,7 @@ The comprehensive documentation suite for SPEC-FINANCE-001 has been successfully
    - Troubleshooting
 
 ### Developer Documentation
-5. **[docs/developer-guide.md](docs/developer-guide.md)** - Developer setup and architecture
+5. **[docs/developer-guide.md](developer-guide.md)** - Developer setup and architecture
    - Environment Setup
    - Project Structure
    - Technology Stack
@@ -36,7 +36,7 @@ The comprehensive documentation suite for SPEC-FINANCE-001 has been successfully
    - Build and Deploy Process
    - Contributing Guidelines
 
-6. **[docs/api.md](docs/api.md)** - Complete API reference
+6. **[docs/api.md](api.md)** - Complete API reference
    - Database Schema Documentation
    - Supabase Client Integration
    - Authentication Methods
@@ -47,7 +47,7 @@ The comprehensive documentation suite for SPEC-FINANCE-001 has been successfully
    - Performance Optimization
 
 ### Operations Documentation
-7. **[docs/deployment-guide.md](docs/deployment-guide.md)** - Production deployment
+7. **[docs/deployment-guide.md](deployment-guide.md)** - Production deployment
    - Prerequisites
    - Deployment Options (GitHub Pages, Netlify, Vercel, Docker)
    - Supabase Configuration
@@ -58,7 +58,7 @@ The comprehensive documentation suite for SPEC-FINANCE-001 has been successfully
    - Security Considerations
 
 ### Architecture Documentation
-8. **[docs/architecture.md](docs/architecture.md)** - System architecture diagrams
+8. **[docs/architecture.md](architecture.md)** - System architecture diagrams
    - Technology Stack Overview
    - Component Architecture
    - Database Schema (ER Diagram)
@@ -69,12 +69,12 @@ The comprehensive documentation suite for SPEC-FINANCE-001 has been successfully
    - Deployment Architecture
 
 ### GitHub Workflows
-9. **[.github/workflows/deploy.yml](.github/workflows/deploy.yml)** - Production deployment
+9. **[.github/workflows/deploy.yml](../.github/workflows/deploy.yml)** - Production deployment
    - GitHub Pages deployment
    - Build optimization
    - Automated deployment on push to main
 
-10. **[.github/workflows/docs-validation.yml](.github/workflows/docs-validation.yml)** - Documentation validation
+10. **[.github/workflows/docs-validation.yml](../.github/workflows/docs-validation.yml)** - Documentation validation
     - Markdown syntax checking
     - Broken link detection
     - Documentation structure validation
@@ -168,19 +168,19 @@ The comprehensive documentation suite for SPEC-FINANCE-001 has been successfully
 ## Next Steps
 
 ### For Users
-1. Read the [User Guide](docs/user-guide.md) to get started
+1. Read the [User Guide](user-guide.md) to get started
 2. Follow the Getting Started section for initial setup
 3. Explore the Project Management section for core features
 4. Check the Troubleshooting section for common issues
 
 ### For Developers
-1. Follow the [Developer Guide](docs/developer-guide.md) for setup
+1. Follow the [Developer Guide](developer-guide.md) for setup
 2. Review the Architecture documentation for system understanding
 3. Check the API documentation for integration details
 4. Follow the Contributing Guidelines for submissions
 
 ### For Administrators
-1. Follow the [Deployment Guide](docs/deployment-guide.md) for production setup
+1. Follow the [Deployment Guide](deployment-guide.md) for production setup
 2. Review the Security Considerations section
 3. Set up monitoring and maintenance procedures
 4. Configure backup and disaster recovery

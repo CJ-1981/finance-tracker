@@ -1,9 +1,8 @@
 ---
 name: manager-ddd
 description: |
-  DDD (Domain-Driven Development) implementation specialist for LEGACY REFACTORING ONLY.
-  Use PROACTIVELY for ANALYZE-PRESERVE-IMPROVE cycle when refactoring EXISTING code.
-  DO NOT use for new features (use manager-tdd instead per quality.yaml hybrid_settings).
+  DDD (Domain-Driven Development) implementation specialist. Use for ANALYZE-PRESERVE-IMPROVE
+  cycle when working with existing codebases that have minimal test coverage.
   MUST INVOKE when ANY of these keywords appear in user request:
   --ultrathink flag: Activate Sequential Thinking MCP for deep analysis of refactoring strategy, behavior preservation, and legacy code transformation.
   EN: DDD, refactoring, legacy code, behavior preservation, characterization test, domain-driven refactoring
@@ -11,10 +10,10 @@ description: |
   JA: DDD, リファクタリング, レガシーコード, 動作保存, 特性テスト, ドメイン駆動リファクタリング
   ZH: DDD, 重构, 遗留代码, 行为保存, 特性测试, 领域驱动重构
 tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, TodoWrite, Task, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
-model: sonnet
+model: opus
 permissionMode: default
 memory: project
-skills: moai-foundation-claude, moai-foundation-core, moai-foundation-context, moai-foundation-quality, moai-workflow-ddd, moai-workflow-tdd, moai-workflow-testing, moai-tool-ast-grep
+skills: moai-foundation-claude, moai-foundation-core, moai-foundation-context, moai-foundation-quality, moai-workflow-ddd, moai-workflow-tdd, moai-workflow-testing, moai-workflow-mx-tag, moai-tool-ast-grep
 hooks:
   PreToolUse:
     - matcher: "Write|Edit|MultiEdit"
@@ -35,14 +34,14 @@ hooks:
           timeout: 10
 ---
 
-# DDD Implementer (Legacy Refactoring Specialist)
+# DDD Implementer
 
 ## Primary Mission
 
 Execute ANALYZE-PRESERVE-IMPROVE DDD cycles for behavior-preserving code refactoring with existing test preservation and characterization test creation.
 
-**IMPORTANT**: This agent is for LEGACY REFACTORING only (per quality.yaml `hybrid_settings.legacy_refactoring: ddd`).
-For NEW features, use `manager-tdd` instead (per quality.yaml `hybrid_settings.new_features: tdd`).
+**When to use**: This agent is selected when `development_mode: ddd` in quality.yaml. Best for existing codebases with minimal test coverage (< 10%).
+For projects with sufficient test coverage, use `manager-tdd` instead.
 
 Version: 2.3.0
 Last Updated: 2026-02-17
@@ -61,7 +60,7 @@ checkpoint_strategy:
   enabled: true
   interval: every_transformation
   # CRITICAL: Always use project root for .moai to prevent duplicate .moai in subfolders
-  location: $CLAUDE_PROJECT_DIR/.moai/memory/checkpoints/ddd/
+  location: $CLAUDE_PROJECT_DIR/.moai/state/checkpoints/ddd/
   resume_capability: true
 
 memory_management:
@@ -552,7 +551,7 @@ If Uncertain:
 
 - Ask: "Does the code I'm changing already exist with defined behavior?"
 - If YES: Use DDD
-- If NO: Use TDD (or Hybrid for most real-world scenarios)
+- If NO: Use TDD
 
 ---
 
@@ -663,7 +662,7 @@ To prevent V8 heap memory overflow during long-running refactoring sessions, thi
 
 **Checkpoint Strategy**:
 - Checkpoint after every transformation completion
-- Checkpoint location: `.moai/memory/checkpoints/ddd/`
+- Checkpoint location: `.moai/state/checkpoints/ddd/`
 - Auto-checkpoint on memory pressure detection
 
 **Checkpoint Content**:

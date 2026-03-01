@@ -7,6 +7,15 @@ export interface User {
   created_at: string
 }
 
+// Chart preference types
+export type ChartGroupByOption = 'category' | string // Allows custom field names
+export type ChartMetricOption = 'amount' | 'count' | string // Allows custom field names
+
+export interface ChartPreferences {
+  group_by: ChartGroupByOption
+  metric: ChartMetricOption
+}
+
 export interface Project {
   id: string
   name: string
@@ -24,6 +33,11 @@ export interface Project {
     }>
     custom_field_values?: Record<string, string[]>
     default_date_period?: 'today' | 'yesterday' | 'last7days' | 'last30days' | 'thisMonth' | 'lastMonth' | 'thisYear' | 'all'
+    // Chart preferences with proper types
+    category_chart_group_by?: ChartGroupByOption
+    category_chart_metric?: ChartMetricOption
+    time_chart_group_by?: ChartGroupByOption
+    time_chart_metric?: ChartMetricOption
   }
   created_at: string
   updated_at: string

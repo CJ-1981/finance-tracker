@@ -103,6 +103,12 @@ export default function LandingPage() {
           >
             Get Started
           </Link>
+          <Link
+            to="/config"
+            className="btn btn-secondary px-8 py-3 text-lg"
+          >
+            Configure Database
+          </Link>
         </div>
 
         <p className="mt-8 text-sm text-gray-500">

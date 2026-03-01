@@ -136,7 +136,7 @@ Before deploying the Finance Tracker application, ensure you have:
 
 2. **Push Code to GitHub**
    ```bash
-   git remote add origin https://github.com/yourusername/finance-tracker.git
+   git remote add origin https://github.com/CJ-1981/finance-tracker.git
    git branch -M main
    git push -u origin main
    ```
@@ -759,7 +759,7 @@ Solution: Optimize Chart.js
 - [Vite Documentation](https://vitejs.dev)
 
 #### Community Support
-- [GitHub Issues](https://github.com/yourusername/finance-tracker/issues)
+- [GitHub Issues](https://github.com/CJ-1981/finance-tracker/issues)
 - [Supabase Discord](https://discord.supabase.com)
 - [Stack Overflow](https://stackoverflow.com)
 

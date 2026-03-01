@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase = getSupabaseClient()
     } catch (error) {
       // Supabase not configured yet - this is OK on first visit
-      console.log('Supabase not configured yet')
+      console.log('Supabase not configured yet - client initialization failed:', error)
       setAuthState({ user: null, session: null, loading: false })
       return
     }
@@ -34,7 +34,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        fetchUserProfile(session.user, supabase)
+        // Await to prevent race conditions
+        fetchUserProfile(session.user, supabase).catch(err => {
+          console.error('Error fetching user profile:', err)
+          setAuthState({ user: null, session: null, loading: false })
+        })
       } else {
         setAuthState({ user: null, session: null, loading: false })
       }
@@ -43,9 +47,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        fetchUserProfile(session.user, supabase)
+        // Await to prevent race conditions from concurrent inserts
+        await fetchUserProfile(session.user, supabase).catch(err => {
+          console.error('Error fetching user profile:', err)
+          setAuthState({ user: null, session: null, loading: false })
+        })
       } else {
         setAuthState({ user: null, session: null, loading: false })
       }
@@ -62,7 +70,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('id', user.id)
         .single()
 
-      if (error) throw error
+      if (error) {
+        // If profile doesn't exist yet (new user), create it
+        if (error.code === 'PGRST116') {
+          const newProfile = {
+            id: user.id,
+            email: user.email || '',
+            name: user.user_metadata?.name || user.email?.split('@')[0] || '',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }
+
+          const { data: newProfileData, error: insertError } = await supabase
+            .from('profiles')
+            .insert(newProfile as any)
+            .select()
+            .single()
+
+          if (insertError) {
+            // Handle duplicate-key error (race condition from concurrent inserts)
+            if (insertError.code === '23505' || (insertError as any).message?.includes('duplicate key')) {
+              console.warn('Profile already exists (race condition), re-fetching...')
+              // Re-fetch the existing profile instead of throwing
+              const { data: existingProfile, error: fetchError } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single()
+
+              if (fetchError) throw fetchError
+
+              setAuthState({
+                user: existingProfile as AppUser,
+                session: user,
+                loading: false,
+              })
+              return
+            }
+            throw insertError
+          }
+
+          setAuthState({
+            user: newProfileData as AppUser,
+            session: user,
+            loading: false,
+          })
+          return
+        }
+        throw error
+      }
 
       setAuthState({
         user: data as AppUser,
@@ -70,8 +126,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading: false,
       })
     } catch (error) {
-      console.error('Error fetching user profile:', error)
-      setAuthState({ user: null, session: null, loading: false })
+      console.error('Error fetching/creating user profile:', error)
+      // Don't set user to null on profile errors - still authenticated, just no profile data
+      setAuthState({
+        user: { id: user.id, email: user.email || '' } as AppUser,
+        session: user,
+        loading: false,
+      })
     }
   }
 

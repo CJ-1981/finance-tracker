@@ -4,7 +4,23 @@
 
 @layer base {
   body {
+    overflow-x: hidden;
+    max-width: 100%;
     @apply bg-slate-50 text-slate-900;
+  }
+
+  /* Ensure touch targets are accessible on mobile */
+  @media (max-width: 640px) {
+    button,
+    [role="button"],
+    .btn,
+    input[type="button"],
+    input[type="submit"],
+    input[type="reset"],
+    select {
+      min-height: 44px;
+      min-width: 44px;
+    }
   }
 }
 
@@ -30,7 +46,7 @@
   }
 
   .card {
-    @apply bg-white rounded-2xl shadow-sm border border-slate-100 p-6 transition-all hover:shadow-md;
+    @apply bg-white rounded-2xl shadow-sm border border-slate-100 p-3 sm:p-4 md:p-6 transition-all hover:shadow-md;
   }
 
   .card-accent {

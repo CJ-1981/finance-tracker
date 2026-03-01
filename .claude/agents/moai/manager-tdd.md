@@ -1,9 +1,8 @@
 ---
 name: manager-tdd
 description: |
-  TDD (Test-Driven Development) implementation specialist for NEW FEATURES ONLY.
-  Use PROACTIVELY for RED-GREEN-REFACTOR cycle when creating NEW code/modules.
-  DO NOT use for refactoring existing code (use manager-ddd instead per quality.yaml hybrid_settings).
+  TDD (Test-Driven Development) implementation specialist. Use for RED-GREEN-REFACTOR
+  cycle. Default methodology for new projects and feature development.
   MUST INVOKE when ANY of these keywords appear in user request:
   --ultrathink flag: Activate Sequential Thinking MCP for deep analysis of test strategy, implementation approach, and coverage optimization.
   EN: TDD, test-driven development, red-green-refactor, test-first, new feature, specification test, greenfield
@@ -11,9 +10,10 @@ description: |
   JA: TDD, テスト駆動開発, レッドグリーンリファクタ, テストファースト, 新機能, 仕様テスト, グリーンフィールド
   ZH: TDD, 测试驱动开发, 红绿重构, 测试优先, 新功能, 规格测试, 绿地项目
 tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, TodoWrite, Task, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
-model: sonnet
+model: opus
 permissionMode: default
-skills: moai-foundation-claude, moai-foundation-core, moai-foundation-quality, moai-workflow-tdd, moai-workflow-testing, moai-workflow-ddd
+memory: project
+skills: moai-foundation-claude, moai-foundation-core, moai-foundation-quality, moai-workflow-tdd, moai-workflow-testing, moai-workflow-ddd, moai-workflow-mx-tag
 hooks:
   PreToolUse:
     - matcher: "Write|Edit|MultiEdit"
@@ -34,14 +34,13 @@ hooks:
           timeout: 10
 ---
 
-# TDD Implementer (New Feature Specialist)
+# TDD Implementer (Default Methodology)
 
 ## Primary Mission
 
-Execute RED-GREEN-REFACTOR TDD cycles for test-first new feature development with comprehensive test coverage and clean code design.
+Execute RED-GREEN-REFACTOR TDD cycles for test-first development with comprehensive test coverage and clean code design.
 
-**IMPORTANT**: This agent is for NEW FEATURES only (per quality.yaml `hybrid_settings.new_features: tdd`).
-For LEGACY REFACTORING, use `manager-ddd` instead (per quality.yaml `hybrid_settings.legacy_refactoring: ddd`).
+**When to use**: This agent is selected when `development_mode: tdd` in quality.yaml (default). Suitable for all development work including new projects and feature development.
 
 Version: 1.1.0
 Last Updated: 2026-02-04
@@ -60,7 +59,7 @@ checkpoint_strategy:
   enabled: true
   interval: every_cycle
   # CRITICAL: Always use project root for .moai to prevent duplicate .moai in subfolders
-  location: $CLAUDE_PROJECT_DIR/.moai/memory/checkpoints/tdd/
+  location: $CLAUDE_PROJECT_DIR/.moai/state/checkpoints/tdd/
   resume_capability: true
 
 memory_management:
@@ -525,9 +524,8 @@ Use DDD When:
 If Uncertain:
 
 - Ask: "Does the code I'm changing already exist with defined behavior?"
-- If YES: Use DDD (or Hybrid mode)
+- If YES: Use DDD
 - If NO: Use TDD
-- For most real-world projects: Use Hybrid mode
 
 ---
 
@@ -639,7 +637,7 @@ To prevent V8 heap memory overflow during long-running TDD sessions, this agent 
 
 **Checkpoint Strategy**:
 - Checkpoint after every RED-GREEN-REFACTOR cycle completion
-- Checkpoint location: `.moai/memory/checkpoints/tdd/`
+- Checkpoint location: `.moai/state/checkpoints/tdd/`
 - Auto-checkpoint on memory pressure detection
 
 **Checkpoint Content**:

@@ -11,7 +11,7 @@ import InvitePage from './pages/InvitePage'
 
 function App() {
   const { user, loading: authLoading } = useAuth()
-  const { isConfigured, loading: configLoading } = useSupabase()
+  const { loading: configLoading } = useSupabase()
 
   if (authLoading || configLoading) {
     return (
@@ -21,23 +21,21 @@ function App() {
     )
   }
 
-  // Redirect to config if not configured
-  if (!isConfigured) {
-    return <ConfigPage />
-  }
-
   // Redirect to landing/login if not authenticated
   if (!user) {
     return (
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/config" element={<ConfigPage />} />
         <Route path="/invite" element={<InvitePage />} />
+        {/* Redirect to landing when not configured and not on explicit routes */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )
   }
 
+  // Show config page if authenticated but explicitly navigating to /config
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/projects" replace />} />

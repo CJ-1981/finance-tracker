@@ -31,8 +31,30 @@ export default function ProjectDetailPage() {
   const [showAddTransactionModal, setShowAddTransactionModal] = useState(false)
   const [chartMode, setChartMode] = useState<'cumulative' | 'absolute'>('absolute')
 
+  // Chart grouping states (what to group segments by - category or custom text field)
+  const [categoryChartGroupBy, setCategoryChartGroupBy] = useState<string>('category')
+  const [timeChartGroupBy, setTimeChartGroupBy] = useState<string>('category')
+
+  // Chart metric states (what values to aggregate - amount, count, or custom number field)
+  const [categoryChartMetric, setCategoryChartMetric] = useState<string>('amount')
+  const [timeChartMetric, setTimeChartMetric] = useState<string>('amount')
+
   // Date filter states
   const [datePeriod, setDatePeriod] = useState<'today' | 'yesterday' | 'last7days' | 'last30days' | 'thisMonth' | 'lastMonth' | 'thisYear' | 'all'>('today')
+
+  // Flag to track if initial preferences have been loaded from project settings
+  const [preferencesLoaded, setPreferencesLoaded] = useState(false)
+
+  // Current date and time state
+  const [currentDateTime, setCurrentDateTime] = useState(new Date())
+
+  // Update time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentDateTime(new Date())
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
 
   useEffect(() => {
     if (id) {
@@ -50,6 +72,27 @@ export default function ProjectDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project?.id])
 
+  // Load chart preferences from project settings
+  useEffect(() => {
+    if (project?.settings) {
+      if (project.settings.category_chart_group_by) {
+        setCategoryChartGroupBy(project.settings.category_chart_group_by)
+      }
+      if (project.settings.category_chart_metric) {
+        setCategoryChartMetric(project.settings.category_chart_metric)
+      }
+      if (project.settings.time_chart_group_by) {
+        setTimeChartGroupBy(project.settings.time_chart_group_by)
+      }
+      if (project.settings.time_chart_metric) {
+        setTimeChartMetric(project.settings.time_chart_metric)
+      }
+      // Mark preferences as loaded after setting all chart preferences
+      setPreferencesLoaded(true)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project?.id])
+
   // Save date period preference when changed (debounced)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -60,6 +103,18 @@ export default function ProjectDetailPage() {
     return () => clearTimeout(timeoutId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [datePeriod])
+
+  // Save all chart preferences when changed (consolidated debounced saver)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      // Only save if preferences have been loaded and project exists
+      if (project && preferencesLoaded) {
+        saveConsolidatedChartPreferences()
+      }
+    }, 500)
+    return () => clearTimeout(timeoutId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoryChartGroupBy, categoryChartMetric, timeChartGroupBy, timeChartMetric, preferencesLoaded])
 
   const saveDatePeriodPreference = async (period: typeof datePeriod) => {
     if (!project) return
@@ -76,6 +131,27 @@ export default function ProjectDetailPage() {
       setProject({ ...project, settings: updatedSettings as any })
     } catch (err) {
       console.error('Error saving date period preference:', err)
+    }
+  }
+
+  const saveConsolidatedChartPreferences = async () => {
+    if (!project) return
+    try {
+      const supabase = getSupabaseClient()
+      const updatedSettings = {
+        ...project.settings,
+        category_chart_group_by: categoryChartGroupBy,
+        category_chart_metric: categoryChartMetric,
+        time_chart_group_by: timeChartGroupBy,
+        time_chart_metric: timeChartMetric,
+      }
+      await (supabase
+        .from('projects') as any)
+        .update({ settings: updatedSettings })
+        .eq('id', id)
+      setProject({ ...project, settings: updatedSettings as any })
+    } catch (err) {
+      console.error('Error saving consolidated chart preferences:', err)
     }
   }
 
@@ -176,21 +252,26 @@ export default function ProjectDetailPage() {
           token = existingInvite.token
           isNewInvite = false
         } else {
-          // Role changed - ask to create new invitation or update existing
-          const shouldCreateNew = confirm(
+          // Role changed - update existing invitation instead of creating new
+          const shouldUpdate = confirm(
             `${inviteEmail} already has a pending invitation as ${existingInvite.role}.\n\n` +
-            `Click OK to send a new invitation as ${inviteRole}.\n` +
+            `Click OK to update to ${inviteRole}.\n` +
             `Click Cancel to keep the existing invitation.`
           )
-          if (!shouldCreateNew) {
+          if (!shouldUpdate) {
             return
           }
-          // Mark old invitation as expired (replaced by new one)
-          await (supabase.from('invitations') as any)
-            .update({ status: 'expired' })
+          // Update existing invitation with new role and new token
+          token = Math.random().toString(36).substring(2) + Date.now().toString(36)
+          const { error: updateError } = await (supabase.from('invitations') as any)
+            .update({
+              role: inviteRole,
+              token: token,
+              expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+            })
             .eq('id', existingInvite.id)
-          // Create new invitation below
-          isNewInvite = true
+          if (updateError) throw updateError
+          isNewInvite = false
         }
       } else {
         isNewInvite = true
@@ -210,8 +291,11 @@ export default function ProjectDetailPage() {
         if (error) throw error
       }
 
-      // Generate invite link and store recipient email for mailto link
-      const link = `${window.location.origin}/finance-tracker/invite?token=${token!}`
+      // Generate invite link with embedded config and store recipient email for mailto link
+      const { getConfig } = await import('../lib/config')
+      const { generateInviteLink } = await import('../lib/inviteConfig')
+      const config = getConfig()
+      const link = generateInviteLink(window.location.origin, token!, config || undefined)
       setInviteLink(link)
       setInviteRecipientEmail(inviteEmail) // Store before clearing
       setShowInviteLink(true)
@@ -298,51 +382,132 @@ export default function ProjectDetailPage() {
 
   const filteredTransactions = getFilteredTransactions()
 
-  const getChartData = () => {
-    const categoryTotals: Record<string, number> = {}
-    const categoryColors: Record<string, string> = {}
+  // Helper function to get value from transaction based on metric
+  const getTransactionValue = (transaction: Transaction, metric: string): number => {
+    if (metric === 'amount') {
+      return transaction.amount
+    } else if (metric === 'count') {
+      return 1
+    } else {
+      // Custom field - only support number types
+      const customValue = transaction.custom_data?.[metric]
+      return typeof customValue === 'number' ? customValue : 0
+    }
+  }
+
+  // Get label for a metric value
+  const getMetricLabel = (metric: string, value: number): string => {
+    if (metric === 'amount') {
+      const currency = project?.settings?.currency || 'USD'
+      return `${currency} ${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    } else if (metric === 'count') {
+      return value.toString()
+    } else {
+      // Custom field
+      const field = project?.settings?.custom_fields?.find(f => f.name === metric)
+      if (field?.type === 'number') {
+        return value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      }
+      return value.toString()
+    }
+  }
+
+  // Get grouping key for a transaction based on groupBy selection
+  const getGroupingKey = (transaction: Transaction, groupBy: string): string => {
+    if (groupBy === 'category') {
+      return getCategoryName(transaction.category_id)
+    } else {
+      // Custom field - get the value
+      const customValue = transaction.custom_data?.[groupBy]
+      // Only treat null/undefined as empty, preserve valid falsy values like 0 or false
+      return (customValue ?? null) !== null ? String(customValue) : '(empty)'
+    }
+  }
+
+  // Get color for a grouping key
+  const getGroupingColor = (key: string, groupBy: string): string => {
+    if (groupBy === 'category') {
+      // Find category by name to get its color
+      const category = categories.find(c => c.name === key)
+      return category?.color || '#6B7280'
+    } else {
+      // Generate consistent color based on key hash
+      let hash = 0
+      for (let i = 0; i < key.length; i++) {
+        hash = key.charCodeAt(i) + ((hash << 5) - hash)
+      }
+      const hue = Math.abs(hash) % 360
+      return `hsl(${hue}, 70%, 50%)`
+    }
+  }
+
+  // Get chart title based on metric and grouping
+  const getChartTitle = (metric: string, groupBy: string): string => {
+    const metricLabel = metric === 'amount' ? 'Amount' : metric
+    const groupByOption = getGroupingOptions().find(opt => opt.value === groupBy)
+    const groupByLabel = groupByOption?.label || groupBy
+    return `${metricLabel} by ${groupByLabel}`
+  }
+
+  // Get available grouping options (category + text/select custom fields)
+  const getGroupingOptions = () => {
+    const standardOptions = [
+      { value: 'category', label: 'Category' },
+    ]
+
+    // Add custom text and select fields
+    const customFields = project?.settings?.custom_fields || []
+    const groupableFields = customFields
+      .filter(f => f.type === 'text' || f.type === 'select')
+      .map(f => ({ value: f.name, label: f.name }))
+
+    return [...standardOptions, ...groupableFields]
+  }
+
+  const getChartData = (groupBy: string = 'category', metric: string = 'amount') => {
+    const groupTotals: Record<string, number> = {}
+    const groupColors: Record<string, string> = {}
 
     filteredTransactions.forEach((t) => {
-      const categoryName = getCategoryName(t.category_id)
-      categoryTotals[categoryName] = (categoryTotals[categoryName] || 0) + t.amount
-      categoryColors[categoryName] = getCategoryColor(t.category_id)
+      const groupingKey = getGroupingKey(t, groupBy)
+      const value = getTransactionValue(t, metric)
+      groupTotals[groupingKey] = (groupTotals[groupingKey] || 0) + value
+      groupColors[groupingKey] = getGroupingColor(groupingKey, groupBy)
     })
 
-    const currency = project?.settings?.currency || 'USD'
-    const labels = Object.keys(categoryTotals).map(name => {
-      const amount = categoryTotals[name].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-      return `${name}: ${currency} ${amount}`
+    const labels = Object.keys(groupTotals).map(name => {
+      return `${name}: ${getMetricLabel(metric, groupTotals[name])}`
     })
 
     return {
       labels: labels,
       datasets: [
         {
-          data: Object.values(categoryTotals),
-          backgroundColor: Object.values(categoryColors),
+          data: Object.values(groupTotals),
+          backgroundColor: Object.values(groupColors),
         },
       ],
     }
   }
 
-  const getAreaChartData = () => {
+  const getAreaChartData = (groupBy: string = 'category', metric: string = 'amount') => {
     // Get all unique dates from filtered transactions, sorted
     const dates = Array.from(new Set(filteredTransactions.map(t => t.date))).sort()
 
-    // Get all categories
-    const categoryNames = Array.from(new Set(filteredTransactions.map(t => getCategoryName(t.category_id))))
+    // Get all unique grouping keys
+    const groupingKeys = Array.from(new Set(filteredTransactions.map(t => getGroupingKey(t, groupBy)))).sort()
 
-    // Build dataset for each category
-    const datasets = categoryNames.map((categoryName) => {
-      const category = categories.find(c => c.name === categoryName)
-      const color = category?.color || '#6B7280'
+    // Build dataset for each grouping key
+    const datasets = groupingKeys.map((groupingKey) => {
+      const color = getGroupingColor(groupingKey, groupBy)
 
-      // Calculate amount for each date based on chart mode
+      // Calculate metric for each date based on chart mode
       let cumulative = 0
       const data = dates.map(date => {
-        const dayTotal = filteredTransactions
-          .filter(t => t.date === date && getCategoryName(t.category_id) === categoryName)
-          .reduce((sum, t) => sum + t.amount, 0)
+        const dayTransactions = filteredTransactions
+          .filter(t => t.date === date && getGroupingKey(t, groupBy) === groupingKey)
+
+        const dayTotal = dayTransactions.reduce((sum, t) => sum + getTransactionValue(t, metric), 0)
 
         if (chartMode === 'cumulative') {
           cumulative += dayTotal
@@ -353,7 +518,7 @@ export default function ProjectDetailPage() {
       })
 
       return {
-        label: categoryName,
+        label: groupingKey,
         data: data,
         borderColor: color,
         backgroundColor: `${color}33`,
@@ -368,8 +533,23 @@ export default function ProjectDetailPage() {
     }
   }
 
+  // Get available chart metrics (standard + custom number fields)
+  const getChartMetricOptions = () => {
+    const standardOptions = [
+      { value: 'amount', label: 'Amount' },
+      { value: 'count', label: 'Count' },
+    ]
+
+    // Add custom number fields
+    const customFields = project?.settings?.custom_fields || []
+    const numberFields = customFields
+      .filter(f => f.type === 'number')
+      .map(f => ({ value: f.name, label: f.name }))
+
+    return [...standardOptions, ...numberFields]
+  }
+
   const totalSpent = filteredTransactions.reduce((sum, t) => sum + t.amount, 0)
-  const avgTransaction = filteredTransactions.length > 0 ? totalSpent / filteredTransactions.length : 0
 
   if (loading) {
     return (
@@ -393,10 +573,10 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20 md:pb-0">
+    <div className="min-h-screen bg-slate-50 pb-20 md:pb-0 overflow-x-hidden">
       <header className="bg-white border-b border-slate-200 shadow-sm relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-primary"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
             <div className="flex-1 min-w-0">
               <Link to="/projects" className="text-sm font-medium text-primary-600 hover:text-primary-700 mb-2 inline-flex items-center gap-1">
@@ -416,34 +596,34 @@ export default function ProjectDetailPage() {
                   </div>
                 </form>
               ) : (
-                <div className="group flex flex-col gap-1 items-start mt-1">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
+                <div className="group flex flex-col gap-1 items-start mt-1 min-w-0">
+                  <div className="flex items-center gap-3 flex-wrap min-w-0">
+                    <h1 className="text-2xl font-bold text-gray-900 truncate flex-shrink">{project.name}</h1>
                     <button onClick={() => {
                       setIsEditing(true)
                       setEditFormData({ name: project.name, description: project.description || '', currency: project.settings?.currency || 'USD' })
-                    }} className="text-blue-500 hover:text-blue-700 text-sm opacity-0 group-hover:opacity-100 transition-opacity">Edit</button>
+                    }} className="text-blue-500 hover:text-blue-700 text-sm opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">Edit</button>
                   </div>
-                  {project.description && <p className="text-sm text-gray-600 max-w-2xl">{project.description}</p>}
+                  {project.description && <p className="text-sm text-gray-600 max-w-2xl break-words">{project.description}</p>}
 
                   {/* Date Period Selector */}
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <div className="mt-3 flex flex-wrap items-center gap-2 min-w-0">
                     <label className="text-sm font-medium text-gray-700">Period:</label>
                     <select
                       value={datePeriod}
                       onChange={(e) => setDatePeriod(e.target.value as any)}
-                      className="input py-1 px-3 text-sm w-40 flex-shrink-0"
+                      className="input py-1 px-2 text-xs sm:py-1 sm:px-3 w-full sm:w-auto sm:min-w-0 flex-1"
                     >
                       <option value="today">Today</option>
                       <option value="yesterday">Yesterday</option>
-                      <option value="last7days">Last 7 Days</option>
-                      <option value="last30days">Last 30 Days</option>
+                      <option value="last7days">Last 7</option>
+                      <option value="last30days">Last 30</option>
                       <option value="thisMonth">This Month</option>
                       <option value="lastMonth">Last Month</option>
                       <option value="thisYear">This Year</option>
                       <option value="all">All Time</option>
                     </select>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-gray-500 flex-shrink-0">
                       ({filteredTransactions.length} transactions)
                     </span>
                   </div>
@@ -453,6 +633,18 @@ export default function ProjectDetailPage() {
             <div className="flex gap-2 flex-shrink-0">
               <button onClick={() => setShowInviteModal(true)} className="btn btn-secondary border border-blue-600 text-blue-600 hover:bg-blue-50 text-sm whitespace-nowrap">
                 Invite
+              </button>
+              <button
+                onClick={() => {
+                  const transactionsSection = document.getElementById('recent-transactions')
+                  if (transactionsSection) {
+                    transactionsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  }
+                }}
+                className="btn btn-secondary text-sm whitespace-nowrap hidden sm:flex"
+                title="View Transactions"
+              >
+                📋 Transactions
               </button>
               <button onClick={() => setShowAddTransactionModal(true)} className="btn btn-primary text-sm whitespace-nowrap">
                 + Add Transaction
@@ -506,7 +698,7 @@ export default function ProjectDetailPage() {
             {/* Invite Link */}
             <div className="bg-gray-50 p-3 rounded-md mb-3">
               <p className="text-xs text-gray-500 mb-1">Invite Link:</p>
-              <p className="text-sm text-blue-600 break-all">{inviteLink}</p>
+              <p className="text-sm text-blue-600 break-words">{inviteLink}</p>
             </div>
 
             {/* Actions */}
@@ -546,25 +738,35 @@ export default function ProjectDetailPage() {
         </div>
       )}
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-0 sm:px-2 md:px-6 lg:px-8 py-8 overflow-x-hidden">
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Summary Cards */}
-          <div className="lg:col-span-3 grid gap-4 md:grid-cols-3">
-            <div className="card border-t-4 border-t-primary-500">
+          <div className="lg:col-span-3 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+            {/* Date & Time Widget */}
+            <div className="card border-t-4 border-t-blue-500 overflow-hidden">
+              <div className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">
+                <span className="mr-1">☀️</span> Date & Time
+              </div>
+              <div className="flex flex-col">
+                <div className="text-base font-semibold text-slate-900">
+                  {currentDateTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                </div>
+                <div className="text-xl font-medium text-slate-900">
+                  {currentDateTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' })}
+                </div>
+              </div>
+            </div>
+            {/* Total Amount Widget */}
+            <div className="card border-t-4 border-t-primary-500 overflow-hidden">
               <div className="text-xs font-bold text-primary-600 uppercase tracking-wider mb-1">Total Amount</div>
-              <div className="text-3xl font-black text-slate-900">
+              <div className="text-3xl font-black text-slate-900 break-all">
                 {project.settings?.currency || 'USD'} {totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
-            <div className="card border-t-4 border-t-teal-500">
+            {/* Transactions Widget */}
+            <div className="card border-t-4 border-t-teal-500 overflow-hidden">
               <div className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-1">Transactions</div>
               <div className="text-3xl font-black text-slate-900">{filteredTransactions.length}</div>
-            </div>
-            <div className="card border-t-4 border-t-orange-500">
-              <div className="text-xs font-bold text-orange-600 uppercase tracking-wider mb-1">Avg Transaction</div>
-              <div className="text-3xl font-black text-slate-900">
-                {project.settings?.currency || 'USD'} {avgTransaction.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
             </div>
           </div>
 
@@ -573,42 +775,66 @@ export default function ProjectDetailPage() {
             <>
               {/* Pie Chart and Recent Transactions in same row */}
               <div className="lg:col-span-2 card border-t-4 border-t-primary-500">
-                <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                  <span className="w-2 h-6 bg-primary-500 rounded-full"></span>
-                  Amount by Category
-                </h2>
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-6">
+                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <span className="w-2 h-6 bg-primary-500 rounded-full"></span>
+                    {getChartTitle(categoryChartMetric, categoryChartGroupBy)}
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={categoryChartGroupBy}
+                      onChange={(e) => setCategoryChartGroupBy(e.target.value)}
+                      className="input py-1 px-2 text-xs sm:py-1 sm:px-3 w-full sm:w-auto sm:min-w-0"
+                      title="Group by"
+                    >
+                      {getGroupingOptions().map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                    <select
+                      value={categoryChartMetric}
+                      onChange={(e) => setCategoryChartMetric(e.target.value)}
+                      className="input py-1 px-2 text-xs sm:py-1 sm:px-3 w-full sm:w-auto sm:min-w-0"
+                      title="Metric"
+                    >
+                      {getChartMetricOptions().map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
                 <div className="flex items-center justify-center p-4">
                   <div className="w-full max-w-xs">
-                    <Pie data={getChartData()} options={{ maintainAspectRatio: true, plugins: { legend: { position: 'bottom' } } }} />
+                    <Pie data={getChartData(categoryChartGroupBy, categoryChartMetric)} options={{ maintainAspectRatio: true, plugins: { legend: { position: 'bottom' } } }} />
                   </div>
                 </div>
               </div>
 
               {/* Recent Transactions */}
-              <div className="lg:col-span-1 card border-t-4 border-t-teal-500 flex flex-col">
-                <div className="flex justify-between items-center mb-6">
+              <div id="recent-transactions" className="lg:col-span-1 card border-t-4 border-t-teal-500 flex flex-col overflow-hidden">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-6">
                   <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                    <span className="w-2 h-6 bg-teal-500 rounded-full"></span>
+                    <span className="w-2 h-6 bg-teal-500 rounded-full flex-shrink-0"></span>
                     Recent
                   </h2>
-                  <Link to={`/transactions/${id}`} className="text-sm font-semibold text-primary-600 hover:text-primary-700">
+                  <Link to={`/transactions/${id}`} className="text-sm font-semibold text-primary-600 hover:text-primary-700 whitespace-nowrap">
                     View All →
                   </Link>
                 </div>
                 <div className="space-y-3 flex-1 overflow-auto">
                   {filteredTransactions.slice(0, 6).map((transaction) => (
-                    <Link key={transaction.id} to={`/transactions/${id}`} className="flex justify-between items-center p-3 hover:bg-slate-50 rounded-xl transition-all border border-transparent hover:border-slate-100 group">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm bg-white border border-slate-100" style={{ color: getCategoryColor(transaction.category_id) }}>
+                    <Link key={transaction.id} to={`/transactions/${id}`} className="flex justify-between items-center gap-2 p-3 hover:bg-slate-50 rounded-xl transition-all border border-transparent hover:border-slate-100 group">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm bg-white border border-slate-100 flex-shrink-0" style={{ color: getCategoryColor(transaction.category_id) }}>
                           {getCategoryName(transaction.category_id).charAt(0)}
                         </div>
-                        <div>
-                          <div className="text-sm font-bold text-slate-800">{getCategoryName(transaction.category_id)}</div>
-                          <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">{transaction.date}</div>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-bold text-slate-800 truncate">{getCategoryName(transaction.category_id)}</div>
+                          <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider truncate">{transaction.date}</div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className={`font-extrabold ${
+                      <div className="text-right flex-shrink-0">
+                        <div className={`font-extrabold text-sm break-words ${
                           transaction.amount < 0 ? 'text-rose-600' : 'text-emerald-600'
                         }`}>
                           {transaction.amount < 0 ? '-' : ''}{project.settings?.currency || 'USD'} {Math.abs(transaction.amount).toFixed(2)}
@@ -625,13 +851,35 @@ export default function ProjectDetailPage() {
               </div>
 
               {datePeriod !== 'today' && (
-                <div className="lg:col-span-3 card border-t-4 border-t-primary-500">
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-lg font-semibold">Amount Over Time by Category</h2>
-                    <div className="flex items-center gap-2">
+                <div className="lg:col-span-3 card border-t-4 border-t-primary-500 overflow-hidden">
+                  <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-4">
+                    <h2 className="text-lg font-semibold truncate pr-2">
+                      {getChartTitle(timeChartMetric, timeChartGroupBy)} Over Time
+                    </h2>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <select
+                        value={timeChartGroupBy}
+                        onChange={(e) => setTimeChartGroupBy(e.target.value)}
+                        className="input py-1 px-2 text-xs sm:py-1 sm:px-3 w-full sm:w-auto sm:min-w-0"
+                        title="Group by"
+                      >
+                        {getGroupingOptions().map(option => (
+                          <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                      </select>
+                      <select
+                        value={timeChartMetric}
+                        onChange={(e) => setTimeChartMetric(e.target.value)}
+                        className="input py-1 px-2 text-xs sm:py-1 sm:px-3 w-full sm:w-auto sm:min-w-0"
+                        title="Metric"
+                      >
+                        {getChartMetricOptions().map(option => (
+                          <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                      </select>
                       <button
                         onClick={() => setChartMode('cumulative')}
-                        className={`px-3 py-1 text-sm rounded transition-colors ${chartMode === 'cumulative'
+                        className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded transition-colors ${chartMode === 'cumulative'
                           ? 'bg-blue-100 text-blue-700 font-medium'
                           : 'text-gray-600 hover:bg-gray-100'
                           }`}
@@ -640,7 +888,7 @@ export default function ProjectDetailPage() {
                       </button>
                       <button
                         onClick={() => setChartMode('absolute')}
-                        className={`px-3 py-1 text-sm rounded transition-colors ${chartMode === 'absolute'
+                        className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded transition-colors ${chartMode === 'absolute'
                           ? 'bg-blue-100 text-blue-700 font-medium'
                           : 'text-gray-600 hover:bg-gray-100'
                           }`}
@@ -651,7 +899,7 @@ export default function ProjectDetailPage() {
                   </div>
                   <div className="h-64">
                     <Line
-                      data={getAreaChartData()}
+                      data={getAreaChartData(timeChartGroupBy, timeChartMetric)}
                       options={{
                         responsive: true,
                         maintainAspectRatio: false,
@@ -676,7 +924,7 @@ export default function ProjectDetailPage() {
                             stacked: true,
                             title: {
                               display: true,
-                              text: chartMode === 'cumulative' ? 'Cumulative Amount' : 'Amount',
+                              text: `${chartMode === 'cumulative' ? 'Cumulative' : ''} ${timeChartMetric === 'amount' ? 'Amount' : timeChartMetric === 'count' ? 'Count' : timeChartMetric}`.trim(),
                             },
                             beginAtZero: true,
                           },

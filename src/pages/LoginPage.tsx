@@ -1,24 +1,37 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [isConfigured, setIsConfigured] = useState(true)
 
   // Check if user was redirected from invite page
-  const inviteToken = location.state?.inviteToken
+  const inviteToken = location.state?.inviteToken || searchParams.get('token')
 
   useEffect(() => {
-    // If user is already logged in and has invite token, redirect to invite
-    const checkAuth = async () => {
+    // Check if Supabase is configured and handle session
+    const checkConfig = async () => {
+      const { getSupabaseClient } = await import('../lib/supabase')
+
+      // Check if Supabase is configured
       try {
-        const { getSupabaseClient } = await import('../lib/supabase')
+        getSupabaseClient()
+        setIsConfigured(true)
+      } catch (err) {
+        setIsConfigured(false)
+        return
+      }
+
+      // If user is already logged in and has invite token, redirect to invite
+      try {
         const supabase = getSupabaseClient()
         const { data } = await supabase.auth.getSession()
         if (data.session) {
@@ -29,11 +42,11 @@ export default function LoginPage() {
           }
         }
       } catch (err) {
-        // Ignore auth check errors
+        // Supabase not configured - stay on login page, will redirect on submit
       }
     }
-    checkAuth()
-  }, [])
+    checkConfig()
+  }, [inviteToken, navigate])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -43,7 +56,14 @@ export default function LoginPage() {
 
     try {
       const { getSupabaseClient } = await import('../lib/supabase')
-      const supabase = getSupabaseClient()
+      let supabase
+      try {
+        supabase = getSupabaseClient()
+      } catch (configErr) {
+        // Supabase not configured
+        navigate('/config')
+        return
+      }
 
       if (isSignUp) {
         // Sign up
@@ -101,6 +121,29 @@ export default function LoginPage() {
         </div>
 
         <div className="card shadow-xl border-t-4 border-t-primary-500">
+          {!isConfigured && (
+            <div className="rounded-md bg-amber-50 p-4 mb-4 border border-amber-200">
+              <div className="flex items-start gap-3">
+                <svg className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-amber-800">Database Not Configured</p>
+                  <p className="text-xs text-amber-700 mt-2">
+                    Please configure your Supabase connection first.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/config')}
+                    className="mt-2 w-full btn btn-secondary text-xs py-2"
+                  >
+                    Go to Configuration
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Email/Password Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

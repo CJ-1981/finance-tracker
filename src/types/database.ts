@@ -30,6 +30,10 @@ export interface Database {
             }>
             custom_field_values?: Record<string, string[]>
             default_date_period?: string
+            category_chart_group_by?: string
+            category_chart_metric?: string
+            time_chart_group_by?: string
+            time_chart_metric?: string
           } | null
           created_at: string
           updated_at: string
@@ -44,6 +48,17 @@ export interface Database {
             currency: string
             date_format: string
             notifications_enabled: boolean
+            custom_fields?: Array<{
+              name: string
+              type: 'text' | 'number' | 'date' | 'select'
+              options?: string[]
+            }>
+            custom_field_values?: Record<string, string[]>
+            default_date_period?: string
+            category_chart_group_by?: string
+            category_chart_metric?: string
+            time_chart_group_by?: string
+            time_chart_metric?: string
           } | null
           created_at?: string
           updated_at?: string
@@ -55,9 +70,20 @@ export interface Database {
           owner_id?: string
           template_id?: string | null
           settings?: {
-            currency: string
-            date_format: string
-            notifications_enabled: boolean
+            currency?: string
+            date_format?: string
+            notifications_enabled?: boolean
+            custom_fields?: Array<{
+              name: string
+              type: 'text' | 'number' | 'date' | 'select'
+              options?: string[]
+            }>
+            custom_field_values?: Record<string, string[]>
+            default_date_period?: string
+            category_chart_group_by?: string
+            category_chart_metric?: string
+            time_chart_group_by?: string
+            time_chart_metric?: string
           } | null
           created_at?: string
           updated_at?: string
