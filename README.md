@@ -289,7 +289,15 @@ finance-tracker/
 
 ## Documentation
 
-See `database/schema.sql` for:
+For comprehensive documentation, see the `docs/` directory:
+- [User Guide](docs/user-guide.md) - Getting started, account setup, project management
+- [Developer Guide](docs/developer-guide.md) - Development setup, architecture, testing
+- [API Documentation](docs/api.md) - Database schema, Supabase integration, CRUD operations
+- [Deployment Guide](docs/deployment-guide.md) - Production deployment options and configuration
+- [Architecture](docs/architecture.md) - System architecture and design decisions
+- [E2E Testing](docs/e2e-testing.md) - End-to-end testing with Playwright
+
+Also see `database/schema.sql` for:
 - Complete database schema
 - RLS (Row Level Security) policies
 - Indexes for performance
