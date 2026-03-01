@@ -78,8 +78,8 @@ When reporting documentation issues, please include:
 We welcome contributions to improve the documentation! Please see:
 
 - [Developer Guide - Contributing Guidelines](developer-guide.md#contributing-guidelines)
-- [GitHub Issues](https://github.com/yourusername/finance-tracker/issues)
-- [Pull Requests](https://github.com/yourusername/finance-tracker/pulls)
+- [GitHub Issues](https://github.com/CJ-1981/finance-tracker/issues)
+- [Pull Requests](https://github.com/CJ-1981/finance-tracker/pulls)
 
 ---
 
