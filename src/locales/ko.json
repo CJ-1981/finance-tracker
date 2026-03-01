@@ -282,5 +282,23 @@
     "invitationEmailBody": "{project} 프로젝트에 {role} 권한으로 초대되었습니다.\n\n아래 링크를 클릭하여 초대를 수락하세요:\n{link}\n\n이 초대는 7일 후에 만료됩니다.",
     "fullInvitationCopied": "전체 초대가 클립보드에 복사되었습니다!",
     "linkCopied": "링크가 클립보드에 복사되었습니다!"
+  },
+  "cashCounter": {
+    "title": "현금 계산기",
+    "anonymous": "익명",
+    "withNames": "이름 포함",
+    "enterName": "이름 입력",
+    "currentEntry": "현재 항목",
+    "addEntry": "항목 추가",
+    "totalCounted": "계산된 총액",
+    "transactionsTotal": "거래 총액",
+    "match": "일치",
+    "excess": "초과",
+    "shortage": "부족",
+    "entries": "항목 목록",
+    "delete": "삭제",
+    "clearAll": "모두 지우기",
+    "confirmClearAll": "모든 항목을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "pleaseEnterName": "이 항목의 이름을 입력해주세요."
   }
 }

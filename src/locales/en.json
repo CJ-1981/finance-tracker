@@ -282,5 +282,23 @@
     "invitationEmailBody": "You've been invited to join the project \"{project}\" as a {role}.\n\nClick the link below to accept the invitation:\n{link}\n\nThis invitation expires in 7 days.",
     "fullInvitationCopied": "Full invitation copied to clipboard!",
     "linkCopied": "Link copied to clipboard!"
+  },
+  "cashCounter": {
+    "title": "Cash Counter",
+    "anonymous": "Anonymous",
+    "withNames": "With Names",
+    "enterName": "Enter name",
+    "currentEntry": "Current Entry",
+    "addEntry": "Add Entry",
+    "totalCounted": "Total Counted",
+    "transactionsTotal": "Transactions Total",
+    "match": "Match",
+    "excess": "Excess",
+    "shortage": "Shortage",
+    "entries": "Entries",
+    "delete": "Delete",
+    "clearAll": "Clear All",
+    "confirmClearAll": "Are you sure you want to clear all entries? This cannot be undone.",
+    "pleaseEnterName": "Please enter a name for this entry."
   }
 }

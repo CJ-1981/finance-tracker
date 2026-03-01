@@ -5,6 +5,7 @@ import { getSupabaseClient } from '../lib/supabase'
 import { getPendingInvitation } from '../lib/invitations'
 import type { Project, Transaction, Category } from '../types'
 import TransactionModal from '../components/TransactionModal'
+import CashCounterModal from '../components/CashCounterModal'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Filler } from 'chart.js'
 import { Pie, Line } from 'react-chartjs-2'
 import { useAuth } from '../hooks/useAuth'
@@ -31,6 +32,7 @@ export default function ProjectDetailPage() {
 
   // Quick add transaction modal states
   const [showAddTransactionModal, setShowAddTransactionModal] = useState(false)
+  const [showCashCounterModal, setShowCashCounterModal] = useState(false)
   const [chartMode, setChartMode] = useState<'cumulative' | 'absolute'>('absolute')
 
   // Chart grouping states (what to group segments by - category or custom text field)
@@ -653,6 +655,10 @@ export default function ProjectDetailPage() {
               <button onClick={() => setShowAddTransactionModal(true)} className="btn btn-primary text-sm whitespace-nowrap">
                 + {t('projectDetail.addTransaction')}
               </button>
+              <button onClick={() => setShowCashCounterModal(true)} className="btn btn-secondary text-sm whitespace-nowrap flex" title="Cash Counter">
+                <span>🧮</span>
+                <span className="hidden sm:inline ml-1">{t('cashCounter.title')}</span>
+              </button>
             </div>
           </div>
         </div>
@@ -957,6 +963,16 @@ export default function ProjectDetailPage() {
           categories={categories}
           onGoToSettings={handleGoToSettings}
           allTransactions={transactions}
+        />
+      )}
+
+      {/* Cash Counter Modal */}
+      {project && (
+        <CashCounterModal
+          isOpen={showCashCounterModal}
+          onClose={() => setShowCashCounterModal(false)}
+          project={project}
+          totalTransactionsAmount={filteredTransactions.reduce((sum, t) => sum + t.amount, 0)}
         />
       )}
     </div>
