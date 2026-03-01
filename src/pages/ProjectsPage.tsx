@@ -168,7 +168,7 @@ export default function ProjectsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20 md:pb-0">
-      <header className="bg-white border-b border-slate-200 shadow-sm relative overflow-hidden">
+      <header className="bg-white border-b border-slate-200 shadow-sm relative">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-primary"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">

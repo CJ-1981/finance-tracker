@@ -54,7 +54,7 @@ export default function LanguageSelector() {
       {/* Dropdown */}
       {isOpen && (
         <div
-          className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50"
+          className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-[200]"
           onBlur={(e) => {
             // Close when focus moves outside the dropdown
             if (!e.currentTarget.contains(e.relatedTarget)) {
@@ -66,9 +66,8 @@ export default function LanguageSelector() {
             <button
               key={language.code}
               onClick={() => changeLanguage(language.code)}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-slate-50 transition-colors ${
-                currentLangCode === language.code ? 'bg-primary-50 text-primary-700' : 'text-slate-700'
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-slate-50 transition-colors ${currentLangCode === language.code ? 'bg-primary-50 text-primary-700' : 'text-slate-700'
+                }`}
             >
               <span className="text-xl">{language.flag}</span>
               <span className="font-medium">{language.name}</span>
