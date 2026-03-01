@@ -26,7 +26,7 @@
     "datePlaceholder": "날짜 선택"
   },
   "projects": {
-    "title": "재무 추적기",
+    "title": "회계 관리",
     "subtitle": "프로젝트와 거래 내역을 관리하세요",
     "newProject": "+ 새 프로젝트",
     "inviteToMulti": "다중 초대",
@@ -148,8 +148,8 @@
     "configureSupabaseFirst": "먼저 Supabase 연결을 구성해 주세요.",
     "goToConfiguration": "구성 페이지로 이동",
     "securedWithSupabase": "데이터는 Supabase Auth로 보안됩니다",
-    "financialTracker": "재무 추적기",
-    "financialTrackerFull": "재무 추적기"
+    "financialTracker": "회계 관리",
+    "financialTrackerFull": "회계 관리"
   },
   "config": {
     "supabaseConfig": "Supabase 구성",

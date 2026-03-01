@@ -15,6 +15,17 @@ export default function LoginPage() {
   const [message, setMessage] = useState('')
   const [isConfigured, setIsConfigured] = useState(true)
 
+  // Helper: navigate to the saved redirect path after login, then clear it
+  const navigateAfterLogin = (fallback = '/projects') => {
+    const saved = sessionStorage.getItem('redirectAfterLogin')
+    if (saved) {
+      sessionStorage.removeItem('redirectAfterLogin')
+      navigate(saved, { replace: true })
+    } else {
+      navigate(fallback, { replace: true })
+    }
+  }
+
   // Check if user was redirected from invite page
   const inviteToken = location.state?.inviteToken || searchParams.get('token')
 
@@ -40,7 +51,7 @@ export default function LoginPage() {
           if (inviteToken) {
             navigate(`/invite?token=${inviteToken}`)
           } else {
-            navigate('/projects')
+            navigateAfterLogin()
           }
         }
       } catch (err) {
@@ -86,12 +97,12 @@ export default function LoginPage() {
         })
         if (error) throw error
 
-        // After successful login, redirect to invite or projects
+        // After successful login, redirect to saved path or projects
         setTimeout(() => {
           if (inviteToken) {
             navigate(`/invite?token=${inviteToken}`)
           } else {
-            navigate('/projects')
+            navigateAfterLogin()
           }
         }, 100)
       }

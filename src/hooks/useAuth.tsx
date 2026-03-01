@@ -20,16 +20,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   })
 
   useEffect(() => {
-    // Timeout fallback to ensure loading is never stuck (e.g. database query taking too long or slow network)
-    const timeoutId = setTimeout(() => {
-      setAuthState(prev => {
-        if (prev.loading) {
-          console.warn('Auth initialization taking longer than expected - forcing loading to false. This may be due to a slow network, cold start, or connection issues.')
-          return { ...prev, loading: false }
-        }
-        return prev
-      })
-    }, 15000) // Increase to 15 second timeout to allow for slow networks and cold starts
+    let cancelled = false
 
     // Try to get Supabase client - it might not be initialized yet
     let supabase
@@ -37,38 +28,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase = getSupabaseClient()
     } catch (error) {
       // Supabase not configured yet - this is OK on first visit
-      console.log('Supabase not configured yet - client initialization failed:', error)
+      console.log('Supabase not configured yet:', error)
       setAuthState({ user: null, session: null, loading: false })
       return
     }
 
-    // Check active session
-    supabase.auth.getSession()
-      .then(({ data: { session } }) => {
-        if (session?.user) {
-          // Await to prevent race conditions
-          fetchUserProfile(session.user, supabase).catch(err => {
-            console.error('Error fetching user profile:', err)
-            setAuthState({ user: null, session: null, loading: false })
-          })
-        } else {
-          setAuthState({ user: null, session: null, loading: false })
-        }
-      })
-      .catch(err => {
-        console.error('Error getting session:', err)
-        setAuthState({ user: null, session: null, loading: false })
-      })
+    // Dead-man fallback: if nothing resolves after 10s, unblock the UI
+    const timeoutId = setTimeout(() => {
+      if (!cancelled) {
+        console.warn('Auth initialization timed out after 10s — forcing loading to false.')
+        setAuthState(prev => prev.loading ? { ...prev, loading: false } : prev)
+      }
+    }, 10000)
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    // Race getSession() against a 6s timeout.
+    // Supabase uses Navigator.locks internally; a stale lock can cause getSession()
+    // to hang silently. If it times out, we treat it as "no session".
+    const sessionPromise = supabase.auth.getSession()
+    const timedOut = new Promise<'timeout'>(resolve => setTimeout(() => resolve('timeout'), 6000))
+
+    Promise.race([sessionPromise, timedOut]).then(result => {
+      if (cancelled) return
+      clearTimeout(timeoutId)
+
+      if (result === 'timeout') {
+        console.warn('getSession() timed out (possible stale LockManager lock) — treating as logged out.')
+        setAuthState({ user: null, session: null, loading: false })
+        return
+      }
+
+      const session = result.data?.session
       if (session?.user) {
-        // Await to prevent race conditions from concurrent inserts
-        await fetchUserProfile(session.user, supabase).catch(err => {
+        fetchUserProfile(session.user, supabase).catch(err => {
           console.error('Error fetching user profile:', err)
-          setAuthState({ user: null, session: null, loading: false })
+          if (!cancelled) setAuthState({ user: null, session: null, loading: false })
+        })
+      } else {
+        setAuthState({ user: null, session: null, loading: false })
+      }
+    }).catch(err => {
+      if (cancelled) return
+      clearTimeout(timeoutId)
+      console.error('Error getting session:', err)
+      setAuthState({ user: null, session: null, loading: false })
+    })
+
+    // Listen for live auth state changes (sign in, sign out, token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (cancelled) return
+      if (session?.user) {
+        await fetchUserProfile(session.user, supabase).catch(err => {
+          console.error('Error fetching user profile on auth change:', err)
+          if (!cancelled) setAuthState({ user: null, session: null, loading: false })
         })
       } else {
         setAuthState({ user: null, session: null, loading: false })
@@ -76,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     return () => {
+      cancelled = true
       clearTimeout(timeoutId)
       subscription.unsubscribe()
     }
