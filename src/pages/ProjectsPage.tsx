@@ -34,12 +34,19 @@ export default function ProjectsPage() {
   }, [user])
 
   const fetchProjects = async () => {
+    // If user is not authenticated, clear projects and return early
+    if (!user?.id) {
+      setProjects([])
+      setLoading(false)
+      return
+    }
+
     try {
       const supabase = getSupabaseClient()
       const { data, error } = await supabase
         .from('project_members')
         .select('role, project_id, projects(*)')
-        .eq('user_id', user?.id || '')
+        .eq('user_id', user.id)
 
       if (error) throw error
 
@@ -51,6 +58,7 @@ export default function ProjectsPage() {
       setProjects(projectsWithRoles)
     } catch (error) {
       console.error('Error fetching projects:', error)
+      setProjects([])
     } finally {
       setLoading(false)
     }
