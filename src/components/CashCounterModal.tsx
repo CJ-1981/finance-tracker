@@ -78,6 +78,15 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
   const counts = category === 'anonymous' ? anonymousCounts : namedCounts
   const setCounts = category === 'anonymous' ? setAnonymousCounts : setNamedCounts
 
+  // Set default name when switching to named category
+  useEffect(() => {
+    if (category === 'named' && !entryName) {
+      const namedEntriesCount = entries.filter(e => e.category === 'named').length
+      const defaultName = t('cashCounter.defaultName', { defaultValue: 'Person' }) + ' ' + (namedEntriesCount + 1)
+      setEntryName(defaultName)
+    }
+  }, [category, entries, entryName, t])
+
   // Load saved data from localStorage
   useEffect(() => {
     if (!isOpen || !project) return
@@ -169,11 +178,6 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
   }
 
   const handleAddEntry = () => {
-    if (category === 'named' && !entryName.trim()) {
-      alert(t('cashCounter.pleaseEnterName'))
-      return
-    }
-
     const newEntry: CashEntry = {
       id: Date.now().toString(),
       category,
@@ -202,7 +206,15 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
     setCounts(() =>
       DENOMINATIONS.reduce((acc, d) => ({ ...acc, [d.value]: 0 }), {} as Record<number, number>)
     )
-    setEntryName('')
+
+    // Set new default name for next entry if in named mode
+    if (category === 'named') {
+      const namedEntriesCount = updatedEntries.filter(e => e.category === 'named').length
+      const nextDefaultName = t('cashCounter.defaultName', { defaultValue: 'Person' }) + ' ' + (namedEntriesCount + 1)
+      setEntryName(nextDefaultName)
+    } else {
+      setEntryName('')
+    }
   }
 
   const handleDeleteEntry = (id: string) => {

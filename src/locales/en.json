@@ -318,6 +318,7 @@
     "anonymous": "Anonymous",
     "withNames": "With Names",
     "enterName": "Name",
+    "defaultName": "Person",
     "currentEntry": "Current Entry",
     "addEntry": "Add Entry",
     "totalCounted": "Total Counted",
