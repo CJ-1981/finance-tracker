@@ -81,11 +81,14 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Update RLS policies to handle soft deletes
 
--- Drop existing policies
+-- Drop all existing transaction policies first
 DROP POLICY IF EXISTS "Members can view project transactions" ON public.transactions;
 DROP POLICY IF EXISTS "Members can insert transactions" ON public.transactions;
 DROP POLICY IF EXISTS "Creators can update own transactions" ON public.transactions;
 DROP POLICY IF EXISTS "Creators can delete own transactions" ON public.transactions;
+DROP POLICY IF EXISTS "Members can view active transactions" ON public.transactions;
+DROP POLICY IF EXISTS "Owners can view deleted transactions" ON public.transactions;
+DROP POLICY IF EXISTS "Members can soft delete transactions" ON public.transactions;
 
 -- SELECT: Members can view non-deleted transactions, owners can view all (including deleted)
 CREATE POLICY "Members can view active transactions"
