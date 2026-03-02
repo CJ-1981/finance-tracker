@@ -65,6 +65,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Creates soft delete RPC functions
 - Updates RLS policies to handle soft-deleted transactions
 
+## [2.3.1] - 2026-03-02
+
+### Added
+- **Version Information Display**
+  - App version and build timestamp now visible in ConfigPage settings menu
+  - Automatic version generation during build process
+  - Translated version info labels (English/Korean)
+
+### Fixed
+- **Date Filter Bug** - "Last 7 days" and "Last 30 days" periods now correctly include today's data
+  - Previous behavior excluded today's transactions due to midnight timestamp comparison
+  - Fixed by using date string comparison instead of Date object comparison
+- **Cash Counter Clarity** - Mode label now displayed next to "Current Entry" heading
+  - Shows "(Anonymous)" or "(With Names)" to indicate active category
+  - Makes it clear which category's sum is being displayed
+
+### Changed
+- **Cash Counter Totals** - Refined total calculation logic for better UX
+  - "Current Entry" now shows sum of active tab only (previously showed both categories)
+  - "Total Counted" shows sum of both categories' current inputs plus all saved entries
+  - Clear separation between current active entry and grand total
+
 ## [2.2.0] - 2026-02-28
 
 ### Added
