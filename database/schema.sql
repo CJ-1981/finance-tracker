@@ -71,8 +71,8 @@ CREATE TABLE IF NOT EXISTS public.invitations (
   role TEXT NOT NULL CHECK (role IN ('member', 'viewer')),
   invited_by UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
   token TEXT UNIQUE NOT NULL,
-  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'expired')),
+  expires_at TIMESTAMP WITH TIME ZONE,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'accepted')),
   accepted_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
