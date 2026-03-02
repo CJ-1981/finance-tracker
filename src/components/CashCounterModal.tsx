@@ -149,13 +149,18 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
     )
   }
 
-  // Calculate total from all entries
+  // Calculate total from all entries (both anonymous and named)
   const totalFromEntries = entries.reduce((sum, entry) => {
     const entryTotal = DENOMINATIONS.reduce((s, d) => s + (entry.denominations[d.value] || 0) * d.value, 0)
     return sum + entryTotal
   }, 0)
 
-  const grandTotal = totalCashCounted + totalFromEntries
+  // Calculate current input totals for both categories
+  const anonymousCurrentTotal = DENOMINATIONS.reduce((sum, denom) => sum + (anonymousCounts[denom.value] || 0) * denom.value, 0)
+  const namedCurrentTotal = DENOMINATIONS.reduce((sum, denom) => sum + (namedCounts[denom.value] || 0) * denom.value, 0)
+
+  // Grand total: sum of both current inputs (anonymous + named) + all saved entries
+  const grandTotal = anonymousCurrentTotal + namedCurrentTotal + totalFromEntries
 
   // Calculate current entry breakdown
   const currentBreakdown = calculateBreakdown(counts)
@@ -171,9 +176,13 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
     { bills: 0, coins: 0 }
   )
 
+  // Calculate breakdown for both current categories
+  const anonymousBreakdown = calculateBreakdown(anonymousCounts)
+  const namedBreakdown = calculateBreakdown(namedCounts)
+
   const grandBreakdown = {
-    bills: currentBreakdown.bills + entriesBreakdown.bills,
-    coins: currentBreakdown.coins + entriesBreakdown.coins,
+    bills: anonymousBreakdown.bills + namedBreakdown.bills + entriesBreakdown.bills,
+    coins: anonymousBreakdown.coins + namedBreakdown.coins + entriesBreakdown.coins,
   }
 
   const handleCountChange = (denomination: number, delta: number) => {
