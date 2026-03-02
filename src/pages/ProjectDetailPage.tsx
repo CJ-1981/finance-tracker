@@ -204,6 +204,7 @@ export default function ProjectDetailPage() {
         .from('transactions')
         .select('*')
         .eq('project_id', id)
+        .is('deleted_at', null)
         .order('date', { ascending: false })
 
       if (error) throw error
