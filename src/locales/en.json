@@ -183,6 +183,7 @@
     "backToHome": "← Back to Home",
     "signedInAs": "Signed in as",
     "currentConfiguration": "Current Configuration:",
+    "appInfo": "App Information",
     "notConfigured": "Not configured",
     "connectionFailed": "Connection failed",
     "signInFailed": "Sign in failed"
