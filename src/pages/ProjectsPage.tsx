@@ -50,10 +50,15 @@ export default function ProjectsPage() {
 
       if (error) throw error
 
-      const projectsWithRoles = data?.map((m: any) => ({
-        ...m.projects,
-        userRole: m.role
-      })).filter((p: any) => p.id !== undefined) || []
+      const projectsWithRoles = data?.map((m: any) => {
+        const project = m.projects
+        // Set userRole to 'owner' if user is the project owner, otherwise use the role from project_members
+        const userRole = project.owner_id === user.id ? 'owner' : m.role
+        return {
+          ...project,
+          userRole
+        }
+      }).filter((p: any) => p.id !== undefined) || []
 
       setProjects(projectsWithRoles)
     } catch (error) {
