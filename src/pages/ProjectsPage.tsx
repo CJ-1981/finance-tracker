@@ -13,7 +13,7 @@ export default function ProjectsPage() {
   const navigate = useNavigate()
   const [projects, setProjects] = useState<(Project & { userRole: string })[]>([])
   const [showCreateForm, setShowCreateForm] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [projectsLoading, setProjectsLoading] = useState(true)
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -38,9 +38,13 @@ export default function ProjectsPage() {
     // If user is not authenticated, clear projects and return early
     if (!user?.id) {
       setProjects([])
-      setLoading(false)
+      setProjectsLoading(false)
       return
     }
+
+    setProjectsLoading(true)
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10s timeout
 
     try {
       const supabase = getSupabaseClient()
@@ -48,6 +52,8 @@ export default function ProjectsPage() {
         .from('project_members')
         .select('role, project_id, projects(*)')
         .eq('user_id', user.id)
+
+      clearTimeout(timeoutId)
 
       if (error) throw error
 
@@ -66,7 +72,7 @@ export default function ProjectsPage() {
       console.error('Error fetching projects:', error)
       setProjects([])
     } finally {
-      setLoading(false)
+      setProjectsLoading(false)
     }
   }
 
@@ -208,14 +214,6 @@ export default function ProjectsPage() {
     )
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-slate-50 pb-20 md:pb-0" data-testid="projects-page">
       <header className="bg-white border-b border-slate-200 shadow-sm relative">
@@ -283,8 +281,21 @@ export default function ProjectsPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {showCreateForm && (
-          <div className="card mb-6" data-testid="create-project-form">
+        {projectsLoading ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="card animate-pulse">
+                <div className="h-6 bg-slate-200 rounded mb-4 w-3/4"></div>
+                <div className="h-4 bg-slate-200 rounded mb-2 w-1/2"></div>
+                <div className="h-4 bg-slate-200 rounded mb-4 w-full"></div>
+                <div className="h-8 bg-slate-200 rounded mt-4"></div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <>
+            {showCreateForm && (
+              <div className="card mb-6" data-testid="create-project-form">
             <h2 className="text-lg font-semibold mb-4">{t('projects.createNewProject')}</h2>
             <form onSubmit={handleCreateProject} className="space-y-4">
               <div>
@@ -391,6 +402,8 @@ export default function ProjectsPage() {
               </Link>
             ))}
           </div>
+        )}
+          </>
         )}
       </main>
 
