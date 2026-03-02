@@ -9,7 +9,7 @@ export default function InvitePage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const [status, setStatus] = useState<'loading' | 'valid' | 'invalid' | 'expired' | 'accepted' | 'wrong-email'>('loading')
+  const [status, setStatus] = useState<'loading' | 'valid' | 'invalid' | 'accepted' | 'wrong-email'>('loading')
   const [inviteData, setInviteData] = useState<any>(null)
   const [error, setError] = useState('')
 
@@ -47,18 +47,9 @@ export default function InvitePage() {
         return
       }
 
-      // Check if any expired
-      const now = new Date()
-      const validInvites = data.filter((invite: any) => new Date(invite.expires_at) >= now && invite.status === 'pending')
-      const expiredInvites = data.filter((invite: any) => new Date(invite.expires_at) < now && invite.status === 'pending')
+      // Filter pending invitations (no expiration check)
+      const validInvites = data.filter((invite: any) => invite.status === 'pending')
       const acceptedInvites = data.filter((invite: any) => invite.status === 'accepted')
-
-      // Auto-mark expired in DB
-      if (expiredInvites.length > 0) {
-        await (supabase.from('invitations') as any)
-          .update({ status: 'expired' })
-          .in('id', expiredInvites.map((i: any) => i.id))
-      }
 
       if (validInvites.length === 0) {
         if (acceptedInvites.length > 0) {
@@ -66,8 +57,8 @@ export default function InvitePage() {
           setInviteData(acceptedInvites[0]) // Show the first one as context
           return
         }
-        setStatus('expired')
-        setError(t('invite.invitationsExpired'))
+        setStatus('invalid')
+        setError(t('invite.invitationNoLongerValid'))
         return
       }
 
@@ -239,24 +230,6 @@ export default function InvitePage() {
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('invite.invalidInvitation')}</h2>
               <p className="text-gray-600">{error}</p>
-            </div>
-          )}
-
-          {status === 'expired' && (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('invite.invitationExpiredTitle')}</h2>
-              <p className="text-gray-600 mb-6">{error}</p>
-              <button
-                onClick={() => navigate('/projects')}
-                className="btn btn-secondary"
-              >
-                {t('invite.goToProjects')}
-              </button>
             </div>
           )}
 

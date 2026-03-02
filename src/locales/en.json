@@ -61,7 +61,7 @@
     "copyMessage": "📋 Copy Message",
     "copyLinkOnly": "🔗 Copy Link Only",
     "invitationEmailSubject": "You're invited to join {{count}} projects",
-    "invitationEmailBody": "You've been invited to join {{count}} projects as a {{role}}.\n\nClick the link below to accept all invitations:\n{{link}}\n\nThis invitation expires in 7 days.",
+    "invitationEmailBody": "You've been invited to join {{count}} projects as a {{role}}.\n\nClick the link below to accept all invitations:\n{{link}}",
     "linkCopied": "Link copied to clipboard!",
     "messageCopied": "Full invitation message copied to clipboard!",
     "failedInvite": "Failed to send invitations"
@@ -216,7 +216,8 @@
     "invitationNotFoundError": "Invitation not found",
     "failedToValidate": "Failed to validate invitation",
     "failedToAccept": "Failed to accept invitation",
-    "inviteMismatch": "This invitation is meant for {{expected}}, but you're signed in as {{actual}}."
+    "inviteMismatch": "This invitation is meant for {{expected}}, but you're signed in as {{actual}}.",
+    "invitationNoLongerValid": "This invitation is no longer valid."
   },
   "errors": {
     "somethingWentWrong": "Something went wrong",

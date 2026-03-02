@@ -61,7 +61,7 @@
     "copyMessage": "📋 메시지 복사",
     "copyLinkOnly": "🔗 링크만 복사",
     "invitationEmailSubject": "{{count}}개 프로젝트에 초대됨",
-    "invitationEmailBody": "{{role}} 권한으로 {{count}}개 프로젝트에 초대되었습니다.\n\n아래 링크를 클릭하여 모든 초대를 수락하세요:\n{{link}}\n\n이 초대는 7일 후에 만료됩니다.",
+    "invitationEmailBody": "{{role}} 권한으로 {{count}}개 프로젝트에 초대되었습니다.\n\n아래 링크를 클릭하여 모든 초대를 수락하세요:\n{{link}}",
     "linkCopied": "링크가 클립보드에 복사되었습니다!",
     "messageCopied": "전체 초대 메시지가 클립보드에 복사되었습니다!",
     "failedInvite": "초대를 보내지 못했습니다"
@@ -216,7 +216,8 @@
     "invitationNotFoundError": "초대를 찾을 수 없습니다",
     "failedToValidate": "초대 확인에 실패했습니다",
     "failedToAccept": "초대 수락에 실패했습니다",
-    "inviteMismatch": "이 초대는 {{expected}}을 위한 것이지만, {{actual}}으로 로그인되어 있습니다."
+    "inviteMismatch": "이 초대는 {{expected}}을 위한 것이지만, {{actual}}으로 로그인되어 있습니다.",
+    "invitationNoLongerValid": "이 초대는 더 이상 유효하지 않습니다."
   },
   "errors": {
     "somethingWentWrong": "문제가 발생했습니다",
@@ -312,7 +313,7 @@
     "uncategorized": "미분류",
     "subject": "제목",
     "invitationEmailSubject": "\"{{project}}\" 프로젝트에 초대되었습니다",
-    "invitationEmailBody": "{{project}} 프로젝트에 {{role}} 권한으로 초대되었습니다.\n\n아래 링크를 클릭하여 초대를 수락하세요:\n{{link}}\n\n이 초대는 7일 후에 만료됩니다.",
+    "invitationEmailBody": "{{project}} 프로젝트에 {{role}} 권한으로 초대되었습니다.\n\n아래 링크를 클릭하여 초대를 수락하세요:\n{{link}}",
     "fullInvitationCopied": "전체 초대가 클립보드에 복사되었습니다!",
     "linkCopied": "링크가 클립보드에 복사되었습니다!",
     "chartDate": "날짜",
