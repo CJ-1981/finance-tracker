@@ -60,6 +60,10 @@ export default function ProjectsPage() {
         }
       }).filter((p: any) => p.id !== undefined) || []
 
+      // Debug logging
+      console.log('Projects with roles:', projectsWithRoles.map(p => ({ id: p.id, name: p.name, ownerId: p.owner_id, userId: user?.id, userRole: p.userRole })))
+      console.log('Has owner role:', projectsWithRoles.some(p => p.userRole === 'owner'))
+
       setProjects(projectsWithRoles)
     } catch (error) {
       console.error('Error fetching projects:', error)
@@ -199,7 +203,7 @@ export default function ProjectsPage() {
                   {projects.some(p => p.userRole === 'owner') && (
                     <button
                       onClick={() => setIsSelectionMode(true)}
-                      className="btn btn-secondary text-sm whitespace-nowrap hidden sm:inline-flex"
+                      className="btn btn-secondary text-sm whitespace-nowrap"
                     >
                       {t('projects.inviteToMulti')}
                     </button>
