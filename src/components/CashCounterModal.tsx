@@ -358,39 +358,44 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
               {DENOMINATIONS.filter(d => d.type === 'bill').map((denom) => (
                 <div
                   key={denom.value}
-                  className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border-2 border-yellow-200 bg-yellow-50"
+                  className="p-2 sm:p-3 rounded-lg border-2 border-yellow-200 bg-yellow-50"
                 >
-                  {/* Denomination label */}
-                  <div className="whitespace-nowrap">
-                    <span className="text-base sm:text-lg font-black">
-                      {getCurrencyEmoji(currency, denom.type)} {denom.label}
-                    </span>
+                  {/* Row 1: Denomination label, X, and quantity */}
+                  <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                    {/* Denomination label */}
+                    <div className="whitespace-nowrap">
+                      <span className="text-base sm:text-lg font-black">
+                        {getCurrencyEmoji(currency, denom.type)} {denom.label}
+                      </span>
+                    </div>
+
+                    {/* X separator */}
+                    <span className="text-gray-400 font-bold text-sm sm:text-base flex-shrink-0">×</span>
+
+                    {/* Quantity input */}
+                    <input
+                      type="number"
+                      min="0"
+                      className="flex-1 text-center font-semibold text-sm sm:text-base min-w-[60px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={counts[denom.value] || 0}
+                      onChange={(e) => handleDirectInput(denom.value, parseInt(e.target.value) || 0)}
+                    />
                   </div>
 
-                  {/* X separator */}
-                  <span className="text-gray-400 font-bold text-sm sm:text-base flex-shrink-0">×</span>
-
-                  {/* Quantity controls */}
-                  <div className="flex items-center gap-1 sm:gap-2 flex-1">
+                  {/* Row 2: Control buttons */}
+                  <div className="flex justify-center gap-2">
                     <button
                       type="button"
                       onClick={() => handleCountChange(denom.value, -1)}
-                      className="w-8 h-8 sm:w-9 sm:h-9 rounded bg-red-500 text-white font-bold text-base sm:text-lg hover:bg-red-600 disabled:opacity-30 flex-shrink-0"
+                      className="w-12 h-10 sm:w-16 sm:h-11 rounded bg-red-500 text-white font-bold text-base sm:text-lg hover:bg-red-600 disabled:opacity-30"
                       disabled={(counts[denom.value] || 0) === 0}
                     >
                       −
                     </button>
-                    <input
-                      type="number"
-                      min="0"
-                      className="flex-1 text-center font-semibold text-sm sm:text-base min-w-[40px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={counts[denom.value] || 0}
-                      onChange={(e) => handleDirectInput(denom.value, parseInt(e.target.value) || 0)}
-                    />
                     <button
                       type="button"
                       onClick={() => handleCountChange(denom.value, 1)}
-                      className="w-8 h-8 sm:w-9 sm:h-9 rounded bg-green-500 text-white font-bold text-base sm:text-lg hover:bg-green-600 flex-shrink-0"
+                      className="w-12 h-10 sm:w-16 sm:h-11 rounded bg-green-500 text-white font-bold text-base sm:text-lg hover:bg-green-600"
                     >
                       +
                     </button>
@@ -412,39 +417,44 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
               {DENOMINATIONS.filter(d => d.type === 'coin').map((denom) => (
                 <div
                   key={denom.value}
-                  className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border-2 border-gray-300 bg-gray-50"
+                  className="p-2 sm:p-3 rounded-lg border-2 border-gray-300 bg-gray-50"
                 >
-                  {/* Denomination label */}
-                  <div className="whitespace-nowrap">
-                    <span className="text-base sm:text-lg font-black">
-                      {getCurrencyEmoji(currency, denom.type)} {denom.label}
-                    </span>
+                  {/* Row 1: Denomination label, X, and quantity */}
+                  <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                    {/* Denomination label */}
+                    <div className="whitespace-nowrap">
+                      <span className="text-base sm:text-lg font-black">
+                        {getCurrencyEmoji(currency, denom.type)} {denom.label}
+                      </span>
+                    </div>
+
+                    {/* X separator */}
+                    <span className="text-gray-400 font-bold text-sm sm:text-base flex-shrink-0">×</span>
+
+                    {/* Quantity input */}
+                    <input
+                      type="number"
+                      min="0"
+                      className="flex-1 text-center font-semibold text-sm sm:text-base min-w-[60px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={counts[denom.value] || 0}
+                      onChange={(e) => handleDirectInput(denom.value, parseInt(e.target.value) || 0)}
+                    />
                   </div>
 
-                  {/* X separator */}
-                  <span className="text-gray-400 font-bold text-sm sm:text-base flex-shrink-0">×</span>
-
-                  {/* Quantity controls */}
-                  <div className="flex items-center gap-1 sm:gap-2 flex-1">
+                  {/* Row 2: Control buttons */}
+                  <div className="flex justify-center gap-2">
                     <button
                       type="button"
                       onClick={() => handleCountChange(denom.value, -1)}
-                      className="w-8 h-8 sm:w-9 sm:h-9 rounded bg-red-500 text-white font-bold text-base sm:text-lg hover:bg-red-600 disabled:opacity-30 flex-shrink-0"
+                      className="w-12 h-10 sm:w-16 sm:h-11 rounded bg-red-500 text-white font-bold text-base sm:text-lg hover:bg-red-600 disabled:opacity-30"
                       disabled={(counts[denom.value] || 0) === 0}
                     >
                       −
                     </button>
-                    <input
-                      type="number"
-                      min="0"
-                      className="flex-1 text-center font-semibold text-sm sm:text-base min-w-[40px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={counts[denom.value] || 0}
-                      onChange={(e) => handleDirectInput(denom.value, parseInt(e.target.value) || 0)}
-                    />
                     <button
                       type="button"
                       onClick={() => handleCountChange(denom.value, 1)}
-                      className="w-8 h-8 sm:w-9 sm:h-9 rounded bg-green-500 text-white font-bold text-base sm:text-lg hover:bg-green-600 flex-shrink-0"
+                      className="w-12 h-10 sm:w-16 sm:h-11 rounded bg-green-500 text-white font-bold text-base sm:text-lg hover:bg-green-600"
                     >
                       +
                     </button>
