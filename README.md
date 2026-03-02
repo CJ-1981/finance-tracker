@@ -9,6 +9,17 @@ A collaborative financial tracking web application built with React, TypeScript,
 - **Email/Password Authentication** - Sign up and sign in with email
 - **Landing page** - Welcome screen with sign in/sign up buttons
 - **Project-based financial tracking** - Organize finances by project
+- **Cash Counter Modal** - Count cash bills and coins with comparison to transaction records
+  - EUR bill/coin support (200€ to 0.01€)
+  - Anonymous and named entry categories
+  - Bills/coins breakdown with color-coded match status
+  - Mobile-friendly +/- buttons and direct input
+  - localStorage persistence with auto-clear
+- **Soft Delete with Recovery** - Recover deleted transactions within 1 year
+  - Soft delete instead of permanent deletion
+  - Restore deleted transactions functionality
+  - "Show Deleted" / "Hide Deleted" toggle for owners
+  - Bulk delete uses soft delete for consistency
 - **Income/Expense Selector** - Mobile-friendly segmented control for transaction types
   - No minus sign needed on mobile keyboards
   - Visual color coding (green for income, red for expense)
@@ -25,7 +36,10 @@ A collaborative financial tracking web application built with React, TypeScript,
 - **Category management** - Create, rename, reorder categories with color coding
 - **CSV export** - Export transactions matching table structure
 - **Multi-user collaboration** - Invite members with role-based access (owner, member, viewer)
-- **Email invitations** - Send invitations with token-based acceptance flow
+- **Email invitations** - Send invitations with token-based acceptance flow (owner only)
+- **Full internationalization** - English and Korean language support
+  - Browser language detection
+  - Localized UI elements and chart labels
 - **Mobile-responsive design** - Works seamlessly on all devices
   - No horizontal overflow on mobile (320px-375px)
   - Touch targets ≥44px meeting WCAG 2.1 AA standards
@@ -34,10 +48,11 @@ A collaborative financial tracking web application built with React, TypeScript,
 
 ## Tech Stack
 
-- **Frontend**: React 18, TypeScript, Tailwind CSS, Vite
+- **Frontend**: React 19, TypeScript, Tailwind CSS, Vite
 - **Backend**: Supabase (PostgreSQL, Auth, Realtime)
 - **Charts**: Chart.js with react-chartjs-2
-- **Routing**: React Router v6
+- **Routing**: React Router v7
+- **Internationalization**: i18next with react-i18next
 - **CSV Export**: PapaParse
 - **Date Handling**: Native browser date pickers
 - **Testing**: Playwright (E2E)
@@ -227,6 +242,32 @@ finance-tracker/
 ```
 
 ## Recent Updates
+
+### v2.3.0 - Cash Counter & Soft Delete System
+
+**New Features:**
+- ✅ Cash Counter Modal with EUR denomination support (200€ to 0.01€)
+- ✅ Bills/coins breakdown with color-coded match status
+- ✅ Anonymous and named entry categories
+- ✅ Soft delete system with 1-year retention
+- ✅ Transaction recovery functionality
+- ✅ Enhanced security - invite restricted to owners
+- ✅ Full Korean translation with browser language detection
+- ✅ Mobile optimizations for iPhone 13 Pro
+
+**Security Enhancements:**
+- RPC authorization hardening for soft-delete functions
+- Service role isolation for administrative operations
+- Client-side authorization guards for multi-invite
+
+**Technical:**
+- Added `deleted_at` and `deleted_by` columns to transactions
+- RPC functions for soft delete, restore, and permanent deletion
+- Updated RLS policies for soft-deleted transaction handling
+- Local timezone handling for date comparisons
+
+**Database Migration Required:**
+- Run `database/migration_soft_delete_transactions.sql` in Supabase SQL Editor
 
 ### v2.2.0 - Complete Mobile Responsiveness & E2E Testing
 

@@ -5,6 +5,66 @@ All notable changes to the Finance Tracker application will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-03-02
+
+### Added
+- **Cash Counter Modal** (closes #8)
+  - EUR bill/coin denomination support (200€, 100€, 50€, 20€, 10€, 5€, 2€, 1€, 0.50€, 0.20€, 0.10€, 0.05€, 0.02€, 0.01€)
+  - Mobile-friendly +/- buttons and direct number input
+  - Two entry categories: Anonymous and With Names
+  - localStorage persistence with automatic date-based clearing
+  - Real-time total calculation with color-coded match status
+  - Bills/coins breakdown for detailed cash tracking
+  - Comparison with transaction totals (within 1 cent tolerance)
+
+- **Soft Delete System** with Transaction Recovery
+  - Soft delete transactions instead of permanent deletion
+  - 1-year retention period for audit and recovery
+  - Restore deleted transactions functionality
+  - "Show Deleted" / "Hide Deleted" toggle for project owners
+  - Bulk delete now uses soft delete for consistency
+  - Permanent deletion option for truly removing records
+  - RPC functions: `soft_delete_transaction()`, `restore_transaction()`, `permanently_delete_transaction()`
+
+- **Security Enhancements** (fixes #4)
+  - Invite functionality restricted to project owners only
+  - RPC authorization hardening for soft-delete functions
+  - Service role only access for global cleanup operations
+  - Client-side authorization guards for multi-invite
+
+- **Localization Improvements** (closes #7)
+  - Complete Korean translation support
+  - Browser language detection
+  - Localized chart labels and UI elements
+  - Interpolation support for invitation emails
+
+- **Mobile Responsiveness** (fixes #5, #6)
+  - iPhone 13 Pro optimizations (375px screens)
+  - Improved modal layouts for small screens
+  - Enhanced touch targets for mobile interaction
+
+### Changed
+- Improved date handling using local timezone instead of UTC
+- Enhanced chart mode persistence with state synchronization
+- Refactored bulk delete to use soft delete
+
+### Fixed
+- Chart mode save using stale state
+- Inconsistent logout translation key
+- Deleted transactions showing raw category_id instead of names
+- Hardcoded UI strings in deleted-transactions feature
+
+### Security
+- All RPC functions now properly validate user permissions
+- Service role isolation for administrative functions
+- Project ownership validation for restore operations
+
+### Database Migration
+- **Required**: Run `database/migration_soft_delete_transactions.sql` in Supabase SQL Editor
+- Adds `deleted_at` and `deleted_by` columns to transactions table
+- Creates soft delete RPC functions
+- Updates RLS policies to handle soft-deleted transactions
+
 ## [2.2.0] - 2026-02-28
 
 ### Added
