@@ -259,7 +259,7 @@ export default function TransactionModal({
                             <input
                                 id="modal-date"
                                 type="date"
-                                className="input pr-10"
+                                className="input pr-10 w-full"
                                 placeholder={t('transactionModal.datePlaceholder')}
                                 value={formData.date}
                                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
@@ -275,7 +275,7 @@ export default function TransactionModal({
                         </label>
                         <select
                             id="modal-category"
-                            className="input"
+                            className="input w-full"
                             value={formData.category_id}
                             onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
                             required
@@ -300,7 +300,7 @@ export default function TransactionModal({
                                         id={`modal-${field.name}`}
                                         type="text"
                                         list={`modal-custom-list-${field.name}`}
-                                        className="input pr-10"
+                                        className="input pr-10 w-full"
                                         value={customData[field.name] || ''}
                                         onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
                                     />
@@ -320,7 +320,7 @@ export default function TransactionModal({
                                         id={`modal-${field.name}`}
                                         type="number"
                                         step="0.01"
-                                        className="input pr-10"
+                                        className="input pr-10 w-full"
                                         value={customData[field.name] || ''}
                                         onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
                                     />
@@ -329,7 +329,7 @@ export default function TransactionModal({
                             ) : field.type === 'select' ? (
                                 <select
                                     id={`modal-${field.name}`}
-                                    className="input"
+                                    className="input w-full"
                                     value={customData[field.name] || (field.options?.[0] || '')}
                                     onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
                                 >
@@ -342,7 +342,7 @@ export default function TransactionModal({
                                     <input
                                         id={`modal-${field.name}`}
                                         type="date"
-                                        className="input pr-10"
+                                        className="input pr-10 w-full"
                                         value={customData[field.name] || ''}
                                         onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
                                     />
