@@ -325,8 +325,42 @@ export default function ProjectDetailPage() {
       setShowInviteModal(false)
       setInviteEmail('')
     } catch (err) {
-      console.error(err)
-      alert('Failed to send invitation')
+      console.error('Error creating invitation:', err)
+
+      // Extract error message from Supabase error or generic error
+      let errorMessage = 'Unknown error'
+      if (err) {
+        if (typeof err === 'object' && 'message' in err) {
+          errorMessage = String(err.message)
+          // Check for specific Supabase error codes
+          if ('code' in err && typeof err.code === 'string') {
+            switch (err.code) {
+              case '42501':
+                errorMessage = 'Permission denied. You must be the project owner to send invitations.'
+                break
+              case '23505':
+                errorMessage = 'An invitation to this email already exists.'
+                break
+              case '23503':
+                errorMessage = 'Project not found or you do not have access to it.'
+                break
+            }
+          }
+          // Add details if available
+          if ('details' in err && err.details) {
+            errorMessage += ` (${String(err.details)})`
+          }
+          if ('hint' in err && err.hint) {
+            errorMessage += ` - ${String(err.hint)}`
+          }
+        } else if (err instanceof Error) {
+          errorMessage = err.message
+        } else {
+          errorMessage = String(err)
+        }
+      }
+
+      alert(`Failed to send invitation: ${errorMessage}`)
     }
   }
 
