@@ -3,6 +3,18 @@ import { useTranslation } from 'react-i18next'
 
 export default function LandingPage() {
   const { t } = useTranslation()
+
+  // Fallback for translations to prevent blank page on mobile
+  const text = (key: string, fallback: string) => {
+    try {
+      const result = t(key)
+      // If translation returns the key itself, use fallback
+      return result === key ? fallback : result
+    } catch {
+      return fallback
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 relative overflow-hidden">
       {/* Background blobs for flair */}
@@ -15,19 +27,19 @@ export default function LandingPage() {
             Financial <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-indigo-600">Tracker</span>
           </h1>
           <p className="text-xl text-slate-600 mb-4 max-w-xl mx-auto leading-relaxed">
-            {t('landing.tagline')}
+            {text('landing.tagline', 'Track expenses, manage budgets, and analyze spending patterns with ease and elegance.')}
           </p>
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-50 text-primary-700 text-xs font-bold rounded-full border border-primary-100">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
             </span>
-            {t('landing.collaborativeSecure')}
+            {text('landing.collaborativeSecure', 'COLLABORATIVE & SECURE')}
           </div>
         </div>
 
         <div className="card p-8 mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">{t('landing.features')}</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">{text('landing.features', 'Features')}</h2>
           <div className="grid md:grid-cols-2 gap-4 text-left">
             <div className="flex items-start gap-3">
               <div className="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -36,8 +48,8 @@ export default function LandingPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t('landing.multiCurrencySupport')}</h3>
-                <p className="text-sm text-slate-600">{t('landing.multiCurrencyDesc')}</p>
+                <h3 className="font-semibold text-slate-900">{text('landing.multiCurrencySupport', 'Multi-Currency Support')}</h3>
+                <p className="text-sm text-slate-600">{text('landing.multiCurrencyDesc', 'Track expenses in USD, EUR, GBP, JPY, KRW, CNY, INR')}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -47,8 +59,8 @@ export default function LandingPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t('landing.customCategories')}</h3>
-                <p className="text-sm text-slate-600">{t('landing.customCategoriesDesc')}</p>
+                <h3 className="font-semibold text-slate-900">{text('landing.customCategories', 'Custom Categories')}</h3>
+                <p className="text-sm text-slate-600">{text('landing.customCategoriesDesc', 'Create and organize categories your way')}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -58,8 +70,8 @@ export default function LandingPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t('landing.visualCharts')}</h3>
-                <p className="text-sm text-slate-600">{t('landing.visualChartsDesc')}</p>
+                <h3 className="font-semibold text-slate-900">{text('landing.visualCharts', 'Visual Charts')}</h3>
+                <p className="text-sm text-slate-600">{text('landing.visualChartsDesc', 'Pie charts and area plots for insights')}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -69,8 +81,8 @@ export default function LandingPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t('landing.teamCollaboration')}</h3>
-                <p className="text-sm text-slate-600">{t('landing.teamCollaborationDesc')}</p>
+                <h3 className="font-semibold text-slate-900">{text('landing.teamCollaboration', 'Team Collaboration')}</h3>
+                <p className="text-sm text-slate-600">{text('landing.teamCollaborationDesc', 'Share projects with team members')}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -80,8 +92,8 @@ export default function LandingPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t('landing.customFields')}</h3>
-                <p className="text-sm text-slate-600">{t('landing.customFieldsDesc')}</p>
+                <h3 className="font-semibold text-slate-900">{text('landing.customFields', 'Custom Fields')}</h3>
+                <p className="text-sm text-slate-600">{text('landing.customFieldsDesc', 'Add dropdown lists and custom data fields')}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -91,8 +103,8 @@ export default function LandingPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t('landing.csvExport')}</h3>
-                <p className="text-sm text-slate-600">{t('landing.csvExportDesc')}</p>
+                <h3 className="font-semibold text-slate-900">{text('landing.csvExport', 'CSV Export')}</h3>
+                <p className="text-sm text-slate-600">{text('landing.csvExportDesc', 'Export your data for analysis')}</p>
               </div>
             </div>
           </div>
@@ -103,18 +115,18 @@ export default function LandingPage() {
             to="/login"
             className="btn btn-primary px-8 py-3 text-lg"
           >
-            {t('landing.getStarted')}
+            {text('landing.getStarted', 'Get Started')}
           </Link>
           <Link
             to="/config"
             className="btn btn-secondary px-8 py-3 text-lg"
           >
-            {t('landing.configureDatabase')}
+            {text('landing.configureDatabase', 'Configure Database')}
           </Link>
         </div>
 
         <p className="mt-8 text-sm text-gray-500">
-          {t('landing.dataSecured')}
+          {text('landing.dataSecured', 'Your data is secured with Supabase Auth and stored in your own project')}
         </p>
       </div>
     </div>
