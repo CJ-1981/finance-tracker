@@ -3,61 +3,33 @@ import { getSupabaseClient } from './supabase'
 
 /**
  * Mark expired invitations as 'expired' in the database
- * Call this periodically or on app initialization
+ * NOTE: This function is deprecated since invitations no longer expire.
+ * It's kept for backward compatibility but does nothing.
+ * @deprecated Invitations no longer expire
  */
 export async function markExpiredInvitations(): Promise<number> {
-  try {
-    const supabase = getSupabaseClient()
-
-    // Mark pending invitations that have expired
-    const { error } = await (supabase
-      .from('invitations') as any)
-      .update({ status: 'expired' })
-      .eq('status', 'pending')
-      .lt('expires_at', new Date().toISOString())
-      .is('accepted_at', null)
-
-    if (error) throw error
-
-    // Return count using a separate query
-    const { count } = await (supabase
-      .from('invitations') as any)
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'expired')
-
-    return count || 0
-  } catch (error) {
-    console.error('Error marking expired invitations:', error)
-    return 0
-  }
+  // No-op since invitations no longer expire
+  return 0
 }
 
 /**
- * Clean up old invitations (expired/accepted older than 30 days)
+ * Clean up old accepted invitations (older than 30 days)
  * Call this periodically to keep the invitations table clean
+ * NOTE: Expired invitations cleanup removed since invitations no longer expire
  */
 export async function cleanupOldInvitations(): Promise<number> {
   try {
     const supabase = getSupabaseClient()
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
-    // Delete expired invitations older than 30 days
-    const { error: error1 } = await (supabase
-      .from('invitations') as any)
-      .delete()
-      .eq('status', 'expired')
-      .lt('created_at', thirtyDaysAgo)
-
-    if (error1) throw error1
-
     // Delete accepted invitations older than 30 days
-    const { error: error2 } = await (supabase
+    const { error } = await (supabase
       .from('invitations') as any)
       .delete()
       .eq('status', 'accepted')
       .lt('created_at', thirtyDaysAgo)
 
-    if (error2) throw error2
+    if (error) throw error
 
     return 1 // Success indicator (exact count would require additional queries)
   } catch (error) {
@@ -81,7 +53,11 @@ export async function getPendingInvitation(
       .eq('project_id', projectId)
       .eq('email', email)
       .eq('status', 'pending')
-      .gte('expires_at', new Date().toISOString())
+      // Filter: (expires_at IS NULL) OR (expires_at >= now())
+      // This handles both non-expiring invitations and those with expiration
+      .or('expires_at.is.null,expires_at.gte.' + new Date().toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1)
       .single()
 
     if (error) {

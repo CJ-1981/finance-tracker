@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../hooks/useAuth'
 import { getSupabaseClient } from '../lib/supabase'
+import { getPendingInvitation } from '../lib/invitations'
 import type { Project } from '../types'
 import LanguageSelector from '../components/LanguageSelector'
 
@@ -115,17 +116,54 @@ export default function ProjectsPage() {
       const supabase = getSupabaseClient()
       const tokens: string[] = []
 
+      // Check for existing invitations and collect projects that need new invitations
+      const projectInvitations: Array<{ projectId: string; existing: any | null }> = []
+
       for (const projectId of selectedProjectIds) {
-        const token = Math.random().toString(36).substring(2) + Date.now().toString(36)
-        const { error } = await (supabase.from('invitations') as any).insert({
-          project_id: projectId,
-          email: inviteEmail,
-          role: inviteRole,
-          invited_by: user.id,
-          token: token
-        })
-        if (error) throw error
-        tokens.push(token)
+        const existingInvite = await getPendingInvitation(projectId, inviteEmail)
+        projectInvitations.push({ projectId, existing: existingInvite })
+
+        if (existingInvite) {
+          // Reuse existing invitation token
+          tokens.push(existingInvite.token)
+        }
+      }
+
+      const needsNewInvite = projectInvitations.filter(p => !p.existing)
+
+      // If some projects already have invitations, confirm with user
+      if (projectInvitations.some(p => p.existing) && needsNewInvite.length > 0) {
+        const existingCount = projectInvitations.length - needsNewInvite.length
+        const confirmed = confirm(
+          `${inviteEmail} already has pending invitations for ${existingCount} project(s).\n\n` +
+          `Click OK to create new invitations for the remaining ${needsNewInvite.length} project(s) and resend all links.\n` +
+          `Click Cancel to keep existing invitations.`
+        )
+        if (!confirmed) return
+      } else if (projectInvitations.every(p => p.existing)) {
+        // All projects already have invitations
+        const confirmed = confirm(
+          `${inviteEmail} already has pending invitations for all ${projectInvitations.length} selected project(s).\n\n` +
+          `Click OK to resend the same invitation links.\n` +
+          `Click Cancel to keep existing invitations.`
+        )
+        if (!confirmed) return
+      }
+
+      // Create new invitations for projects that don't have one
+      for (const { projectId, existing } of projectInvitations) {
+        if (!existing) {
+          const token = Math.random().toString(36).substring(2) + Date.now().toString(36)
+          const { error } = await (supabase.from('invitations') as any).insert({
+            project_id: projectId,
+            email: inviteEmail,
+            role: inviteRole,
+            invited_by: user.id,
+            token: token
+          })
+          if (error) throw error
+          tokens.push(token)
+        }
       }
 
       // Generate combined invitation link with embedded config
