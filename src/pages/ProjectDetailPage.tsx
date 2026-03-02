@@ -399,14 +399,14 @@ export default function ProjectDetailPage() {
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
         return transactions.filter(t => {
           const transactionDate = new Date(t.date)
-          return transactionDate >= sevenDaysAgo && transactionDate <= today
+          return transactionDate >= sevenDaysAgo && transactionDate.toDateString() <= today.toDateString()
         })
       case 'last30days':
         const thirtyDaysAgo = new Date(today)
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
         return transactions.filter(t => {
           const transactionDate = new Date(t.date)
-          return transactionDate >= thirtyDaysAgo && transactionDate <= today
+          return transactionDate >= thirtyDaysAgo && transactionDate.toDateString() <= today.toDateString()
         })
       case 'thisMonth':
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
