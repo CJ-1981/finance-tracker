@@ -233,7 +233,7 @@ export default function ProjectsPage() {
               </button>
               <button onClick={handleLogout} className="btn border border-red-200 text-red-600 hover:bg-red-50 text-sm whitespace-nowrap px-4 py-2 rounded-xl font-semibold transition-all">
                 <span className="hidden sm:inline">{t('common.logout')}</span>
-                <span className="sm:hidden">{t('common.logOut')}</span>
+                <span className="sm:hidden">{t('common.logout')}</span>
               </button>
             </div>
           </div>

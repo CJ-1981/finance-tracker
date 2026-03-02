@@ -152,3 +152,90 @@ export async function testConnection(config: SupabaseConfig): Promise<boolean> {
     return false
   }
 }
+
+// @MX:NOTE: Soft delete functions for transaction recovery
+// These functions call RPC functions created in migration_soft_delete_transactions.sql
+// Soft delete marks records as deleted but retains them for 1 year for recovery
+
+/**
+ * Soft delete a transaction (marks as deleted, keeps record for 1 year)
+ * @param transactionId UUID of the transaction to soft delete
+ * @returns Promise<boolean> true if successful, false otherwise
+ */
+export async function softDeleteTransaction(transactionId: string): Promise<boolean> {
+  const supabase = getSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('User not authenticated')
+  }
+
+  const { data, error } = await supabase.rpc('soft_delete_transaction', {
+    transaction_id: transactionId
+  })
+
+  if (error) {
+    console.error('Error soft deleting transaction:', error)
+    return false
+  }
+
+  return data || false
+}
+
+/**
+ * Restore a soft-deleted transaction
+ * @param transactionId UUID of the transaction to restore
+ * @returns Promise<boolean> true if successful, false otherwise
+ */
+export async function restoreTransaction(transactionId: string): Promise<boolean> {
+  const supabase = getSupabaseClient()
+
+  const { data, error } = await supabase.rpc('restore_transaction', {
+    transaction_id: transactionId
+  } as any)
+
+  if (error) {
+    console.error('Error restoring transaction:', error)
+    return false
+  }
+
+  return data || false
+}
+
+/**
+ * Permanently delete a transaction (irreversible)
+ * @param transactionId UUID of the transaction to permanently delete
+ * @returns Promise<boolean> true if successful, false otherwise
+ */
+export async function permanentlyDeleteTransaction(transactionId: string): Promise<boolean> {
+  const supabase = getSupabaseClient()
+
+  const { data, error } = await supabase.rpc('permanently_delete_transaction', {
+    transaction_id: transactionId
+  } as any)
+
+  if (error) {
+    console.error('Error permanently deleting transaction:', error)
+    return false
+  }
+
+  return data || false
+}
+
+/**
+ * Cleanup old soft-deleted transactions (older than 1 year)
+ * This is typically called via a scheduled job or admin function
+ * @returns Promise<number> Number of transactions permanently deleted
+ */
+export async function cleanupOldDeletedTransactions(): Promise<number> {
+  const supabase = getSupabaseClient()
+
+  const { data, error } = await supabase.rpc('cleanup_old_deleted_transactions')
+
+  if (error) {
+    console.error('Error cleaning up old transactions:', error)
+    return 0
+  }
+
+  return data || 0
+}

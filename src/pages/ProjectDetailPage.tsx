@@ -5,6 +5,7 @@ import { getSupabaseClient } from '../lib/supabase'
 import { getPendingInvitation } from '../lib/invitations'
 import type { Project, Transaction, Category } from '../types'
 import TransactionModal from '../components/TransactionModal'
+import CashCounterModal from '../components/CashCounterModal'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Filler } from 'chart.js'
 import { Pie, Line } from 'react-chartjs-2'
 import { useAuth } from '../hooks/useAuth'
@@ -31,6 +32,7 @@ export default function ProjectDetailPage() {
 
   // Quick add transaction modal states
   const [showAddTransactionModal, setShowAddTransactionModal] = useState(false)
+  const [showCashCounterModal, setShowCashCounterModal] = useState(false)
   const [chartMode, setChartMode] = useState<'cumulative' | 'absolute'>('absolute')
 
   // Chart grouping states (what to group segments by - category or custom text field)
@@ -89,6 +91,9 @@ export default function ProjectDetailPage() {
       if (project.settings.time_chart_metric) {
         setTimeChartMetric(project.settings.time_chart_metric)
       }
+      if (project.settings.chart_mode) {
+        setChartMode(project.settings.chart_mode)
+      }
       // Mark preferences as loaded after setting all chart preferences
       setPreferencesLoaded(true)
     }
@@ -136,7 +141,7 @@ export default function ProjectDetailPage() {
     }
   }
 
-  const saveConsolidatedChartPreferences = async () => {
+  const saveConsolidatedChartPreferences = async (newChartMode?: 'cumulative' | 'absolute') => {
     if (!project) return
     try {
       const supabase = getSupabaseClient()
@@ -146,6 +151,7 @@ export default function ProjectDetailPage() {
         category_chart_metric: categoryChartMetric,
         time_chart_group_by: timeChartGroupBy,
         time_chart_metric: timeChartMetric,
+        chart_mode: newChartMode ?? chartMode,
       }
       await (supabase
         .from('projects') as any)
@@ -167,10 +173,24 @@ export default function ProjectDetailPage() {
         .eq('id', id)
         .single()
 
-      if (error) throw error
+      if (error) {
+        // Project not found or permission denied
+        console.error('Error fetching project:', error)
+        navigate('/projects')
+        return
+      }
+
+      if (!data) {
+        console.error('Project not found')
+        navigate('/projects')
+        return
+      }
+
       setProject(data)
     } catch (error) {
       console.error('Error fetching project:', error)
+      // On any error, redirect to projects list for better UX
+      navigate('/projects')
     } finally {
       setLoading(false)
     }
@@ -426,6 +446,22 @@ export default function ProjectDetailPage() {
     }
   }
 
+  // Curated color palette for custom fields
+  const customFieldColors = [
+    '#3B82F6', // blue-500
+    '#10B981', // emerald-500
+    '#F59E0B', // amber-500
+    '#EF4444', // red-500
+    '#8B5CF6', // violet-500
+    '#EC4899', // pink-500
+    '#06B6D4', // cyan-500
+    '#84CC16', // lime-500
+    '#F97316', // orange-500
+    '#6366F1', // indigo-500
+    '#14B8A6', // teal-500
+    '#A855F7', // purple-500
+  ]
+
   // Get color for a grouping key
   const getGroupingColor = (key: string, groupBy: string): string => {
     if (groupBy === 'category') {
@@ -433,13 +469,13 @@ export default function ProjectDetailPage() {
       const category = categories.find(c => c.name === key)
       return category?.color || '#6B7280'
     } else {
-      // Generate consistent color based on key hash
+      // Generate consistent color based on key hash using curated palette
       let hash = 0
       for (let i = 0; i < key.length; i++) {
         hash = key.charCodeAt(i) + ((hash << 5) - hash)
       }
-      const hue = Math.abs(hash) % 360
-      return `hsl(${hue}, 70%, 50%)`
+      const colorIndex = Math.abs(hash) % customFieldColors.length
+      return customFieldColors[colorIndex]
     }
   }
 
@@ -633,9 +669,12 @@ export default function ProjectDetailPage() {
               )}
             </div>
             <div className="flex gap-2 flex-shrink-0">
-              <button onClick={() => setShowInviteModal(true)} className="btn btn-secondary border border-blue-600 text-blue-600 hover:bg-blue-50 text-sm whitespace-nowrap">
-                {t('projectDetail.invite')}
-              </button>
+              {project?.owner_id === user?.id && (
+                <button onClick={() => setShowInviteModal(true)} className="btn btn-secondary border border-blue-600 text-blue-600 hover:bg-blue-50 text-sm whitespace-nowrap flex" title="Invite">
+                  <span>✉️</span>
+                  <span className="hidden sm:inline ml-1">{t('projectDetail.invite')}</span>
+                </button>
+              )}
               <button
                 onClick={() => {
                   const transactionsSection = document.getElementById('recent-transactions')
@@ -650,15 +689,20 @@ export default function ProjectDetailPage() {
                 <span>📋</span>
                 <span className="hidden sm:inline ml-1">{t('projectDetail.viewTransactions')}</span>
               </button>
-              <button onClick={() => setShowAddTransactionModal(true)} className="btn btn-primary text-sm whitespace-nowrap">
-                + {t('projectDetail.addTransaction')}
+              <button onClick={() => setShowAddTransactionModal(true)} className="btn btn-primary text-sm whitespace-nowrap flex" title="Add Transaction">
+                <span>+</span>
+                <span className="hidden sm:inline ml-1">{t('projectDetail.addTransaction')}</span>
+              </button>
+              <button onClick={() => setShowCashCounterModal(true)} className="btn btn-secondary text-sm whitespace-nowrap flex" title="Cash Counter">
+                <span>🧮</span>
+                <span className="hidden sm:inline ml-1">{t('cashCounter.title')}</span>
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      {showInviteModal && (
+      {showInviteModal && project?.owner_id === user?.id && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h2 className="text-xl font-bold mb-4">{t('projectDetail.inviteToProject')}</h2>
@@ -766,10 +810,17 @@ export default function ProjectDetailPage() {
               </div>
             </div>
             {/* Transactions Widget */}
-            <div className="card border-t-4 border-t-teal-500 overflow-hidden">
-              <div className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-1">{t('transactions.transactions')}</div>
-              <div className="text-3xl font-black text-slate-900">{filteredTransactions.length}</div>
-            </div>
+            <Link to={`/transactions/${id}`} className="card border-t-4 border-t-teal-500 overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
+              <div className="flex justify-between items-center">
+                <div>
+                  <div className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-1">{t('transactions.transactions')}</div>
+                  <div className="text-3xl font-black text-slate-900">{filteredTransactions.length}</div>
+                </div>
+                <span className="text-lg font-semibold text-teal-600 hover:text-teal-700">
+                  →
+                </span>
+              </div>
+            </Link>
           </div>
 
           {/* Charts and Recent Transactions */}
@@ -782,7 +833,7 @@ export default function ProjectDetailPage() {
                     <span className="w-2 h-6 bg-primary-500 rounded-full"></span>
                     {getChartTitle(categoryChartMetric, categoryChartGroupBy)}
                   </h2>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <select
                       value={categoryChartGroupBy}
                       onChange={(e) => setCategoryChartGroupBy(e.target.value)}
@@ -858,7 +909,7 @@ export default function ProjectDetailPage() {
                     <h2 className="text-lg font-semibold truncate pr-2">
                       {t('projectDetail.chartOverTimeTitle', { title: getChartTitle(timeChartMetric, timeChartGroupBy) })}
                     </h2>
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
                       <select
                         value={timeChartGroupBy}
                         onChange={(e) => setTimeChartGroupBy(e.target.value)}
@@ -880,22 +931,30 @@ export default function ProjectDetailPage() {
                         ))}
                       </select>
                       <button
-                        onClick={() => setChartMode('cumulative')}
-                        className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded transition-colors ${chartMode === 'cumulative'
+                        onClick={async () => {
+                          setChartMode('cumulative')
+                          await saveConsolidatedChartPreferences('cumulative')
+                        }}
+                        className={`px-1.5 sm:px-3 py-1 text-xs sm:text-sm rounded transition-colors ${chartMode === 'cumulative'
                           ? 'bg-blue-100 text-blue-700 font-medium'
                           : 'text-gray-600 hover:bg-gray-100'
                           }`}
                       >
-                        {t('projectDetail.cumulative')}
+                        <span className="hidden sm:inline">{t('projectDetail.cumulative')}</span>
+                        <span className="inline sm:hidden">Cumul.</span>
                       </button>
                       <button
-                        onClick={() => setChartMode('absolute')}
-                        className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded transition-colors ${chartMode === 'absolute'
+                        onClick={async () => {
+                          setChartMode('absolute')
+                          await saveConsolidatedChartPreferences('absolute')
+                        }}
+                        className={`px-1.5 sm:px-3 py-1 text-xs sm:text-sm rounded transition-colors ${chartMode === 'absolute'
                           ? 'bg-blue-100 text-blue-700 font-medium'
                           : 'text-gray-600 hover:bg-gray-100'
                           }`}
                       >
-                        {t('projectDetail.absolute')}
+                        <span className="hidden sm:inline">{t('projectDetail.absolute')}</span>
+                        <span className="inline sm:hidden">Abs.</span>
                       </button>
                     </div>
                   </div>
@@ -960,6 +1019,16 @@ export default function ProjectDetailPage() {
           categories={categories}
           onGoToSettings={handleGoToSettings}
           allTransactions={transactions}
+        />
+      )}
+
+      {/* Cash Counter Modal */}
+      {project && (
+        <CashCounterModal
+          isOpen={showCashCounterModal}
+          onClose={() => setShowCashCounterModal(false)}
+          project={project}
+          totalTransactionsAmount={filteredTransactions.reduce((sum, t) => sum + t.amount, 0)}
         />
       )}
     </div>
