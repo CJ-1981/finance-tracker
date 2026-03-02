@@ -91,6 +91,9 @@ export default function ProjectDetailPage() {
       if (project.settings.time_chart_metric) {
         setTimeChartMetric(project.settings.time_chart_metric)
       }
+      if (project.settings.chart_mode) {
+        setChartMode(project.settings.chart_mode)
+      }
       // Mark preferences as loaded after setting all chart preferences
       setPreferencesLoaded(true)
     }
@@ -148,6 +151,7 @@ export default function ProjectDetailPage() {
         category_chart_metric: categoryChartMetric,
         time_chart_group_by: timeChartGroupBy,
         time_chart_metric: timeChartMetric,
+        chart_mode: chartMode,
       }
       await (supabase
         .from('projects') as any)
@@ -897,7 +901,10 @@ export default function ProjectDetailPage() {
                         ))}
                       </select>
                       <button
-                        onClick={() => setChartMode('cumulative')}
+                        onClick={async () => {
+                          setChartMode('cumulative')
+                          await saveConsolidatedChartPreferences()
+                        }}
                         className={`px-1.5 sm:px-3 py-1 text-xs sm:text-sm rounded transition-colors ${chartMode === 'cumulative'
                           ? 'bg-blue-100 text-blue-700 font-medium'
                           : 'text-gray-600 hover:bg-gray-100'
@@ -907,7 +914,10 @@ export default function ProjectDetailPage() {
                         <span className="inline sm:hidden">Cumul.</span>
                       </button>
                       <button
-                        onClick={() => setChartMode('absolute')}
+                        onClick={async () => {
+                          setChartMode('absolute')
+                          await saveConsolidatedChartPreferences()
+                        }}
                         className={`px-1.5 sm:px-3 py-1 text-xs sm:text-sm rounded transition-colors ${chartMode === 'absolute'
                           ? 'bg-blue-100 text-blue-700 font-medium'
                           : 'text-gray-600 hover:bg-gray-100'
