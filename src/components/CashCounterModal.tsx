@@ -4,15 +4,19 @@ import type { Project } from '../types'
 
 // Get emoji for currency and denomination type
 const getCurrencyEmoji = (currency: string, type: 'bill' | 'coin'): string => {
+  // Use widely-supported emojis for better PC compatibility
+  // ⚪ (U+1FA99) is not supported on older Windows versions
   const currencyEmojis: Record<string, { bill: string; coin: string }> = {
-    'EUR': { bill: '💶', coin: '🪙' },
-    'USD': { bill: '💵', coin: '🪙' },
-    'GBP': { bill: '💷', coin: '🪙' },
-    'JPY': { bill: '💴', coin: '🪙' },
-    'KRW': { bill: '💴', coin: '🪙' }, // Won uses same visual style as Yen
+    'EUR': { bill: '💶', coin: '⚪' },
+    'USD': { bill: '💵', coin: '⚪' },
+    'GBP': { bill: '💷', coin: '⚪' },
+    'JPY': { bill: '💴', coin: '⚪' },
+    'KRW': { bill: '💴', coin: '⚪' }, // Won uses same visual style as Yen
+    'CNY': { bill: '💴', coin: '⚪' }, // Chinese Yuan
+    'INR': { bill: '💵', coin: '⚪' }, // Indian Rupee
   }
 
-  return currencyEmojis[currency]?.[type] || (type === 'bill' ? '💵' : '🪙')
+  return currencyEmojis[currency]?.[type] || (type === 'bill' ? '💵' : '⚪')
 }
 
 // Denominations for EUR (can be extended for other currencies)
@@ -123,11 +127,12 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
     }
   }, [isOpen, project?.id])
 
-  // Calculate total whenever counts change
+  // Calculate total whenever counts change (sum of both anonymous and named)
   useEffect(() => {
-    const total = DENOMINATIONS.reduce((sum, denom) => sum + (counts[denom.value] || 0) * denom.value, 0)
-    setTotalCashCounted(total)
-  }, [counts])
+    const anonymousTotal = DENOMINATIONS.reduce((sum, denom) => sum + (anonymousCounts[denom.value] || 0) * denom.value, 0)
+    const namedTotal = DENOMINATIONS.reduce((sum, denom) => sum + (namedCounts[denom.value] || 0) * denom.value, 0)
+    setTotalCashCounted(anonymousTotal + namedTotal)
+  }, [anonymousCounts, namedCounts])
 
   // Helper function to calculate bills and coins breakdown
   const calculateBreakdown = (denomCounts: Record<number, number>) => {
@@ -412,7 +417,7 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
           {/* Coins Section */}
           <div className="mb-4">
             <h3 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">
-              🪙 {t('cashCounter.coins', { defaultValue: 'Coins' })}
+              ⚪ {t('cashCounter.coins', { defaultValue: 'Coins' })}
             </h3>
             <div className="space-y-2">
               {DENOMINATIONS.filter(d => d.type === 'coin').map((denom) => (
@@ -481,7 +486,7 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
                 <span className="font-bold">{currency} {currentBreakdown.bills.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between bg-gray-100 p-2 rounded">
-                <span className="text-gray-600">🪙 {t('cashCounter.coins', { defaultValue: 'Coins' })}:</span>
+                <span className="text-gray-600">⚪ {t('cashCounter.coins', { defaultValue: 'Coins' })}:</span>
                 <span className="font-bold">{currency} {currentBreakdown.coins.toFixed(2)}</span>
               </div>
             </div>
@@ -519,7 +524,7 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
                 <span className="font-bold text-lg">{currency} {grandBreakdown.bills.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg border border-gray-200">
-                <span className="text-gray-700 font-medium">🪙 {t('cashCounter.coins', { defaultValue: 'Coins' })}:</span>
+                <span className="text-gray-700 font-medium">⚪ {t('cashCounter.coins', { defaultValue: 'Coins' })}:</span>
                 <span className="font-bold text-lg">{currency} {grandBreakdown.coins.toFixed(2)}</span>
               </div>
             </div>
