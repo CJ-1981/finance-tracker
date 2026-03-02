@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getSupabaseClient } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
@@ -38,6 +38,17 @@ export default function TransactionModal({
         date: new Date().toISOString().split('T')[0],
     })
     const [customData, setCustomData] = useState<Record<string, any>>({})
+
+    // Cache custom field values to prevent unnecessary recomputation
+    const customFieldValues = useMemo(() => {
+        const values: Record<string, string[]> = {}
+        if (project?.settings?.custom_field_values) {
+            Object.entries(project.settings.custom_field_values).forEach(([fieldName, fieldValue]: [string, string[]]) => {
+                values[fieldName] = fieldValue
+            })
+        }
+        return values
+    }, [project?.settings?.custom_field_values])
 
     useEffect(() => {
         if (transaction) {
@@ -296,7 +307,7 @@ export default function TransactionModal({
                                     <ClearButton show={!!customData[field.name]} onClick={() => setCustomData({ ...customData, [field.name]: '' })} />
                                     <datalist id={`modal-custom-list-${field.name}`}>
                                         {Array.from(new Set([
-                                            ...(project?.settings?.custom_field_values?.[field.name] || []),
+                                            ...(customFieldValues[field.name] || []),
                                             ...allTransactions.map(t => t.custom_data?.[field.name]).filter(Boolean)
                                         ])).map((value, i) => (
                                             <option key={i} value={value as string} />

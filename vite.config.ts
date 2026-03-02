@@ -32,8 +32,24 @@ export default defineConfig(({ command }) => ({
     sourcemap: true,
     rollupOptions: {
       output: {
-        manualChunks: {},
+        // Split code into chunks for better caching and parallel loading
+        manualChunks: {
+          // Vendor chunk for React and related libraries
+          'react-vendor': ['react', 'react-dom', 'react-router-dom', 'react-i18next', 'i18next', 'i18next-browser-languagedetector'],
+          // Chart library chunk
+          'chart-vendor': ['chart.js', 'react-chartjs-2'],
+          // Supabase chunk
+          'supabase-vendor': ['@supabase/supabase-js'],
+          // CSV parsing chunk
+          'csv-vendor': ['papaparse'],
+        },
       },
     },
+    // Optimize chunk size warnings
+    chunkSizeWarningLimit: 500,
+  },
+  // Pre-bundle dependencies for faster development server start
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom', 'react-i18next', 'i18next', '@supabase/supabase-js', 'chart.js', 'react-chartjs-2', 'papaparse'],
   },
 }))
