@@ -14,6 +14,7 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<(Project & { userRole: string })[]>([])
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [projectsLoading, setProjectsLoading] = useState(true)
+  const [projectsError, setProjectsError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -39,23 +40,37 @@ export default function ProjectsPage() {
     if (!user?.id) {
       setProjects([])
       setProjectsLoading(false)
+      setProjectsError(null)
       return
     }
 
     setProjectsLoading(true)
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10s timeout
+    setProjectsError(null)
+
+    // Add timeout using Promise.race
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Projects fetch timeout after 10s')), 10000)
+    )
 
     try {
       const supabase = getSupabaseClient()
-      const { data, error } = await supabase
-        .from('project_members')
-        .select('role, project_id, projects(*)')
-        .eq('user_id', user.id)
+      console.log('Fetching projects for user:', user.id)
 
-      clearTimeout(timeoutId)
+      // Race between fetch and timeout
+      const { data, error } = await Promise.race([
+        supabase
+          .from('project_members')
+          .select('role, project_id, projects(*)')
+          .eq('user_id', user.id),
+        timeoutPromise
+      ]) as any
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase error:', error)
+        throw error
+      }
+
+      console.log('Projects data received:', data?.length, 'projects')
 
       const projectsWithRoles = data?.map((m: any) => {
         const project = m.projects
@@ -67,10 +82,20 @@ export default function ProjectsPage() {
         }
       }).filter((p: any) => p.id !== undefined) || []
 
+      console.log('Processed projects:', projectsWithRoles.length)
       setProjects(projectsWithRoles)
+      setProjectsError(null)
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
       console.error('Error fetching projects:', error)
+      console.error('Error details:', {
+        message: errorMessage,
+        stack: error instanceof Error ? error.stack : undefined,
+        userId: user.id,
+        hasSupabase: !!getSupabaseClient()
+      })
       setProjects([])
+      setProjectsError(errorMessage)
     } finally {
       setProjectsLoading(false)
     }
@@ -202,8 +227,16 @@ export default function ProjectsPage() {
   }
 
   const handleLogout = async () => {
-    await signOut()
-    window.location.reload()
+    try {
+      console.log('Logging out...')
+      await signOut()
+      console.log('Logged out successfully, reloading...')
+      window.location.href = import.meta.env.BASE_URL || '/'
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Force redirect to landing page even if signOut fails
+      window.location.href = import.meta.env.BASE_URL || '/'
+    }
   }
 
   const toggleProjectSelection = (projectId: string) => {
@@ -291,6 +324,20 @@ export default function ProjectsPage() {
                 <div className="h-8 bg-slate-200 rounded mt-4"></div>
               </div>
             ))}
+          </div>
+        ) : projectsError ? (
+          <div className="card text-center py-12">
+            <div className="text-red-500 mb-4">
+              <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Unable to Load Projects</h2>
+              <p className="text-gray-600 mb-2">Failed to fetch your projects. Please check your connection and try again.</p>
+              <p className="text-xs text-gray-500 font-mono bg-gray-100 p-2 rounded mb-4">{projectsError}</p>
+            </div>
+            <button onClick={fetchProjects} className="btn btn-primary">
+              Try Again
+            </button>
           </div>
         ) : (
           <>
