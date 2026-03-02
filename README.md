@@ -73,7 +73,7 @@ A collaborative financial tracking web application built with React, TypeScript,
 3. Copy your Project URL and anon/public key
 4. Go to the SQL Editor and run the schema from `database/schema.sql`
 
-**Important:** For existing databases, run `database/migrations/005_update_to_match_schema.sql` to update your schema.
+**Important:** For existing databases, ensure you have the latest schema and run `database/migration_soft_delete_transactions.sql` to enable soft delete functionality.
 
 ### Local Development
 
@@ -230,13 +230,11 @@ finance-tracker/
 │   ├── main.tsx       # Entry point
 │   └── index.css      # Global styles
 ├── database/          # SQL schema and migrations
-│   ├── schema.sql              # Master schema (for new databases)
-│   └── migrations/            # Migration scripts
-│       ├── 001_initial_migrations.sql
-│       ├── 002_invitation_cleanup.sql
-│       ├── 003_add_payee_field.sql
-│       ├── 004_add_currency_column.sql
-│       └── 005_update_to_match_schema.sql
+│   ├── schema.sql                            # Master schema (for new databases)
+│   ├── migration_soft_delete_transactions.sql # Soft delete system
+│   └── migrations/                            # Additional migration scripts
+│       ├── 006_remove_description_column.sql  # Description column removal
+│       └── add_category_order.sql            # Category ordering feature
 ├── public/            # Static assets
 └── index.html         # HTML template
 ```
@@ -326,7 +324,7 @@ finance-tracker/
 
 **Migration:**
 - For new databases: Run `database/schema.sql`
-- For existing databases: Run `database/migrations/005_update_to_match_schema.sql`
+- Database should be up to date with all schema changes incorporated
 
 ## Documentation
 
