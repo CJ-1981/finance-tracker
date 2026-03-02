@@ -168,6 +168,6 @@ WHERE routine_schema = 'public'
 
 SELECT
   'Policies updated' as status,
-  policy_name
+  policyname
 FROM pg_policies
 WHERE tablename = 'transactions';
