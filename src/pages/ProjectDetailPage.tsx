@@ -446,6 +446,22 @@ export default function ProjectDetailPage() {
     }
   }
 
+  // Curated color palette for custom fields
+  const customFieldColors = [
+    '#3B82F6', // blue-500
+    '#10B981', // emerald-500
+    '#F59E0B', // amber-500
+    '#EF4444', // red-500
+    '#8B5CF6', // violet-500
+    '#EC4899', // pink-500
+    '#06B6D4', // cyan-500
+    '#84CC16', // lime-500
+    '#F97316', // orange-500
+    '#6366F1', // indigo-500
+    '#14B8A6', // teal-500
+    '#A855F7', // purple-500
+  ]
+
   // Get color for a grouping key
   const getGroupingColor = (key: string, groupBy: string): string => {
     if (groupBy === 'category') {
@@ -453,13 +469,13 @@ export default function ProjectDetailPage() {
       const category = categories.find(c => c.name === key)
       return category?.color || '#6B7280'
     } else {
-      // Generate consistent color based on key hash
+      // Generate consistent color based on key hash using curated palette
       let hash = 0
       for (let i = 0; i < key.length; i++) {
         hash = key.charCodeAt(i) + ((hash << 5) - hash)
       }
-      const hue = Math.abs(hash) % 360
-      return `hsl(${hue}, 70%, 50%)`
+      const colorIndex = Math.abs(hash) % customFieldColors.length
+      return customFieldColors[colorIndex]
     }
   }
 
