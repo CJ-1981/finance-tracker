@@ -4,7 +4,8 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => ({
   plugins: [react()],
-  base: '/', // Serve from root path for both dev and production
+  // Use root path for dev, subdirectory for GitHub Pages production
+  base: command === 'serve' ? '/' : '/finance-tracker/',
   server: {
     port: 3000,
     strictPort: true,
