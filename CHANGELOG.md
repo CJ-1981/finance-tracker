@@ -65,6 +65,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Creates soft delete RPC functions
 - Updates RLS policies to handle soft-deleted transactions
 
+## [2.3.2] - 2026-03-02
+
+### Fixed
+- **Automated Version Bump** - Added GitHub Actions workflow to automatically sync package.json version with CHANGELOG.md
+  - Workflow triggers on CHANGELOG.md changes to main branch
+  - Extracts version from latest CHANGELOG entry and updates package.json
+  - Eliminates manual version synchronization steps
+
 ## [2.3.1] - 2026-03-02
 
 ### Added
