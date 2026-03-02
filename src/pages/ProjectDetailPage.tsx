@@ -776,10 +776,17 @@ export default function ProjectDetailPage() {
               </div>
             </div>
             {/* Transactions Widget */}
-            <div className="card border-t-4 border-t-teal-500 overflow-hidden">
-              <div className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-1">{t('transactions.transactions')}</div>
-              <div className="text-3xl font-black text-slate-900">{filteredTransactions.length}</div>
-            </div>
+            <Link to={`/transactions/${id}`} className="card border-t-4 border-t-teal-500 overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
+              <div className="flex justify-between items-center">
+                <div>
+                  <div className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-1">{t('transactions.transactions')}</div>
+                  <div className="text-3xl font-black text-slate-900">{filteredTransactions.length}</div>
+                </div>
+                <span className="text-lg font-semibold text-teal-600 hover:text-teal-700">
+                  →
+                </span>
+              </div>
+            </Link>
           </div>
 
           {/* Charts and Recent Transactions */}
