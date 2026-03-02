@@ -1,0 +1,40 @@
+name: Auto Version Bump
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'CHANGELOG.md'
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version from CHANGELOG
+        id: extract-version
+        run: |
+          # Extract version number from latest CHANGELOG entry (e.g., "## [2.3.1]")
+          VERSION=$(grep -oP '^## \[\K[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | head -1 | grep -oP '[0-9]+\.[0-9]+\.[0-9]+')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update package.json
+        run: |
+          # Update version in package.json
+          npm version ${{ steps.extract-version.outputs.version }} --no-git-tag-version
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json
+          git commit -m "chore: Auto-bump version to ${{ steps.extract-version.outputs.version }}"
+          git push
