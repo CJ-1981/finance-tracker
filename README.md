@@ -229,12 +229,10 @@ finance-tracker/
 │   ├── App.tsx        # Main app with routing
 │   ├── main.tsx       # Entry point
 │   └── index.css      # Global styles
-├── database/          # SQL schema and migrations
+├── database/          # SQL schema and setup scripts
 │   ├── schema.sql                            # Master schema (for new databases)
 │   ├── migration_soft_delete_transactions.sql # Soft delete system
-│   └── migrations/                            # Additional migration scripts
-│       ├── 006_remove_description_column.sql  # Description column removal
-│       └── add_category_order.sql            # Category ordering feature
+│   └── SETUP-GUIDE.md                        # Database setup instructions
 ├── public/            # Static assets
 └── index.html         # HTML template
 ```
