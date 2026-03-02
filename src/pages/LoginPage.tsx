@@ -61,7 +61,7 @@ export default function LoginPage() {
     checkConfig()
   }, [inviteToken, navigate])
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement, SubmitEvent>) => {
     e.preventDefault()
     setError('')
     setMessage('')
@@ -121,7 +121,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-12 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-12 relative overflow-hidden" data-testid="login-page">
       <div className="absolute top-0 -left-20 w-80 h-80 bg-primary-100/50 rounded-full blur-3xl"></div>
       <div className="absolute bottom-0 -right-20 w-80 h-80 bg-secondary-100/50 rounded-full blur-3xl"></div>
 
@@ -133,7 +133,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="card shadow-xl border-t-4 border-t-primary-500">
+        <div className="card shadow-xl border-t-4 border-t-primary-500" data-testid="login-card">
           {!isConfigured && (
             <div className="rounded-md bg-amber-50 p-4 mb-4 border border-amber-200">
               <div className="flex items-start gap-3">
@@ -158,7 +158,7 @@ export default function LoginPage() {
           )}
 
           {/* Email/Password Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" data-testid="login-form">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 {t('auth.email')}
@@ -172,6 +172,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="username"
+                data-testid="email-input"
               />
             </div>
 
@@ -189,17 +190,18 @@ export default function LoginPage() {
                 required
                 minLength={6}
                 autoComplete="current-password"
+                data-testid="password-input"
               />
             </div>
 
             {error && (
-              <div className="rounded-md p-4 text-sm bg-red-50 text-red-800">
+              <div className="rounded-md p-4 text-sm bg-red-50 text-red-800" data-testid="error-message">
                 {error}
               </div>
             )}
 
             {message && (
-              <div className="rounded-md p-4 text-sm bg-green-50 text-green-800">
+              <div className="rounded-md p-4 text-sm bg-green-50 text-green-800" data-testid="success-message">
                 {message}
               </div>
             )}
@@ -208,6 +210,7 @@ export default function LoginPage() {
               type="submit"
               disabled={loading}
               className="w-full btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              data-testid="submit-button"
             >
               {loading ? t('common.loading') : (isSignUp ? t('auth.signUp') : t('auth.signIn'))}
             </button>
@@ -221,6 +224,7 @@ export default function LoginPage() {
                 setMessage('')
               }}
               className="text-blue-600 hover:text-blue-700 font-medium"
+              data-testid="toggle-auth-mode-button"
             >
               {isSignUp ? t('auth.toggleToSignIn') : t('auth.toggleToSignUp')}
             </button>

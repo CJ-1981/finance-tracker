@@ -179,7 +179,7 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20 md:pb-0">
+    <div className="min-h-screen bg-slate-50 pb-20 md:pb-0" data-testid="projects-page">
       <header className="bg-white border-b border-slate-200 shadow-sm relative">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-primary"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -192,7 +192,7 @@ export default function ProjectsPage() {
               <LanguageSelector />
               {!isSelectionMode ? (
                 <>
-                  <button onClick={() => setShowCreateForm(true)} className="btn btn-primary text-sm whitespace-nowrap">
+                  <button onClick={() => setShowCreateForm(true)} className="btn btn-primary text-sm whitespace-nowrap" data-testid="create-project-button">
                     {t('projects.newProject')}
                   </button>
                   {projects.some(p => p.userRole === 'owner') && (
@@ -246,7 +246,7 @@ export default function ProjectsPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {showCreateForm && (
-          <div className="card mb-6">
+          <div className="card mb-6" data-testid="create-project-form">
             <h2 className="text-lg font-semibold mb-4">{t('projects.createNewProject')}</h2>
             <form onSubmit={handleCreateProject} className="space-y-4">
               <div>
@@ -291,7 +291,7 @@ export default function ProjectsPage() {
         )}
 
         {projects.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center py-12" data-testid="empty-state">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('projects.noProjectsYet')}</h2>
             <p className="text-gray-600 mb-6">{t('projects.createFirstProject')}</p>
             <button onClick={() => setShowCreateForm(true)} className="btn btn-primary">
@@ -299,11 +299,12 @@ export default function ProjectsPage() {
             </button>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3" data-testid="projects-grid">
             {projects.map((project) => (
               <Link
                 key={project.id}
                 to={isSelectionMode ? '#' : `/projects/${project.id}`}
+                data-testid={`project-card-${project.id}`}
                 onClick={(e) => {
                   if (isSelectionMode) {
                     e.preventDefault()

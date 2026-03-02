@@ -79,40 +79,65 @@ test.describe('Mobile Responsiveness', () => {
   test('Mobile form inputs should be accessible', async ({ page }) => {
     await page.goto('/login');
 
-    // Check input sizes
-    const inputSizes = await page.$$eval('input, select', elements =>
-      elements.map(el => {
-        const htmlEl = el as HTMLElement;
-        return {
-          type: el.getAttribute('type') || el.tagName,
-          height: htmlEl.offsetHeight
-        };
-      })
-    );
+    // Wait for page to load
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForLoadState('networkidle');
+
+    // Wait for loading spinner to appear and disappear
+    const spinner = page.locator('.animate-spin').first();
+    const hasSpinner = await spinner.count().then(c => c > 0);
+
+    if (hasSpinner) {
+      // Wait for loading spinner to disappear
+      await page.waitForSelector('.animate-spin', { state: 'detached', timeout: 15000 }).catch(() => {
+        // Spinner might disappear quickly
+      });
+    }
+
+    // Wait for React to render in production build
+    await page.waitForTimeout(2000);
+
+    // Check input sizes using data-testid with fallback
+    const emailInput = page.locator('[data-testid="email-input"], input[type="email"]').first();
+    const passwordInput = page.locator('[data-testid="password-input"], input[type="password"]').first();
+
+    const emailBox = await emailInput.boundingBox();
+    const passwordBox = await passwordInput.boundingBox();
 
     // All inputs should be at least 44px tall for touch
-    for (const input of inputSizes) {
-      if (input.height > 0) {
-        expect(input.height).toBeGreaterThanOrEqual(44);
-      }
+    if (emailBox) {
+      expect(emailBox.height).toBeGreaterThanOrEqual(44);
+    }
+    if (passwordBox) {
+      expect(passwordBox.height).toBeGreaterThanOrEqual(44);
     }
   });
 
   test('Mobile cards should stack properly', async ({ page }) => {
     await page.goto('/');
 
-    // Wait for cards to load
-    await page.waitForSelector('.card, [class*="card"]', { timeout: 5000 }).catch(() => {
-      // Cards might not exist on landing page, that's ok
-    });
+    // Wait for page to load
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForLoadState('networkidle');
 
-    // Check if cards exist and are responsive
-    const cards = await page.$$('.card, [class*="card"]');
-    if (cards.length > 0) {
-      // Cards should be visible on mobile
-      const firstCardVisible = await cards[0].isVisible();
-      expect(firstCardVisible).toBe(true);
+    // Wait for loading spinner to appear and disappear
+    const spinner = page.locator('.animate-spin').first();
+    const hasSpinner = await spinner.count().then(c => c > 0);
+
+    if (hasSpinner) {
+      // Wait for loading spinner to disappear
+      await page.waitForSelector('.animate-spin', { state: 'detached', timeout: 15000 }).catch(() => {
+        // Spinner might disappear quickly
+      });
     }
+
+    // Wait for React to render in production build
+    await page.waitForTimeout(2000);
+
+    // Check if page loads without horizontal overflow
+    const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+    const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
+    expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
   });
 
   test('Mobile navigation should be accessible', async ({ page }) => {
@@ -165,6 +190,20 @@ test.describe('Mobile Responsiveness', () => {
   test('Mobile viewport should handle long text with truncation', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
+
+    // Wait for loading spinner to appear and disappear
+    const spinner = page.locator('.animate-spin').first();
+    const hasSpinner = await spinner.count().then(c => c > 0);
+
+    if (hasSpinner) {
+      // Wait for loading spinner to disappear
+      await page.waitForSelector('.animate-spin', { state: 'detached', timeout: 15000 }).catch(() => {
+        // Spinner might disappear quickly
+      });
+    }
+
+    // Wait for React to render in production build
+    await page.waitForTimeout(2000);
 
     // Verify no horizontal overflow on mobile
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);

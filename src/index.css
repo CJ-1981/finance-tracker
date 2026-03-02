@@ -10,6 +10,23 @@
   }
 
   /* Ensure touch targets are accessible on mobile */
+  button,
+  [role="button"],
+  .btn,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  select,
+  textarea {
+    min-height: 44px;
+  }
+
   @media (max-width: 640px) {
     button,
     [role="button"],
@@ -18,7 +35,6 @@
     input[type="submit"],
     input[type="reset"],
     select {
-      min-height: 44px;
       min-width: 44px;
     }
   }
@@ -42,7 +58,8 @@
   }
 
   .input {
-    @apply w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-transparent outline-none transition-all;
+    @apply w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-400 focus:border-transparent outline-none transition-all;
+    min-height: 44px;
   }
 
   .card {
