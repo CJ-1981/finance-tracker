@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Projects load asynchronously with skeleton loading states
   - Added 10-second timeout for Supabase queries
   - User can now logout/interact even when Supabase is slow
+- **Mobile Pie Chart Legend** - Fixed legend cutoff on mobile screens
+  - Chart container now has minimum height (280px) to accommodate legend
+  - Disabled aspect ratio maintenance for better mobile responsiveness
+  - Reduced legend font size and padding for compact display
 - **Automated Version Bump** - Added GitHub Actions workflow to automatically sync package.json version with CHANGELOG.md
   - Workflow triggers on CHANGELOG.md changes to main branch
   - Extracts version from latest CHANGELOG entry and updates package.json

@@ -890,8 +890,23 @@ export default function ProjectDetailPage() {
                   </div>
                 </div>
                 <div className="flex items-center justify-center p-4">
-                  <div className="w-full max-w-xs">
-                    <Pie data={getChartData(categoryChartGroupBy, categoryChartMetric)} options={{ maintainAspectRatio: true, plugins: { legend: { position: 'bottom' } } }} />
+                  <div className="w-full max-w-xs" style={{ minHeight: '280px' }}>
+                    <Pie data={getChartData(categoryChartGroupBy, categoryChartMetric)} options={{
+                      maintainAspectRatio: false,
+                      responsive: true,
+                      plugins: {
+                        legend: {
+                          position: 'bottom',
+                          labels: {
+                            boxWidth: 12,
+                            padding: 8,
+                            font: {
+                              size: 11
+                            }
+                          }
+                        }
+                      }
+                    }} />
                   </div>
                 </div>
               </div>
