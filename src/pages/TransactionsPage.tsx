@@ -180,9 +180,19 @@ export default function TransactionsPage() {
       const success = await softDeleteTransaction(transactionId)
       if (success) {
         fetchTransactions()
+      } else {
+        alert(t('transactions.failedSave') + ': ' + t('errors.somethingWentWrong'))
       }
     } catch (error) {
       console.error('Error deleting transaction:', error)
+
+      // Check if it's a function not found error (migration not run yet)
+      if (error instanceof Error && error.message.includes('function')) {
+        alert('Soft delete not available. Please run the SQL migration: database/migration_soft_delete_transactions.sql')
+        return
+      }
+
+      alert(t('transactions.failedSave') + ': ' + (error instanceof Error ? error.message : t('errors.somethingWentWrong')))
     }
   }
 
