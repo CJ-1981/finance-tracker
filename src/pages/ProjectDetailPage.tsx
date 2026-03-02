@@ -289,8 +289,7 @@ export default function ProjectDetailPage() {
           const { error: updateError } = await (supabase.from('invitations') as any)
             .update({
               role: inviteRole,
-              token: token,
-              expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+              token: token
             })
             .eq('id', existingInvite.id)
           if (updateError) throw updateError
@@ -308,8 +307,7 @@ export default function ProjectDetailPage() {
           email: inviteEmail,
           role: inviteRole,
           invited_by: user.id,
-          token: token,
-          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+          token: token
         })
         if (error) throw error
       }
