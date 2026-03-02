@@ -72,7 +72,9 @@ export async function withAuthError<T>(
       } catch (e) {
         console.error('Error during sign out:', e)
       }
-      window.location.href = '/login' // Force redirect to login
+      // Use BASE_URL to respect deployment path (e.g., /finance-tracker/)
+      const basePath = typeof import.meta !== 'undefined' ? import.meta.env.BASE_URL || '' : ''
+      window.location.href = window.location.origin + basePath + 'login'
       return { error: new Error('Session expired. Please sign in again.') }
     }
 
