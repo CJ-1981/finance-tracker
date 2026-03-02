@@ -361,17 +361,14 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
                   className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border-2 border-yellow-200 bg-yellow-50"
                 >
                   {/* Denomination label */}
-                  <div className="flex items-center gap-1 sm:gap-2 min-w-fit">
+                  <div className="whitespace-nowrap">
                     <span className="text-base sm:text-lg font-black">
-                      {getCurrencyEmoji(currency, denom.type)}
-                    </span>
-                    <span className="text-base sm:text-lg font-black">
-                      {denom.label}
+                      {getCurrencyEmoji(currency, denom.type)} {denom.label}
                     </span>
                   </div>
 
                   {/* X separator */}
-                  <span className="text-gray-400 font-bold text-sm sm:text-base">×</span>
+                  <span className="text-gray-400 font-bold text-sm sm:text-base flex-shrink-0">×</span>
 
                   {/* Quantity controls */}
                   <div className="flex items-center gap-1 sm:gap-2 flex-1">
@@ -418,17 +415,14 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
                   className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border-2 border-gray-300 bg-gray-50"
                 >
                   {/* Denomination label */}
-                  <div className="flex items-center gap-1 sm:gap-2 min-w-fit">
+                  <div className="whitespace-nowrap">
                     <span className="text-base sm:text-lg font-black">
-                      {getCurrencyEmoji(currency, denom.type)}
-                    </span>
-                    <span className="text-base sm:text-lg font-black">
-                      {denom.label}
+                      {getCurrencyEmoji(currency, denom.type)} {denom.label}
                     </span>
                   </div>
 
                   {/* X separator */}
-                  <span className="text-gray-400 font-bold text-sm sm:text-base">×</span>
+                  <span className="text-gray-400 font-bold text-sm sm:text-base flex-shrink-0">×</span>
 
                   {/* Quantity controls */}
                   <div className="flex items-center gap-1 sm:gap-2 flex-1">
