@@ -173,10 +173,24 @@ export default function ProjectDetailPage() {
         .eq('id', id)
         .single()
 
-      if (error) throw error
+      if (error) {
+        // Project not found or permission denied
+        console.error('Error fetching project:', error)
+        navigate('/projects')
+        return
+      }
+
+      if (!data) {
+        console.error('Project not found')
+        navigate('/projects')
+        return
+      }
+
       setProject(data)
     } catch (error) {
       console.error('Error fetching project:', error)
+      // On any error, redirect to projects list for better UX
+      navigate('/projects')
     } finally {
       setLoading(false)
     }
