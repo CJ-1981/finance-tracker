@@ -6,7 +6,7 @@
   "homepage": "https://chimin.github.io/finance-tracker/",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && cp dist/index.html dist/404.html",
+    "build": "node scripts/generate-version.js && tsc && vite build && cp dist/index.html dist/404.html",
     "verify:deployment": "bash scripts/verify-deployment.sh",
     "preview": "vite preview",
     "test": "echo \"Error: no test specified\" && exit 1",

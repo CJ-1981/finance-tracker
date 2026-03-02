@@ -5,6 +5,7 @@ import { useSupabase } from '../hooks/useSupabase'
 import { testConnection } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import type { SupabaseConfig } from '../types'
+import versionInfo from '../version.json'
 
 /**
  * Truncate a string in the middle for security (show prefix...suffix)
@@ -353,6 +354,12 @@ export default function ConfigPage() {
                 <p className="font-medium mb-2">{t('config.currentConfiguration')}</p>
                 <p className="text-xs">URL: {truncateMiddle(config.url, 30)}</p>
                 <p className="text-xs">Key: {truncateMiddle(config.anonKey, 10)}</p>
+              </div>
+
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm text-gray-700">
+                <p className="font-medium mb-2">{t('config.appInfo', { defaultValue: 'App Information' })}</p>
+                <p className="text-xs">Version: {versionInfo.version}</p>
+                <p className="text-xs">Build Time: {new Date(versionInfo.buildTime).toLocaleString()}</p>
               </div>
             </div>
           )}
