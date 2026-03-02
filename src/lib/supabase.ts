@@ -172,7 +172,7 @@ export async function softDeleteTransaction(transactionId: string): Promise<bool
 
   const { data, error } = await supabase.rpc('soft_delete_transaction', {
     transaction_id: transactionId
-  })
+  } as any)
 
   if (error) {
     console.error('Error soft deleting transaction:', error)

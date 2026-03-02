@@ -90,8 +90,8 @@ export default function TransactionsPage() {
           .eq('user_id', user.id)
           .single()
 
-        if (memberData) {
-          setUserRole(memberData.role)
+        if (memberData && 'role' in memberData) {
+          setUserRole((memberData as any).role)
         }
       }
     } catch (error) {

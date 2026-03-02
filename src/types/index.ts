@@ -38,6 +38,7 @@ export interface Project {
     category_chart_metric?: ChartMetricOption
     time_chart_group_by?: ChartGroupByOption
     time_chart_metric?: ChartMetricOption
+    chart_mode?: 'cumulative' | 'absolute'
   }
   created_at: string
   updated_at: string
