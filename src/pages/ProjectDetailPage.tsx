@@ -141,7 +141,7 @@ export default function ProjectDetailPage() {
     }
   }
 
-  const saveConsolidatedChartPreferences = async () => {
+  const saveConsolidatedChartPreferences = async (newChartMode?: 'cumulative' | 'absolute') => {
     if (!project) return
     try {
       const supabase = getSupabaseClient()
@@ -151,7 +151,7 @@ export default function ProjectDetailPage() {
         category_chart_metric: categoryChartMetric,
         time_chart_group_by: timeChartGroupBy,
         time_chart_metric: timeChartMetric,
-        chart_mode: chartMode,
+        chart_mode: newChartMode ?? chartMode,
       }
       await (supabase
         .from('projects') as any)
@@ -933,7 +933,7 @@ export default function ProjectDetailPage() {
                       <button
                         onClick={async () => {
                           setChartMode('cumulative')
-                          await saveConsolidatedChartPreferences()
+                          await saveConsolidatedChartPreferences('cumulative')
                         }}
                         className={`px-1.5 sm:px-3 py-1 text-xs sm:text-sm rounded transition-colors ${chartMode === 'cumulative'
                           ? 'bg-blue-100 text-blue-700 font-medium'
@@ -946,7 +946,7 @@ export default function ProjectDetailPage() {
                       <button
                         onClick={async () => {
                           setChartMode('absolute')
-                          await saveConsolidatedChartPreferences()
+                          await saveConsolidatedChartPreferences('absolute')
                         }}
                         className={`px-1.5 sm:px-3 py-1 text-xs sm:text-sm rounded transition-colors ${chartMode === 'absolute'
                           ? 'bg-blue-100 text-blue-700 font-medium'

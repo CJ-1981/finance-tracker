@@ -47,17 +47,15 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Function to permanently delete old soft-deleted transactions (> 1 year)
+-- Note: Only accessible by service_role, removes all deleted transactions older than 1 year
 CREATE OR REPLACE FUNCTION public.cleanup_old_deleted_transactions()
 RETURNS INTEGER AS $$
 DECLARE
   deleted_count INTEGER;
 BEGIN
-  DELETE FROM public.transactions t
-  USING public.projects p
-  WHERE t.deleted_at IS NOT NULL
-    AND t.deleted_at < NOW() - INTERVAL '1 year'
-    AND t.project_id = p.id
-    AND p.owner_id = auth.uid();
+  DELETE FROM public.transactions
+  WHERE deleted_at IS NOT NULL
+    AND deleted_at < NOW() - INTERVAL '1 year';
 
   GET DIAGNOSTICS deleted_count = ROW_COUNT;
   RETURN deleted_count;

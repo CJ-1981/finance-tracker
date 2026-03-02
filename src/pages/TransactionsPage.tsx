@@ -272,18 +272,29 @@ export default function TransactionsPage() {
     }
 
     try {
-      const supabase = getSupabaseClient()
-      const { error } = await supabase
-        .from('transactions')
-        .delete()
-        .in('id', Array.from(selectedTransactions))
+      // Soft delete each transaction individually
+      let successCount = 0
+      let failureCount = 0
 
-      if (error) throw error
+      for (const transactionId of selectedTransactions) {
+        const success = await softDeleteTransaction(transactionId)
+        if (success) {
+          successCount++
+        } else {
+          failureCount++
+        }
+      }
+
       setSelectedTransactions(new Set())
       setIsMultiSelectMode(false)
       fetchTransactions()
+
+      if (failureCount > 0) {
+        alert(`Deleted ${successCount} transaction(s). ${failureCount} failed.`)
+      }
     } catch (error) {
       console.error('Error deleting transactions:', error)
+      alert('Failed to delete some transactions. Please try again.')
     }
   }
 
