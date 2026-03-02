@@ -127,12 +127,11 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
     }
   }, [isOpen, project?.id])
 
-  // Calculate total whenever counts change (sum of both anonymous and named)
+  // Calculate total for current entry (active category only)
   useEffect(() => {
-    const anonymousTotal = DENOMINATIONS.reduce((sum, denom) => sum + (anonymousCounts[denom.value] || 0) * denom.value, 0)
-    const namedTotal = DENOMINATIONS.reduce((sum, denom) => sum + (namedCounts[denom.value] || 0) * denom.value, 0)
-    setTotalCashCounted(anonymousTotal + namedTotal)
-  }, [anonymousCounts, namedCounts])
+    const activeTotal = DENOMINATIONS.reduce((sum, denom) => sum + (counts[denom.value] || 0) * denom.value, 0)
+    setTotalCashCounted(activeTotal)
+  }, [counts])
 
   // Helper function to calculate bills and coins breakdown
   const calculateBreakdown = (denomCounts: Record<number, number>) => {
@@ -474,7 +473,9 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
           {/* Current Entry Total */}
           <div className="mt-4 p-4 bg-slate-50 rounded-lg">
             <div className="flex justify-between items-center mb-3">
-              <span className="font-medium text-gray-700">{t('cashCounter.currentEntry')}:</span>
+              <span className="font-medium text-gray-700">
+                {t('cashCounter.currentEntry')} ({category === 'anonymous' ? t('cashCounter.anonymous') : t('cashCounter.withNames')}):
+              </span>
               <span className="text-2xl font-bold">
                 {currency} {totalCashCounted.toFixed(2)}
               </span>
