@@ -354,22 +354,31 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
             <h3 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">
               💵 {t('cashCounter.bills', { defaultValue: 'Bills' })}
             </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+            <div className="space-y-2">
               {DENOMINATIONS.filter(d => d.type === 'bill').map((denom) => (
                 <div
                   key={denom.value}
-                  className="p-2 sm:p-3 rounded-lg border-2 border-yellow-200 bg-yellow-50"
+                  className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border-2 border-yellow-200 bg-yellow-50"
                 >
-                  <div className="flex justify-center items-center mb-1 sm:mb-2">
+                  {/* Denomination label */}
+                  <div className="flex items-center gap-1 sm:gap-2 min-w-fit">
                     <span className="text-base sm:text-lg font-black">
-                      {getCurrencyEmoji(currency, denom.type)} {denom.label}
+                      {getCurrencyEmoji(currency, denom.type)}
+                    </span>
+                    <span className="text-base sm:text-lg font-black">
+                      {denom.label}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 sm:gap-2">
+
+                  {/* X separator */}
+                  <span className="text-gray-400 font-bold text-sm sm:text-base">×</span>
+
+                  {/* Quantity controls */}
+                  <div className="flex items-center gap-1 sm:gap-2 flex-1">
                     <button
                       type="button"
                       onClick={() => handleCountChange(denom.value, -1)}
-                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-red-500 text-white font-bold text-base sm:text-xl hover:bg-red-600 disabled:opacity-30"
+                      className="w-8 h-8 sm:w-9 sm:h-9 rounded bg-red-500 text-white font-bold text-base sm:text-lg hover:bg-red-600 disabled:opacity-30 flex-shrink-0"
                       disabled={(counts[denom.value] || 0) === 0}
                     >
                       −
@@ -377,14 +386,14 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
                     <input
                       type="number"
                       min="0"
-                      className="flex-1 text-center font-semibold text-sm sm:text-lg min-w-[32px] sm:min-w-[40px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="flex-1 text-center font-semibold text-sm sm:text-base min-w-[40px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={counts[denom.value] || 0}
                       onChange={(e) => handleDirectInput(denom.value, parseInt(e.target.value) || 0)}
                     />
                     <button
                       type="button"
                       onClick={() => handleCountChange(denom.value, 1)}
-                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-500 text-white font-bold text-base sm:text-xl hover:bg-green-600"
+                      className="w-8 h-8 sm:w-9 sm:h-9 rounded bg-green-500 text-white font-bold text-base sm:text-lg hover:bg-green-600 flex-shrink-0"
                     >
                       +
                     </button>
@@ -402,22 +411,31 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
             <h3 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">
               🪙 {t('cashCounter.coins', { defaultValue: 'Coins' })}
             </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+            <div className="space-y-2">
               {DENOMINATIONS.filter(d => d.type === 'coin').map((denom) => (
                 <div
                   key={denom.value}
-                  className="p-2 sm:p-3 rounded-lg border-2 border-gray-300 bg-gray-50"
+                  className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border-2 border-gray-300 bg-gray-50"
                 >
-                  <div className="flex justify-center items-center mb-1 sm:mb-2">
+                  {/* Denomination label */}
+                  <div className="flex items-center gap-1 sm:gap-2 min-w-fit">
                     <span className="text-base sm:text-lg font-black">
-                      {getCurrencyEmoji(currency, denom.type)} {denom.label}
+                      {getCurrencyEmoji(currency, denom.type)}
+                    </span>
+                    <span className="text-base sm:text-lg font-black">
+                      {denom.label}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 sm:gap-2">
+
+                  {/* X separator */}
+                  <span className="text-gray-400 font-bold text-sm sm:text-base">×</span>
+
+                  {/* Quantity controls */}
+                  <div className="flex items-center gap-1 sm:gap-2 flex-1">
                     <button
                       type="button"
                       onClick={() => handleCountChange(denom.value, -1)}
-                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-red-500 text-white font-bold text-base sm:text-xl hover:bg-red-600 disabled:opacity-30"
+                      className="w-8 h-8 sm:w-9 sm:h-9 rounded bg-red-500 text-white font-bold text-base sm:text-lg hover:bg-red-600 disabled:opacity-30 flex-shrink-0"
                       disabled={(counts[denom.value] || 0) === 0}
                     >
                       −
@@ -425,14 +443,14 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
                     <input
                       type="number"
                       min="0"
-                      className="flex-1 text-center font-semibold text-sm sm:text-lg min-w-[32px] sm:min-w-[40px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="flex-1 text-center font-semibold text-sm sm:text-base min-w-[40px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={counts[denom.value] || 0}
                       onChange={(e) => handleDirectInput(denom.value, parseInt(e.target.value) || 0)}
                     />
                     <button
                       type="button"
                       onClick={() => handleCountChange(denom.value, 1)}
-                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-500 text-white font-bold text-base sm:text-xl hover:bg-green-600"
+                      className="w-8 h-8 sm:w-9 sm:h-9 rounded bg-green-500 text-white font-bold text-base sm:text-lg hover:bg-green-600 flex-shrink-0"
                     >
                       +
                     </button>
