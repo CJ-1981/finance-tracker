@@ -191,6 +191,9 @@ node_modules/
 .next/
 out/
 
+# Generated version file
+src/version.json
+
 # ===========================================
 # Build Tools & Frameworks
 # ===========================================
