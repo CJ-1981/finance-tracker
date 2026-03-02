@@ -78,6 +78,15 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
   const counts = category === 'anonymous' ? anonymousCounts : namedCounts
   const setCounts = category === 'anonymous' ? setAnonymousCounts : setNamedCounts
 
+  // Helper to get local date string in YYYY-MM-DD format
+  const getLocalDateString = (): string => {
+    const date = new Date()
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
   // Set default name when switching to named category
   useEffect(() => {
     if (category === 'named' && !entryName) {
@@ -97,7 +106,7 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
       if (stored) {
         const data: StoredCashData = JSON.parse(stored)
         // Check if date has changed
-        const today = new Date().toISOString().split('T')[0]
+        const today = getLocalDateString()
         if (data.lastDate !== today) {
           // Clear old data
           localStorage.removeItem(storageKey)
@@ -178,6 +187,21 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
   }
 
   const handleAddEntry = () => {
+    // Validate that the entry has a non-zero total
+    const currentEntryTotal = DENOMINATIONS.reduce(
+      (sum, d) => sum + (counts[d.value] || 0) * d.value,
+      0
+    )
+    if (currentEntryTotal <= 0) {
+      alert(t('cashCounter.enterAmount', { defaultValue: 'Please enter an amount' }))
+      return
+    }
+
+    if (category === 'named' && !entryName.trim()) {
+      alert(t('cashCounter.pleaseEnterName'))
+      return
+    }
+
     const newEntry: CashEntry = {
       id: Date.now().toString(),
       category,
@@ -195,7 +219,7 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
       const data: StoredCashData = {
         projectId: project.id,
         entries: updatedEntries,
-        lastDate: new Date().toISOString().split('T')[0]
+        lastDate: getLocalDateString()
       }
       localStorage.setItem(storageKey, JSON.stringify(data))
     } catch (err) {
@@ -229,7 +253,7 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
         const data: StoredCashData = {
           projectId: project.id,
           entries: updatedEntries,
-          lastDate: new Date().toISOString().split('T')[0]
+          lastDate: getLocalDateString()
         }
         localStorage.setItem(storageKey, JSON.stringify(data))
       }

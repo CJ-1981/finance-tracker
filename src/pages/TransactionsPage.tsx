@@ -1280,7 +1280,7 @@ export default function TransactionsPage() {
                           <div className="flex items-center gap-3">
                             <div className="text-sm">
                               <div className="font-semibold text-gray-900">
-                                {transaction.category_id || 'Uncategorized'}
+                                {getCategoryName(transaction.category_id)}
                               </div>
                               <div className="text-gray-600">
                                 {new Date(transaction.date).toLocaleDateString()} • {transaction.amount.toFixed(2)}

@@ -11,14 +11,20 @@ CREATE INDEX IF NOT EXISTS idx_transactions_deleted_at ON public.transactions(de
 CREATE INDEX IF NOT EXISTS idx_transactions_deleted_by ON public.transactions(deleted_by);
 
 -- Function to soft delete a transaction
-CREATE OR REPLACE FUNCTION public.soft_delete_transaction(transaction_id UUID, user_id UUID)
+CREATE OR REPLACE FUNCTION public.soft_delete_transaction(transaction_id UUID)
 RETURNS BOOLEAN AS $$
 BEGIN
-  UPDATE public.transactions
+  UPDATE public.transactions t
   SET
     deleted_at = NOW(),
-    deleted_by = user_id
-  WHERE id = transaction_id AND deleted_at IS NULL;
+    deleted_by = auth.uid()
+  WHERE t.id = transaction_id
+    AND t.deleted_at IS NULL
+    AND (
+      t.created_by = auth.uid()
+      OR public.is_project_owner(t.project_id)
+      OR public.is_project_member_with_role(t.project_id, ARRAY['owner'])
+    );
 
   RETURN FOUND;
 END;
@@ -28,11 +34,13 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 CREATE OR REPLACE FUNCTION public.restore_transaction(transaction_id UUID)
 RETURNS BOOLEAN AS $$
 BEGIN
-  UPDATE public.transactions
+  UPDATE public.transactions t
   SET
     deleted_at = NULL,
     deleted_by = NULL
-  WHERE id = transaction_id AND deleted_at IS NOT NULL;
+  WHERE t.id = transaction_id
+    AND t.deleted_at IS NOT NULL
+    AND public.is_project_owner(t.project_id);
 
   RETURN FOUND;
 END;
@@ -44,9 +52,12 @@ RETURNS INTEGER AS $$
 DECLARE
   deleted_count INTEGER;
 BEGIN
-  DELETE FROM public.transactions
-  WHERE deleted_at IS NOT NULL
-    AND deleted_at < NOW() - INTERVAL '1 year';
+  DELETE FROM public.transactions t
+  USING public.projects p
+  WHERE t.deleted_at IS NOT NULL
+    AND t.deleted_at < NOW() - INTERVAL '1 year'
+    AND t.project_id = p.id
+    AND p.owner_id = auth.uid();
 
   GET DIAGNOSTICS deleted_count = ROW_COUNT;
   RETURN deleted_count;
@@ -57,8 +68,14 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 CREATE OR REPLACE FUNCTION public.permanently_delete_transaction(transaction_id UUID)
 RETURNS BOOLEAN AS $$
 BEGIN
-  DELETE FROM public.transactions
-  WHERE id = transaction_id;
+  DELETE FROM public.transactions t
+  WHERE t.id = transaction_id
+    AND t.deleted_at IS NOT NULL
+    AND EXISTS (
+      SELECT 1 FROM public.projects p
+      WHERE p.id = t.project_id
+        AND p.owner_id = auth.uid()
+    );
 
   RETURN FOUND;
 END;
@@ -126,10 +143,11 @@ CREATE POLICY "Members can soft delete transactions"
   );
 
 -- Grant execute permissions on functions
-GRANT EXECUTE ON FUNCTION public.soft_delete_transaction(UUID, UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.soft_delete_transaction(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.restore_transaction(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.permanently_delete_transaction(UUID) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.cleanup_old_deleted_transactions() TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.cleanup_old_deleted_transactions() FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.cleanup_old_deleted_transactions() TO service_role;
 
 -- Verification queries
 SELECT
