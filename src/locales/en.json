@@ -180,6 +180,7 @@
     "clearAppConfig": "Clear App Configuration",
     "clearConfigWarning": "This will only remove your Supabase URL and key from this browser. Your data in Supabase will NOT be affected.",
     "backToProjectsList": "← Back to Projects List",
+    "backToHome": "← Back to Home",
     "signedInAs": "Signed in as",
     "currentConfiguration": "Current Configuration:",
     "notConfigured": "Not configured",

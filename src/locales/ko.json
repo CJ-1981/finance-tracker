@@ -180,6 +180,7 @@
     "clearAppConfig": "앱 구성 지우기",
     "clearConfigWarning": "이 브라우저에서 Supabase URL과 키만 제거됩니다. Supabase의 데이터는 영향받지 않습니다.",
     "backToProjectsList": "← 프로젝트 목록으로 돌아가기",
+    "backToHome": "← 홈으로 돌아가기",
     "signedInAs": "로그인됨",
     "currentConfiguration": "현재 구성:",
     "notConfigured": "구성되지 않음",

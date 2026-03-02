@@ -200,8 +200,16 @@ export default function ConfigPage() {
                 </ol>
               </div>
 
-              {config.url && config.anonKey && !user && (
-                <div className="pt-4 border-t border-gray-200">
+              <div className="pt-4 border-t border-gray-200 space-y-4">
+                <button
+                  type="button"
+                  onClick={() => navigate('/')}
+                  className="w-full btn btn-secondary text-sm"
+                >
+                  {t('config.backToHome')}
+                </button>
+
+                {config.url && config.anonKey && !user && (
                   <button
                     type="button"
                     onClick={() => setMode('signin')}
@@ -209,8 +217,8 @@ export default function ConfigPage() {
                   >
                     {t('config.alreadyConfiguredSignIn')}
                   </button>
-                </div>
-              )}
+                )}
+              </div>
             </form>
           )}
 
@@ -267,6 +275,13 @@ export default function ConfigPage() {
               </button>
 
               <div className="pt-4 border-t border-gray-200 space-y-4">
+                <button
+                  type="button"
+                  onClick={() => navigate('/')}
+                  className="w-full btn btn-secondary text-sm"
+                >
+                  {t('config.backToHome')}
+                </button>
                 <button
                   type="button"
                   onClick={handleReconfigure}
