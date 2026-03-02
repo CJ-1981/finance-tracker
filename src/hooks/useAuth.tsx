@@ -55,24 +55,68 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // SIGNED_OUT) during client boot — without competing for the same lock.
     // This gives instant auth resolution on every page load.
     // ──────────────────────────────────────────────────────────────────────────
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (cancelled) return
       clearTimeout(timeoutId)
 
-      if (session?.user) {
-        await fetchUserProfile(session.user, supabase).catch(err => {
-          console.error('Error fetching user profile:', err)
-          if (!cancelled) setAuthState({ user: null, session: null, loading: false })
-        })
-      } else {
-        setAuthState({ user: null, session: null, loading: false })
+      // Handle specific auth events
+      switch (event) {
+        case 'INITIAL_SESSION':
+        case 'SIGNED_IN':
+        case 'TOKEN_REFRESHED':
+          // Session is valid or was refreshed
+          if (session?.user) {
+            await fetchUserProfile(session.user, supabase).catch(err => {
+              console.error('Error fetching user profile:', err)
+              if (!cancelled) setAuthState({ user: null, session: null, loading: false })
+            })
+          } else {
+            setAuthState({ user: null, session: null, loading: false })
+          }
+          break
+
+        case 'SIGNED_OUT':
+          // User explicitly signed out or session expired
+          setAuthState({ user: null, session: null, loading: false })
+          break
+
+        default:
+          // Handle any other events defensively
+          if (session?.user) {
+            await fetchUserProfile(session.user, supabase).catch(err => {
+              console.error('Error fetching user profile:', err)
+              if (!cancelled) setAuthState({ user: null, session: null, loading: false })
+            })
+          } else {
+            setAuthState({ user: null, session: null, loading: false })
+          }
       }
     })
+
+    // Handle page visibility changes - refresh session when user returns to tab
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !cancelled) {
+        // User returned to the tab after being away
+        // Trigger a silent session refresh
+        supabase.auth.getSession().then(({ error }) => {
+          if (error) {
+            console.error('Error refreshing session on visibility change:', error)
+          }
+          // Session will be automatically refreshed if valid, or cleared if expired
+          // The onAuthStateChange listener above will handle the state update
+        }).catch(err => {
+          console.error('Failed to refresh session:', err)
+        })
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
       cancelled = true
       clearTimeout(timeoutId)
       subscription.unsubscribe()
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [])
 
