@@ -375,6 +375,7 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
                     {/* Quantity input */}
                     <input
                       type="number"
+                      inputMode="numeric"
                       min="0"
                       className="flex-1 text-center font-semibold text-sm sm:text-base min-w-[60px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={counts[denom.value] || 0}
@@ -434,6 +435,7 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
                     {/* Quantity input */}
                     <input
                       type="number"
+                      inputMode="numeric"
                       min="0"
                       className="flex-1 text-center font-semibold text-sm sm:text-base min-w-[60px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={counts[denom.value] || 0}
