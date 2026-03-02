@@ -2,6 +2,33 @@
 
 This guide covers deploying the Finance Tracker application to GitHub Pages.
 
+## ⚠️ Critical Deployment Warnings
+
+### The Base Path Issue
+
+**NEVER set `base: '/'` for all environments in vite.config.ts**
+
+The application is deployed to `https://cj-1981.github.io/finance-tracker/` which requires:
+- **Development**: `base: '/'` (for localhost:3000)
+- **Production**: `base: '/finance-tracker/'` (for GitHub Pages)
+
+If you change `base` to `'/'` for production:
+- ❌ All assets (JS, CSS) will return 404 errors
+- ❌ Users will see blank white pages
+- ❌ Router navigation will completely break
+
+**Always verify before deploying:**
+```bash
+npm run verify:deployment
+```
+
+### How to Avoid This Mistake
+
+1. **Run verification script**: `npm run verify:deployment` (checks production build)
+2. **Review the GitHub Actions check** (automatically runs on pushes/PRs)
+3. **Test production build locally**: `npm run build && npm run preview`
+4. **Read the warnings in vite.config.ts** (heavily commented with ⚠️)
+
 ## Prerequisites
 
 1. A GitHub repository with the project code
