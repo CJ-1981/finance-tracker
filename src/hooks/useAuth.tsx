@@ -1,5 +1,5 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { User } from '@supabase/supabase-js'
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react'
+import { User, Session } from '@supabase/supabase-js'
 import type { User as AppUser, AuthState } from '../types'
 import { getSupabaseClient, resetSupabaseClient, createSupabaseClient } from '../lib/supabase'
 import { getConfig } from '../lib/config'
@@ -12,12 +12,80 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+// Module-scoped concurrency guard to serialize session refresh attempts
+let isRefreshing = false
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
     session: null,
     loading: true,
   })
+
+  // Use ref to track loading state without triggering effect re-runs
+  const loadingRef = useRef(authState.loading)
+
+  // Update loadingRef when authState.loading changes
+  useEffect(() => {
+    loadingRef.current = authState.loading
+  }, [authState.loading])
+
+  const refreshSessionWithTimeout = async (
+    supabase: ReturnType<typeof getSupabaseClient>,
+    source: string
+  ): Promise<{ success: boolean; session?: Session }> => {
+    try {
+      const { data, error } = await supabase.auth.getSession()
+      if (error) {
+        console.error(`Error refreshing session from ${source}:`, error)
+        return { success: false }
+      }
+      return { success: true, session: data.session || undefined }
+    } catch (err) {
+      console.error(`Failed to refresh session from ${source}:`, err)
+      return { success: false }
+    }
+  }
+
+  const handleVisibilityChange = async (
+    supabase: ReturnType<typeof getSupabaseClient>,
+    cancelled: boolean
+  ) => {
+    if (document.visibilityState !== 'visible' || cancelled) return
+
+    // Check concurrency guard
+    if (isRefreshing) return
+
+    isRefreshing = true
+    try {
+      const result = await refreshSessionWithTimeout(supabase, 'visibilitychange')
+      if (result.success && result.session?.user) {
+        await fetchUserProfile(result.session.user, supabase)
+      }
+    } finally {
+      isRefreshing = false
+    }
+  }
+
+  const handleFocus = async (
+    supabase: ReturnType<typeof getSupabaseClient>,
+    cancelled: boolean
+  ) => {
+    if (cancelled) return
+
+    // Check concurrency guard
+    if (isRefreshing) return
+
+    isRefreshing = true
+    try {
+      const result = await refreshSessionWithTimeout(supabase, 'focus')
+      if (result.success && result.session?.user) {
+        await fetchUserProfile(result.session.user, supabase)
+      }
+    } finally {
+      isRefreshing = false
+    }
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -35,10 +103,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Dead-man fallback: if onAuthStateChange never fires (network issue, etc.),
     // unblock the UI after 8 seconds.
-    const timeoutId = setTimeout(() => {
+    const timeoutId: ReturnType<typeof setTimeout> = setTimeout(() => {
       if (!cancelled) {
         console.warn('Auth initialization timed out after 8s — forcing loading to false.')
-        setAuthState(prev => prev.loading ? { ...prev, loading: false } : prev)
+        // Use loadingRef.current to avoid dependency on authState.loading
+        setAuthState(prev => (loadingRef.current ? { ...prev, loading: false } : prev))
       }
     }, 8000)
 
@@ -94,29 +163,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     // Handle page visibility changes - refresh session when user returns to tab
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && !cancelled) {
-        // User returned to the tab after being away
-        // Trigger a silent session refresh
-        supabase.auth.getSession().then(({ error }) => {
-          if (error) {
-            console.error('Error refreshing session on visibility change:', error)
-          }
-          // Session will be automatically refreshed if valid, or cleared if expired
-          // The onAuthStateChange listener above will handle the state update
-        }).catch(err => {
-          console.error('Failed to refresh session:', err)
-        })
+    const onVisibilityChange = () => {
+      handleVisibilityChange(supabase, cancelled)
+    }
+
+    // Handle window focus events - refresh session when window regains focus
+    const onFocus = () => {
+      handleFocus(supabase, cancelled)
+    }
+
+    // Polling interval: refresh session every 5 minutes to keep it alive
+    const onPollingInterval = async () => {
+      if (cancelled) return
+
+      // Check concurrency guard
+      if (isRefreshing) return
+
+      isRefreshing = true
+      try {
+        const result = await refreshSessionWithTimeout(supabase, 'polling')
+        if (result.success && result.session?.user) {
+          await fetchUserProfile(result.session.user, supabase)
+        }
+      } finally {
+        isRefreshing = false
       }
     }
 
-    document.addEventListener('visibilitychange', handleVisibilityChange)
+    const pollingIntervalId: ReturnType<typeof setInterval> = setInterval(onPollingInterval, 5 * 60 * 1000)
+
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    window.addEventListener('focus', onFocus)
 
     return () => {
       cancelled = true
       clearTimeout(timeoutId)
+      clearInterval(pollingIntervalId)
       subscription.unsubscribe()
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+      window.removeEventListener('focus', onFocus)
     }
   }, [])
 
