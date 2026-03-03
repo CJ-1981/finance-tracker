@@ -1287,7 +1287,7 @@ export default function ProjectDetailPage() {
                         <div className={`font-extrabold text-sm break-all ${
                           transaction.amount < 0 ? 'text-rose-600' : 'text-emerald-600'
                         }`}>
-                          {transaction.amount < 0 ? '-' : ''}{project.settings?.currency || 'USD'} {Math.abs(transaction.amount).toFixed(2)}
+                          {transaction.amount < 0 ? '-' : ''}{transaction.currency_code || project.settings?.currency || 'USD'} {Math.abs(transaction.amount).toFixed(2)}
                         </div>
                       </div>
                     </Link>
