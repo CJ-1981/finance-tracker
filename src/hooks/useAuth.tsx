@@ -21,6 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false
+    let pollingInterval: NodeJS.Timeout | null = null
 
     // Try to get Supabase client - it might not be initialized yet
     let supabase
@@ -34,13 +35,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // Dead-man fallback: if onAuthStateChange never fires (network issue, etc.),
-    // unblock the UI after 8 seconds.
+    // unblock the UI after 5 seconds (reduced from 8s for better UX).
     const timeoutId = setTimeout(() => {
-      if (!cancelled) {
-        console.warn('Auth initialization timed out after 8s — forcing loading to false.')
+      if (!cancelled && authState.loading) {
+        console.warn('Auth initialization timed out after 5s — forcing loading to false.')
         setAuthState(prev => prev.loading ? { ...prev, loading: false } : prev)
       }
-    }, 8000)
+    }, 5000)
 
     // ── WHY NO getSession() ────────────────────────────────────────────────────
     // When the Supabase client is created (in initSupabase.ts), it immediately
@@ -58,6 +59,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (cancelled) return
       clearTimeout(timeoutId)
+
+      // Stop polling when we get a successful auth state update
+      if (pollingInterval) {
+        clearInterval(pollingInterval)
+        pollingInterval = null
+      }
 
       // Handle specific auth events
       switch (event) {
@@ -93,32 +100,84 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     })
 
-    // Handle page visibility changes - refresh session when user returns to tab
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && !cancelled) {
-        // User returned to the tab after being away
-        // Trigger a silent session refresh
-        supabase.auth.getSession().then(({ error }) => {
-          if (error) {
-            console.error('Error refreshing session on visibility change:', error)
-          }
-          // Session will be automatically refreshed if valid, or cleared if expired
-          // The onAuthStateChange listener above will handle the state update
-        }).catch(err => {
-          console.error('Failed to refresh session:', err)
+    // Helper function to refresh session with timeout and explicit validation
+    const refreshSessionWithTimeout = async (): Promise<{ success: boolean; error?: Error }> => {
+      if (cancelled) return { success: false }
+
+      try {
+        // Set up a timeout for the session refresh attempt
+        const sessionRefreshPromise = supabase.auth.getSession()
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Session refresh timeout')), 3000)
         })
+
+        const { data, error } = await Promise.race([sessionRefreshPromise, timeoutPromise])
+
+        if (error) {
+          console.error('Session refresh error:', error)
+          return { success: false, error }
+        }
+
+        // Explicit validation - check if session exists and is valid
+        if (!data.session) {
+          console.warn('Session is null or expired - treating as signed out')
+          // Trigger signed out state
+          if (!cancelled) {
+            setAuthState({ user: null, session: null, loading: false })
+          }
+          return { success: false, error: new Error('No valid session') }
+        }
+
+        return { success: true }
+      } catch (err) {
+        if (err instanceof Error && err.message === 'Session refresh timeout') {
+          console.warn('Session refresh timed out after 3s')
+        } else {
+          console.error('Session refresh failed:', err)
+        }
+        return { success: false, error: err as Error }
       }
     }
 
+    // Handle page visibility changes - refresh session when user returns to tab
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !cancelled) {
+        console.log('Page became visible - refreshing session')
+        refreshSessionWithTimeout()
+      }
+    }
+
+    // Handle focus events - backup for mobile resume detection
+    const handleFocus = () => {
+      console.log('Window received focus - refreshing session')
+      refreshSessionWithTimeout()
+    }
+
     document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('focus', handleFocus)
+
+    // Periodic polling as last-resort fallback mechanism
+    // This runs every 60 seconds to ensure we detect session changes
+    // that might have been missed by visibility/focus events
+    pollingInterval = setInterval(() => {
+      if (!cancelled && !authState.loading) {
+        // Only poll if we're not already loading to avoid unnecessary calls
+        console.log('Periodic session validation check')
+        refreshSessionWithTimeout()
+      }
+    }, 60000) // Poll every 60 seconds
 
     return () => {
       cancelled = true
       clearTimeout(timeoutId)
+      if (pollingInterval) {
+        clearInterval(pollingInterval)
+      }
       subscription.unsubscribe()
       document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleFocus)
     }
-  }, [])
+  }, [authState.loading])
 
   const fetchUserProfile = async (user: User, supabase: ReturnType<typeof getSupabaseClient>) => {
     try {
