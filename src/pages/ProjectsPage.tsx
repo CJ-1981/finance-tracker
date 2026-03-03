@@ -15,6 +15,7 @@ export default function ProjectsPage() {
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [projectsLoading, setProjectsLoading] = useState(true)
   const [projectsError, setProjectsError] = useState<string | null>(null)
+  const [debugMessages, setDebugMessages] = useState<string[]>([])
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -35,6 +36,14 @@ export default function ProjectsPage() {
     fetchProjects()
   }, [user])
 
+  // Debug logger helper
+  const addDebugMessage = (message: string) => {
+    const timestamp = new Date().toLocaleTimeString()
+    const formattedMessage = `[${timestamp}] ${message}`
+    setDebugMessages(prev => [...prev.slice(-9), formattedMessage])
+    console.log('[DEBUG]', formattedMessage)
+  }
+
   const fetchProjects = async () => {
     // If user is not authenticated, clear projects and return early
     if (!user?.id) {
@@ -49,7 +58,7 @@ export default function ProjectsPage() {
 
     try {
       const supabase = getSupabaseClient()
-      console.log('Fetching projects for user:', user.id, 'Supabase client:', !!supabase)
+      addDebugMessage('Starting session check (5s timeout)...')
 
       // Check session validity before making queries (with timeout)
       const { data: { session }, error: sessionError } = await Promise.race([
@@ -58,6 +67,8 @@ export default function ProjectsPage() {
           setTimeout(() => reject(new Error('Request timeout')), 5000)
         )
       ])
+      addDebugMessage(`Session check: ${session ? 'OK' : 'FAILED'} ${sessionError ? `(${sessionError.message})` : ''}`)
+
       if (sessionError || !session) {
         console.error('Session invalid or expired:', sessionError)
         setProjects([])
@@ -67,6 +78,9 @@ export default function ProjectsPage() {
       }
 
       // Fetch projects with timeout
+      addDebugMessage('Starting projects fetch (5s timeout)...')
+      const startTime = Date.now()
+
       const { data, error } = await Promise.race([
         supabase.from('project_members').select('role, project_id, projects(*)').eq('user_id', user.id),
         new Promise<any>((_, reject) =>
@@ -74,12 +88,13 @@ export default function ProjectsPage() {
         )
       ])
 
+      const elapsed = Date.now() - startTime
+      addDebugMessage(`Projects fetch completed in ${elapsed}ms (${data?.length || 0} projects)`)
+
       if (error) {
         console.error('Supabase error:', error)
         throw error
       }
-
-      console.log('Projects data received:', data?.length, 'projects')
 
       const projectsWithRoles = data?.map((m: any) => {
         const project = m.projects
@@ -91,21 +106,16 @@ export default function ProjectsPage() {
         }
       }).filter((p: any) => p.id !== undefined) || []
 
-      console.log('Processed projects:', projectsWithRoles.length)
       setProjects(projectsWithRoles)
       setProjectsError(null)
     } catch (error) {
       // Check if error is due to timeout
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+      addDebugMessage(`ERROR: ${errorMsg}`)
       const errorMessage = (error instanceof Error && error.message === 'Request timeout')
         ? t('projectDetail.requestTimeout')
         : (error instanceof Error ? error.message : String(error))
       console.error('Error fetching projects:', error)
-      console.error('Error details:', {
-        message: errorMessage,
-        stack: error instanceof Error ? error.stack : undefined,
-        userId: user.id,
-        hasSupabase: !!getSupabaseClient()
-      })
       setProjects([])
       setProjectsError(errorMessage)
     } finally {
@@ -327,15 +337,34 @@ export default function ProjectsPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {projectsLoading ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="card animate-pulse">
-                <div className="h-6 bg-slate-200 rounded mb-4 w-3/4"></div>
-                <div className="h-4 bg-slate-200 rounded mb-2 w-1/2"></div>
-                <div className="h-4 bg-slate-200 rounded mb-4 w-full"></div>
-                <div className="h-8 bg-slate-200 rounded mt-4"></div>
+          <div>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="card animate-pulse">
+                  <div className="h-6 bg-slate-200 rounded mb-4 w-3/4"></div>
+                  <div className="h-4 bg-slate-200 rounded mb-2 w-1/2"></div>
+                  <div className="h-4 bg-slate-200 rounded mb-4 w-full"></div>
+                  <div className="h-8 bg-slate-200 rounded mt-4"></div>
+                </div>
+              ))}
+            </div>
+
+            {/* Debug Panel */}
+            {debugMessages.length > 0 && (
+              <div className="mt-8 p-4 bg-gray-900 rounded-lg max-w-md mx-auto">
+                <h3 className="text-white text-sm font-bold mb-2 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
+                  Debug Log
+                </h3>
+                <div className="space-y-1 max-h-48 overflow-y-auto">
+                  {debugMessages.map((msg, i) => (
+                    <div key={i} className="text-xs font-mono text-green-400">
+                      {msg}
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
+            )}
           </div>
         ) : projectsError ? (
           <div className="card text-center py-12">
@@ -347,9 +376,26 @@ export default function ProjectsPage() {
               <p className="text-gray-600 mb-2">Failed to fetch your projects. Please check your connection and try again.</p>
               <p className="text-xs text-gray-500 font-mono bg-gray-100 p-2 rounded mb-4">{projectsError}</p>
             </div>
-            <button onClick={fetchProjects} className="btn btn-primary">
+            <button onClick={() => { setProjectsError(null); fetchProjects() }} className="btn btn-primary">
               Try Again
             </button>
+
+            {/* Debug Panel */}
+            {debugMessages.length > 0 && (
+              <div className="mt-6 p-4 bg-gray-900 rounded-lg text-left">
+                <h3 className="text-white text-sm font-bold mb-2 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-red-400 rounded-full"></span>
+                  Debug Log (Last 10 messages)
+                </h3>
+                <div className="space-y-1 max-h-48 overflow-y-auto">
+                  {debugMessages.map((msg, i) => (
+                    <div key={i} className="text-xs font-mono text-green-400">
+                      {msg}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <>
