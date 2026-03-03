@@ -379,7 +379,7 @@ export default function ProjectDetailPage() {
       // Fetch transactions with timeout
       const startTime = Date.now()
       const { data, error } = await Promise.race([
-        supabase.from('transactions').select('*').eq('project_id', id).is('deleted_at', null).order('date', { ascending: false }),
+        supabase.from('transactions').select('*').eq('project_id', id).is('deleted_at', null).order('date', { ascending: false }).order('created_at', { ascending: false }),
         new Promise<any>((_, reject) =>
           setTimeout(() => reject(new Error('Request timeout')), 2000)
         )

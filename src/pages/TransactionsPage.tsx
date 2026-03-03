@@ -275,6 +275,7 @@ export default function TransactionsPage() {
         .eq('project_id', projectId)
         .is('deleted_at', null)
         .order('date', { ascending: false })
+        .order('created_at', { ascending: false })
 
       if (error) throw error
 
@@ -303,6 +304,7 @@ export default function TransactionsPage() {
             .eq('project_id', projectId)
             .is('deleted_at', null)
             .order('date', { ascending: false })
+            .order('created_at', { ascending: false })
 
           if (!retryError && retryData) {
             console.log('✓ Safety retry succeeded')
