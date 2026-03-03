@@ -325,6 +325,7 @@ export default function TransactionsPage() {
       setTransactions(transactions)
     } catch (error) {
       console.error('Error fetching transactions:', error)
+      setLoading(false)
     }
   }
 
@@ -347,6 +348,7 @@ export default function TransactionsPage() {
       }
     } catch (error) {
       console.error('Error fetching categories:', error)
+      setLoading(false)
     }
   }
 
