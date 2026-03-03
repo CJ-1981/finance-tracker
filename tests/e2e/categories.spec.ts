@@ -16,6 +16,11 @@ test.describe('Category Management', () => {
     });
   });
 
+  test.afterEach(async ({ page }) => {
+    const errors = ((page as any).pageErrors ?? []) as string[];
+    expect(errors, `Unexpected page errors:\n${errors.join('\n')}`).toEqual([]);
+  });
+
   /**
    * Helper function to wait for page load and spinner to complete
    */
@@ -759,7 +764,7 @@ test.describe('Category Management', () => {
         const box = await firstButton.boundingBox();
 
         if (box) {
-          expect(box.height).toBeGreaterThanOrEqual(40);
+          expect(box.height).toBeGreaterThanOrEqual(44);
         }
       }
     });
