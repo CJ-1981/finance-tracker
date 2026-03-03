@@ -384,6 +384,7 @@ export default function ProjectDetailPage() {
       setTransactions(data || [])
     } catch (error) {
       console.error('Error fetching transactions:', error)
+      setLoading(false)
     }
   }
 
@@ -405,6 +406,7 @@ export default function ProjectDetailPage() {
       setCategories(data || [])
     } catch (error) {
       console.error('Error fetching categories:', error)
+      setLoading(false)
     }
   }
 
