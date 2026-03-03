@@ -886,7 +886,7 @@ export default function ProjectDetailPage() {
 
   // Filter transactions by project currency before calculating totals
   // Memoize to avoid recalculation on every render
-  const { included: transactionsForCalculation } = useMemo(
+  const { included: transactionsForCalculation, excluded: excludedTransactions } = useMemo(
     () => filterByCurrency(
       filteredTransactions,
       project?.settings?.currency || null
@@ -894,6 +894,16 @@ export default function ProjectDetailPage() {
     [filteredTransactions, project?.settings?.currency]
   )
   const totalSpent = transactionsForCalculation.reduce((sum, t) => sum + t.amount, 0)
+
+  // Calculate totals by other currencies
+  const otherCurrencyTotals = useMemo(() => {
+    const totals: Record<string, number> = {}
+    excludedTransactions.forEach(t => {
+      const currency = t.currency_code || 'N/A'
+      totals[currency] = (totals[currency] || 0) + t.amount
+    })
+    return totals
+  }, [excludedTransactions])
 
   if (loading) {
     return (
@@ -1190,6 +1200,19 @@ export default function ProjectDetailPage() {
               <div className="text-3xl font-black text-slate-900 break-words overflow-hidden">
                 {project.settings?.currency || 'USD'} {totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
+              {Object.keys(otherCurrencyTotals).length > 0 && (
+                <div className="mt-3 pt-3 border-t border-slate-200">
+                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Other currencies</div>
+                  <div className="space-y-1">
+                    {Object.entries(otherCurrencyTotals).sort(([a], [b]) => a.localeCompare(b)).map(([currency, amount]) => (
+                      <div key={currency} className="flex justify-between items-center text-sm">
+                        <span className="font-medium text-slate-600">{currency}</span>
+                        <span className="font-bold text-slate-700">{amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             {/* Transactions Widget */}
             <Link to={`/transactions/${id}`} className="card border-t-4 border-t-teal-500 overflow-hidden min-w-0 cursor-pointer hover:shadow-md transition-shadow">
