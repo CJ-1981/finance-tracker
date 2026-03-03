@@ -5,6 +5,35 @@ All notable changes to the Finance Tracker application will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.3] - 2026-03-03
+
+### Changed
+- **Debug Panel Toggle Location** - Moved debug panel toggle from individual page headers to ConfigPage settings menu
+  - Centralized control in one location
+  - Cleaner UI on main pages
+  - Toggle persists across sessions via localStorage
+
+### Fixed
+- **Retry Logic with Stale Connections** - Added Supabase client reset before retry attempts
+  - Fixes repeated timeout errors during retry
+  - Resets client connection to ensure fresh state
+  - Significantly improves retry success rate
+- **Session Error Retry Handling** - Changed session errors to throw exceptions instead of returning false
+  - Enables retry logic for session validation failures
+  - Expanded retry eligibility to Session, Network, and fetch errors
+  - More robust error recovery
+- **Loading State Management** - Removed finally blocks causing stale state reads
+  - Explicit loading state set in success and error paths
+  - Prevents race conditions in state updates
+  - Cleaner control flow
+- **Debug Panel Reactivity** - Fixed debug panel to remain visible after loading completes
+  - Changed from direct localStorage read to useState with storage event listener
+  - Debug panel now stays visible and updates when toggled from config page
+  - State syncs across all pages
+- **Projects Array Preservation** - Only clear projects array on initial fetch attempt
+  - Prevents "No projects available" display during successful retry
+  - Preserves existing data while retrying failed requests
+
 ## [2.3.2] - 2026-03-02
 
 ### Added

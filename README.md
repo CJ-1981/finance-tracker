@@ -239,6 +239,26 @@ finance-tracker/
 
 ## Recent Updates
 
+### v2.3.3 - Connection Retry & Debug Panel Improvements
+
+**Improvements:**
+- ✅ Debug panel toggle moved to ConfigPage settings menu
+- ✅ Debug panel now stays visible after loading completes
+- ✅ Enhanced state sync across pages via storage event listeners
+
+**Bug Fixes:**
+- ✅ Fixed retry logic with Supabase client reset for stale connections
+- ✅ Fixed session error retry handling (now throws instead of returning false)
+- ✅ Fixed "No projects available" showing during successful retry
+- ✅ Improved loading state management by removing finally blocks
+- ✅ Expanded retry eligibility to Session, Network, and fetch errors
+
+**Technical:**
+- Added Supabase client reset before retry attempts
+- Changed session errors to throw exceptions for proper retry triggering
+- Projects array now preserved during retry attempts
+- Explicit loading state management in success/error paths
+
 ### v2.3.0 - Cash Counter & Soft Delete System
 
 **New Features:**
