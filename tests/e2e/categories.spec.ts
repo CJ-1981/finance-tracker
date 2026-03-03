@@ -86,39 +86,33 @@ test.describe('Category Management', () => {
       await waitForPageReady(page);
 
       const transactionsLink = page.locator('a[href*="transactions"], a:has-text("Transactions")').first();
-      const hasTransactionsLink = await transactionsLink.count().then(c => c > 0);
 
-      if (hasTransactionsLink) {
-        await transactionsLink.click();
-        await waitForPageReady(page);
-      }
+      // Assert transactions link exists - fail test if missing
+      await expect(transactionsLink).toBeAttached({ timeout: 5000 });
+      await transactionsLink.click();
+      await waitForPageReady(page);
 
+      // Assert category input exists - fail test if missing
       const categoryInput = page.locator('input[placeholder*="New category" i], input[type="text"]').first();
-      const hasCategoryInput = await categoryInput.count().then(c => c > 0);
+      await expect(categoryInput).toBeAttached({ timeout: 5000 });
 
-      if (hasCategoryInput) {
-        // Generate unique category name
-        const uniqueName = `Test Category ${Date.now()}`;
-        await categoryInput.fill(uniqueName);
+      // Generate unique category name
+      const uniqueName = `Test Category ${Date.now()}`;
+      await categoryInput.fill(uniqueName);
 
-        // Look for add/create button
-        const addButton = page.locator('button:has-text("Add"), button:has-text("Create")').filter({ hasText: /category/i }).or(
-          page.locator('button').filter({ has: categoryInput })
-        ).first();
+      // Look for add/create button
+      const addButton = page.locator('button:has-text("Add"), button:has-text("Create")').filter({ hasText: /category/i }).or(
+        page.locator('button').filter({ has: categoryInput })
+      ).first();
 
-        const hasAddButton = await addButton.count().then(c => c > 0);
+      // Assert add button exists - fail test if missing
+      await expect(addButton).toBeAttached({ timeout: 5000 });
+      await addButton.click();
+      await waitForPageReady(page);
 
-        if (hasAddButton) {
-          const categoriesBefore = await page.locator('text=/category/i').count();
-
-          await addButton.click();
-          await waitForPageReady(page);
-
-          // Look for new category in the list
-          const newCategory = page.locator('text=' + uniqueName);
-          await expect(newCategory.first()).toBeAttached();
-        }
-      }
+      // Look for new category in the list
+      const newCategory = page.locator('text=' + uniqueName);
+      await expect(newCategory.first()).toBeAttached();
     });
   });
 
