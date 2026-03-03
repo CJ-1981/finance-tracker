@@ -187,7 +187,9 @@ export default function ProjectDetailPage() {
       const supabase = getSupabaseClient()
 
       // Check session validity before making queries (with timeout)
+      console.log('[DEBUG] Starting session check with 5000ms timeout...')
       const { data: { session }, error: sessionError } = await withTimeout(5000, supabase.auth.getSession())
+      console.log('[DEBUG] Session check completed:', { session: !!session, sessionError })
 
       if (sessionError || !session) {
         console.error('Session invalid or expired:', sessionError)
@@ -197,6 +199,7 @@ export default function ProjectDetailPage() {
       }
 
       // Fetch project with timeout - wrap in Promise since Supabase returns a builder
+      console.log('[DEBUG] Starting project fetch with 5000ms timeout...')
       const { data, error } = await withTimeout(5000,
         (async () => {
           return await supabase
@@ -206,6 +209,7 @@ export default function ProjectDetailPage() {
             .single()
         })()
       )
+      console.log('[DEBUG] Project fetch completed:', { data: !!data, error })
 
       if (error) {
         // Project not found or permission denied
@@ -226,9 +230,15 @@ export default function ProjectDetailPage() {
       setError(null)
     } catch (error) {
       console.error('Error fetching project:', error)
-      const errorMessage = (error as Error).message === 'Request timeout'
+      console.error('[DEBUG] Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        name: error instanceof Error ? error.name : 'Unknown',
+        stack: error instanceof Error ? error.stack : undefined
+      })
+      const errorMessage = (error instanceof Error && error.message === 'Request timeout')
         ? t('projectDetail.requestTimeout')
         : t('projectDetail.projectLoadError')
+      console.log('[DEBUG] Setting error message:', errorMessage)
       setError(errorMessage)
     } finally {
       setLoading(false)
@@ -237,14 +247,30 @@ export default function ProjectDetailPage() {
 
   const fetchTransactions = async () => {
     if (!id) return
+
+    // Timeout wrapper
+    const withTimeout = <T,>(ms: number, promise: Promise<T>): Promise<T> =>
+      Promise.race([
+        promise,
+        new Promise<T>((_, reject) =>
+          setTimeout(() => reject(new Error('Request timeout')), ms)
+        )
+      ])
+
     try {
       const supabase = getSupabaseClient()
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('project_id', id)
-        .is('deleted_at', null)
-        .order('date', { ascending: false })
+
+      // Fetch transactions with timeout
+      const { data, error } = await withTimeout(5000,
+        (async () => {
+          return await supabase
+            .from('transactions')
+            .select('*')
+            .eq('project_id', id)
+            .is('deleted_at', null)
+            .order('date', { ascending: false })
+        })()
+      )
 
       if (error) throw error
       setTransactions(data || [])
@@ -255,13 +281,29 @@ export default function ProjectDetailPage() {
 
   const fetchCategories = async () => {
     if (!id) return
+
+    // Timeout wrapper
+    const withTimeout = <T,>(ms: number, promise: Promise<T>): Promise<T> =>
+      Promise.race([
+        promise,
+        new Promise<T>((_, reject) =>
+          setTimeout(() => reject(new Error('Request timeout')), ms)
+        )
+      ])
+
     try {
       const supabase = getSupabaseClient()
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('project_id', id)
-        .order('order', { ascending: true })
+
+      // Fetch categories with timeout
+      const { data, error } = await withTimeout(5000,
+        (async () => {
+          return await supabase
+            .from('categories')
+            .select('*')
+            .eq('project_id', id)
+            .order('order', { ascending: true })
+        })()
+      )
 
       if (error) throw error
       setCategories(data || [])
