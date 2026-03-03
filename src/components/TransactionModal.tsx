@@ -31,7 +31,7 @@ export default function TransactionModal({
     const { user } = useAuth()
     const [saving, setSaving] = useState(false)
     const [formData, setFormData] = useState({
-        transactionType: 'expense' as 'income' | 'expense',
+        transactionType: 'income' as 'income' | 'expense',
         amount: '',
         currency_code: project?.settings?.currency || 'USD',
         category_id: '',
@@ -90,7 +90,7 @@ export default function TransactionModal({
             // Load saved transaction type for new transactions
             const savedType = localStorage.getItem('transactionType')
             setFormData({
-                transactionType: (savedType === 'income' || savedType === 'expense') ? savedType : 'expense',
+                transactionType: (savedType === 'income' || savedType === 'expense') ? savedType : 'income',
                 amount: '',
                 currency_code: project?.settings?.currency || 'USD',
                 category_id: categories.length > 0 ? categories[0].id : '',
@@ -155,7 +155,7 @@ export default function TransactionModal({
             if (continueNext && !transaction) {
                 // Reset form for next entry (only when adding new transactions)
                 setFormData({
-                    transactionType: 'expense',
+                    transactionType: 'income',
                     amount: '',
                     currency_code: project?.settings?.currency || 'USD',
                     category_id: categories.length > 0 ? categories[0].id : '',
