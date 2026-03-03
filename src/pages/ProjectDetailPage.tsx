@@ -278,6 +278,7 @@ export default function ProjectDetailPage() {
       setProject(data)
       setError(null)
       setRetryCount(0) // Reset retry count on success
+      setLoading(false) // Ensure loading is false on success
       return true
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error'

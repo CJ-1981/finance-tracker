@@ -205,6 +205,8 @@ export default function TransactionsPage() {
 
       setError(null)
       setRetryCount(0) // Reset retry count on success
+      setLoading(false) // Ensure loading is false on success
+      addDebugMessage(`✓ Success (retries: ${retryCount}/${maxRetries})`)
       return true
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error'
@@ -230,11 +232,8 @@ export default function TransactionsPage() {
 
       console.error('Error fetching project:', error)
       setError(errorMessage)
+      setLoading(false)
       return false
-    } finally {
-      if (retryCount === 0 || retryCount >= maxRetries) {
-        setLoading(false)
-      }
     }
   }
 

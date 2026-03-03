@@ -114,7 +114,10 @@ export default function ProjectsPage() {
       if (sessionError || !session) {
         console.error('Session invalid or expired:', sessionError)
         addDebugMessage(`Session failed: ${sessionError?.message || 'No session'}`)
-        setProjects([])
+        // Only clear projects on initial attempt or when not retrying
+        if (attemptNumber === 0) {
+          setProjects([])
+        }
         setProjectsLoading(false)
         setProjectsError(t('projectDetail.sessionExpired'))
         return false
@@ -154,6 +157,8 @@ export default function ProjectsPage() {
       setProjects(projectsWithRoles)
       setProjectsError(null)
       setRetryCount(0) // Reset retry count on success
+      setProjectsLoading(false) // Ensure loading is false on success
+      addDebugMessage(`✓ Success (retries: ${retryCount}/${maxRetries})`)
       return true
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error'
@@ -172,7 +177,7 @@ export default function ProjectsPage() {
         return fetchProjectsWithRetry(nextAttempt)
       }
 
-      // Max retries reached or non-timeout error
+      // Max retries reached or non-timeout error - only clear projects on final failure
       const errorMessage = isTimeout
         ? `Request failed after ${maxRetries + 1} attempts. Please try again.`
         : (error instanceof Error ? error.message : String(error))
@@ -180,11 +185,8 @@ export default function ProjectsPage() {
       console.error('Error fetching projects:', error)
       setProjects([])
       setProjectsError(errorMessage)
+      setProjectsLoading(false)
       return false
-    } finally {
-      if (retryCount === 0 || retryCount >= maxRetries) {
-        setProjectsLoading(false)
-      }
     }
   }
 
