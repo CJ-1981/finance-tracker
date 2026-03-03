@@ -322,7 +322,13 @@
     "chartCount": "개수",
     "chartTitleFormat": "{{metric}}별 {{groupBy}}",
     "chartOverTimeTitle": "{{title}} 기간별",
-    "chartYAxisTitle": "{{mode}} {{metric}}"
+    "chartYAxisTitle": "{{mode}} {{metric}}",
+    "notAuthenticated": "이 프로젝트를 보려면 로그인해야 합니다",
+    "sessionExpired": "세션이 만료되었습니다. 다시 로그인해 주세요.",
+    "projectLoadFailed": "프로젝트를 불러오지 못했습니다. 다시 시도해 주세요.",
+    "projectLoadError": "프로젝트를 불러오는 중 오류가 발생했습니다",
+    "errorLoadingProject": "프로젝트 로딩 오류",
+    "tryAgain": "다시 시도"
   },
   "cashCounter": {
     "title": "현금 계산기",

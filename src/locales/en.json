@@ -322,7 +322,13 @@
     "chartCount": "Count",
     "chartTitleFormat": "{{metric}} by {{groupBy}}",
     "chartOverTimeTitle": "{{title}} Over Time",
-    "chartYAxisTitle": "{{mode}} {{metric}}"
+    "chartYAxisTitle": "{{mode}} {{metric}}",
+    "notAuthenticated": "You must be signed in to view this project",
+    "sessionExpired": "Your session has expired. Please sign in again.",
+    "projectLoadFailed": "Failed to load project. Please try again.",
+    "projectLoadError": "An error occurred while loading the project",
+    "errorLoadingProject": "Error Loading Project",
+    "tryAgain": "Try Again"
   },
   "cashCounter": {
     "title": "Cash Counter",
