@@ -22,6 +22,12 @@ export default function TransactionsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [debugMessages, setDebugMessages] = useState<string[]>([])
+  const [showDebugPanel, setShowDebugPanel] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('debugPanelEnabled') === 'true'
+    }
+    return false
+  })
   const [retryCount, setRetryCount] = useState(0)
   const maxRetries = 3
   const [showSettings, setShowSettings] = useState(false)
@@ -61,6 +67,14 @@ export default function TransactionsPage() {
     const formattedMessage = `[${timestamp}] ${message}`
     setDebugMessages(prev => [...prev.slice(-9), formattedMessage])
     console.log('[DEBUG]', formattedMessage)
+  }
+
+  const toggleDebugPanel = () => {
+    const newValue = !showDebugPanel
+    setShowDebugPanel(newValue)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('debugPanelEnabled', String(newValue))
+    }
   }
 
   // Network change detection - detect WiFi ↔ Cellular switching
@@ -911,7 +925,7 @@ export default function TransactionsPage() {
           <p className="text-gray-600 mb-4">Loading...</p>
 
           {/* Debug Panel */}
-          {debugMessages.length > 0 && (
+          {showDebugPanel && debugMessages.length > 0 && (
             <div className="mt-8 p-4 bg-gray-900 rounded-lg max-w-md mx-auto text-left">
               <h3 className="text-white text-sm font-bold mb-2 flex items-center gap-2">
                 <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
@@ -954,7 +968,7 @@ export default function TransactionsPage() {
             </div>
 
             {/* Debug Panel */}
-            {debugMessages.length > 0 && (
+            {showDebugPanel && debugMessages.length > 0 && (
               <div className="mt-6 p-4 bg-gray-900 rounded-lg text-left">
                 <h3 className="text-white text-sm font-bold mb-2 flex items-center gap-2">
                   <span className="w-2 h-2 bg-red-400 rounded-full"></span>
@@ -1011,6 +1025,13 @@ export default function TransactionsPage() {
             <div className="flex gap-2 flex-wrap">
               <button onClick={() => setShowSettings(!showSettings)} className="btn btn-secondary text-sm whitespace-nowrap">
                 {showSettings ? t('transactions.closeSettings') : `⚙️ ${t('common.settings')}`}
+              </button>
+              <button
+                onClick={toggleDebugPanel}
+                className={`btn text-sm whitespace-nowrap ${showDebugPanel ? 'btn-primary' : 'btn-secondary'}`}
+                title={showDebugPanel ? 'Hide Debug Panel' : 'Show Debug Panel'}
+              >
+                🐛
               </button>
               <button onClick={() => {
                 setEditingTransactionId(null)

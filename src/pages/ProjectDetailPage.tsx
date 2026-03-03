@@ -23,6 +23,12 @@ export default function ProjectDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [debugMessages, setDebugMessages] = useState<string[]>([])
+  const [showDebugPanel, setShowDebugPanel] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('debugPanelEnabled') === 'true'
+    }
+    return false
+  })
   const [retryCount, setRetryCount] = useState(0)
   const maxRetries = 3
   const [isEditing, setIsEditing] = useState(false)
@@ -62,6 +68,14 @@ export default function ProjectDetailPage() {
     const formattedMessage = `[${timestamp}] ${message}`
     setDebugMessages(prev => [...prev.slice(-9), formattedMessage]) // Keep last 10 messages
     console.log('[DEBUG]', formattedMessage)
+  }
+
+  const toggleDebugPanel = () => {
+    const newValue = !showDebugPanel
+    setShowDebugPanel(newValue)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('debugPanelEnabled', String(newValue))
+    }
   }
 
   // Network change detection - detect WiFi ↔ Cellular switching
@@ -742,7 +756,7 @@ export default function ProjectDetailPage() {
           <p className="text-gray-600 mb-4">Loading...</p>
 
           {/* Debug Panel */}
-          {debugMessages.length > 0 && (
+          {showDebugPanel && debugMessages.length > 0 && (
             <div className="mt-8 p-4 bg-gray-900 rounded-lg max-w-md mx-auto text-left">
               <h3 className="text-white text-sm font-bold mb-2 flex items-center gap-2">
                 <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
@@ -785,7 +799,7 @@ export default function ProjectDetailPage() {
             </div>
 
             {/* Debug Panel */}
-            {debugMessages.length > 0 && (
+            {showDebugPanel && debugMessages.length > 0 && (
               <div className="mt-6 p-4 bg-gray-900 rounded-lg text-left">
                 <h3 className="text-white text-sm font-bold mb-2 flex items-center gap-2">
                   <span className="w-2 h-2 bg-red-400 rounded-full"></span>
@@ -905,6 +919,14 @@ export default function ProjectDetailPage() {
               <button onClick={() => setShowCashCounterModal(true)} className="btn btn-secondary text-sm whitespace-nowrap flex" title="Cash Counter">
                 <span>🧮</span>
                 <span className="hidden sm:inline ml-1">{t('cashCounter.title')}</span>
+              </button>
+              <button
+                onClick={toggleDebugPanel}
+                className={`btn text-sm whitespace-nowrap flex ${showDebugPanel ? 'btn-primary' : 'btn-secondary'}`}
+                title={showDebugPanel ? 'Hide Debug Panel' : 'Show Debug Panel'}
+              >
+                <span>🐛</span>
+                <span className="hidden sm:inline ml-1">Debug</span>
               </button>
             </div>
           </div>
