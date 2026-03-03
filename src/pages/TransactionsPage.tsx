@@ -1136,7 +1136,7 @@ export default function TransactionsPage() {
               </form>
               <ul className="space-y-3">
                 {categories.map((c, index) => (
-                  <li key={c.id} className="flex justify-between items-center text-sm p-3 bg-slate-50 border border-slate-100 rounded-xl hover:border-primary-100 transition-colors">
+                  <li key={c.id} className="flex flex-col sm:flex-row sm:justify-between sm:items-start text-sm p-3 bg-slate-50 border border-slate-100 rounded-xl hover:border-primary-100 transition-colors gap-2">
                     {editingCategoryId === c.id ? (
                       <div className="flex-1 flex gap-2 items-center">
                         <input
@@ -1212,9 +1212,9 @@ export default function TransactionsPage() {
                 {t('transactions.customFields')}
               </h2>
               <form onSubmit={handleAddField} className="flex flex-col gap-3 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100 min-w-0">
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <input type="text" className="input flex-1 min-w-0" placeholder="Field Name (e.g., Note, Tag)" value={newFieldName} onChange={e => setNewFieldName(e.target.value)} required />
-                  <select className="input w-32 flex-shrink-0" value={newFieldType} onChange={e => setNewFieldType(e.target.value as any)}>
+                  <select className="input w-full sm:w-32 flex-shrink-0" value={newFieldType} onChange={e => setNewFieldType(e.target.value as any)}>
                     <option value="text">Text</option>
                     <option value="number">Number</option>
                     <option value="date">Date</option>
@@ -1236,7 +1236,7 @@ export default function TransactionsPage() {
               </form>
               <div className="space-y-3">
                 {project?.settings?.custom_fields?.map((f, index) => (
-                  <div key={f.name} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded min-w-0 gap-2">
+                  <div key={f.name} className="flex flex-col sm:flex-row sm:justify-between sm:items-start text-sm p-3 bg-gray-50 rounded min-w-0 gap-2">
                     {editingFieldOriginalName === f.name ? (
                       <div className="flex-1 flex gap-2 flex-col">
                         <input
@@ -1275,7 +1275,7 @@ export default function TransactionsPage() {
                             )}
                           </div>
                           {f.type === 'text' && project?.settings?.custom_field_values?.[f.name] && (
-                            <div className="mt-1 text-xs text-gray-600 max-w-md">
+                            <div className="mt-1 text-xs text-gray-600 max-w-full break-words">
                               <span className="font-medium">Values: </span>
                               <span className="text-gray-500">
                                 {project.settings.custom_field_values[f.name].slice(0, 5).join(', ')}
@@ -1284,7 +1284,7 @@ export default function TransactionsPage() {
                             </div>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 text-xs min-w-0 flex-wrap">
+                        <div className="flex items-center justify-start gap-2 text-xs min-w-0 flex-wrap sm:justify-end">
                           <button disabled={index === 0} onClick={() => handleMoveField(index, 'up')} className="text-gray-500 hover:text-blue-600 disabled:opacity-30">↑</button>
                           <button disabled={index === (project.settings?.custom_fields?.length || 0) - 1} onClick={() => handleMoveField(index, 'down')} className="text-gray-500 hover:text-blue-600 disabled:opacity-30">↓</button>
                           {f.type === 'text' && (
