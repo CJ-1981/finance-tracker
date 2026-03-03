@@ -1029,12 +1029,12 @@ export default function ProjectDetailPage() {
         </div>
       )}
 
-      <main className="max-w-7xl mx-auto px-0 sm:px-2 md:px-6 lg:px-8 py-8 overflow-x-hidden">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 overflow-x-hidden">
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Summary Cards */}
           <div className="lg:col-span-3 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
             {/* Date & Time Widget */}
-            <div className="card border-t-4 border-t-blue-500 overflow-hidden">
+            <div className="card border-t-4 border-t-blue-500 overflow-hidden min-w-0">
               <div className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">
                 <span className="mr-1">☀️</span> {t('projectDetail.dateTime')}
               </div>
@@ -1048,14 +1048,14 @@ export default function ProjectDetailPage() {
               </div>
             </div>
             {/* Total Amount Widget */}
-            <div className="card border-t-4 border-t-primary-500 overflow-hidden">
+            <div className="card border-t-4 border-t-primary-500 overflow-hidden min-w-0">
               <div className="text-xs font-bold text-primary-600 uppercase tracking-wider mb-1">{t('projectDetail.totalAmount')}</div>
-              <div className="text-3xl font-black text-slate-900 break-all">
+              <div className="text-3xl font-black text-slate-900 break-words overflow-hidden">
                 {project.settings?.currency || 'USD'} {totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
             {/* Transactions Widget */}
-            <Link to={`/transactions/${id}`} className="card border-t-4 border-t-teal-500 overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
+            <Link to={`/transactions/${id}`} className="card border-t-4 border-t-teal-500 overflow-hidden min-w-0 cursor-pointer hover:shadow-md transition-shadow">
               <div className="flex justify-between items-center">
                 <div>
                   <div className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-1">{t('transactions.transactions')}</div>
