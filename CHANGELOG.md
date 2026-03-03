@@ -8,10 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.3.2] - 2026-03-02
 
 ### Fixed
+- **Session Timeout Navigation** - Fixed navigation stuck issue after Supabase session timeout across all pages
+  - ProjectDetailPage: Added session validation and error handling with retry option
+  - ProjectsPage: Added session validation before fetching projects
+  - TransactionsPage: Added error state, session validation, and retry UI
+  - All pages now validate session before making Supabase queries
+  - Users can retry loading when session expires instead of being stuck
 - **Projects Page Loading** - Decoupled UI from Supabase loading to prevent stuck page issues
   - Page header now renders immediately with interactive elements
   - Projects load asynchronously with skeleton loading states
-  - Added 10-second timeout for Supabase queries
   - User can now logout/interact even when Supabase is slow
 - **Mobile Pie Chart Legend** - Fixed legend cutoff on mobile screens
   - Chart container now has minimum height (280px) to accommodate legend
