@@ -112,6 +112,7 @@
     "noTransactionsFound": "No transactions found matching your criteria.",
     "confirmLeaveSettings": "You have entered some data. Are you sure you want to leave and go to settings? Your changes will be lost.",
     "saving": "Saving...",
+    "saveAndContinue": "Save & Continue",
     "failedSave": "Failed to save transaction. Please try again.",
     "confirmBulkDelete": "Are you sure you want to delete {{count}} selected transaction(s)?",
     "confirmDeleteCategory": "Are you sure you want to delete this category? Transactions using it will become Uncategorized.",

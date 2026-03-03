@@ -98,7 +98,7 @@ export default function TransactionModal({
         onGoToSettings()
     }
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent, continueNext: boolean = false) => {
         e.preventDefault()
         if (!user?.id || !project.id) return
 
@@ -132,7 +132,26 @@ export default function TransactionModal({
 
             if (error) throw error
             onSuccess()
-            onClose()
+
+            if (continueNext && !transaction) {
+                // Reset form for next entry (only when adding new transactions)
+                setFormData({
+                    transactionType: 'expense',
+                    amount: '',
+                    currency_code: project?.settings?.currency || 'USD',
+                    category_id: categories.length > 0 ? categories[0].id : '',
+                    date: new Date().toISOString().split('T')[0],
+                })
+                const defaultCustomData: Record<string, any> = {}
+                project?.settings?.custom_fields?.forEach(field => {
+                    if (field.type === 'select' && field.options && field.options.length > 0) {
+                        defaultCustomData[field.name] = field.options[0]
+                    }
+                })
+                setCustomData(defaultCustomData)
+            } else {
+                onClose()
+            }
         } catch (err) {
             console.error('Error saving transaction:', err)
             alert(t('transactions.failedSave'))
@@ -160,8 +179,19 @@ export default function TransactionModal({
 
     return (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center mb-6">
+            <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 p-8 max-w-md w-full max-h-[90vh] overflow-y-auto relative">
+                {/* Close button */}
+                <button
+                    type="button"
+                    onClick={onClose}
+                    className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 transition-colors z-10"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+
+                <div className="flex justify-between items-center mb-6 pr-12">
                     <h2 className="text-2xl font-black text-slate-900 tracking-tight">
                         {transaction ? t('transactions.editTransaction') : t('transactions.addTransaction')}
                     </h2>
@@ -354,6 +384,16 @@ export default function TransactionModal({
                         >
                             {t('common.cancel')}
                         </button>
+                        {!transaction && (
+                            <button
+                                type="button"
+                                onClick={(e) => handleSubmit(e as any, true)}
+                                className="btn bg-slate-600 hover:bg-slate-700 text-white flex-1"
+                                disabled={saving}
+                            >
+                                {saving ? t('transactions.saving') : t('transactions.saveAndContinue')}
+                            </button>
+                        )}
                         <button
                             type="submit"
                             className="btn btn-primary flex-1"
