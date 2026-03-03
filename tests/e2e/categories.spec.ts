@@ -38,8 +38,13 @@ test.describe('Category Management', () => {
       });
     }
 
-    // Wait for React to render in production build
-    await page.waitForTimeout(2000);
+    // Wait for React to finish hydrating - wait for body to be stable
+    await page.waitForSelector('body', { state: 'attached', timeout: 5000 }).catch(() => {
+      // Body should always be attached, this is just for React hydration
+    });
+    await page.waitForLoadState('domcontentloaded').catch(() => {
+      // Already loaded
+    });
   }
 
   test.describe('Create Category', () => {
@@ -273,13 +278,11 @@ test.describe('Category Management', () => {
         await waitForPageReady(page);
       }
 
-      // Look for edit buttons
+      // Look for edit buttons - fail fast if missing
       const editButtons = page.locator('button[aria-label*="edit" i], button:has-text("Edit"), button:has-text("✏")');
-      const hasEditButtons = await editButtons.count().then(c => c > 0);
-
-      if (hasEditButtons) {
-        await expect(editButtons.first()).toBeAttached();
-      }
+      const editButtonCount = await editButtons.count();
+      expect(editButtonCount).toBeGreaterThan(0); // Hard assertion: must have edit buttons
+      await expect(editButtons.first()).toBeAttached();
     });
 
     test('Should allow editing category name', async ({ page }) => {
@@ -404,10 +407,11 @@ test.describe('Category Management', () => {
         await waitForPageReady(page);
       }
 
-      const upButtons = page.locator('button[aria-label*="up" i], button:has-text("↑")').first();
-      const hasUpButton = await upButtons.count().then(c => c > 0);
+      const upButtons = page.locator('button[aria-label*="up" i], button:has-text("↑")');
+      const upButtonCount = await upButtons.count();
 
-      if (hasUpButton) {
+      // Need at least 2 categories to test reordering
+      if (upButtonCount >= 2) {
         // Get category order before clicking
         const categories = page.locator('li, [data-testid*="category-item"]');
         const firstCategory = await categories.first().textContent();
