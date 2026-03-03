@@ -248,14 +248,14 @@ test.describe('Category Management', () => {
       }
 
       // Look for category names (typically text elements)
-      // Use evaluateAll for custom async filtering
-      const allElements = await page.locator('span, div, li').all();
-      const categoryElements = allElements.filter(async elem => {
-        const text = await elem.textContent();
-        return text && text.trim().length > 0 && text !== 'Category';
-      });
+      // Use evaluateAll for filtering in browser context
+      const categoryTexts = await page.locator('span, div, li').evaluateAll(elements =>
+        elements
+          .map(el => el.textContent?.trim())
+          .filter(text => text && text.length > 0 && text !== 'Category')
+      );
 
-      expect(categoryElements.length).toBeGreaterThan(0);
+      expect(categoryTexts.length).toBeGreaterThan(0);
     });
   });
 
