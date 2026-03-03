@@ -5,6 +5,49 @@ All notable changes to the Finance Tracker application will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.5] - 2026-03-03
+
+### Added
+- **Multi-Currency Transaction Filtering** (SPEC-CURRENCY-001)
+  - Filter transactions by project currency for accurate calculations
+  - Case-insensitive and whitespace-normalized currency matching
+  - Visual indicators for mismatched currencies in transaction list
+  - Tooltip explanations for currency exclusions
+
+- **Other Currency Totals Display**
+  - Shows breakdown of amounts by non-matching currencies
+  - Displays in Total Amount widget below main total
+  - Sorted alphabetically by currency code
+
+- **Transaction Modal UX Improvements**
+  - Close button (X) on top-right corner for easy dismissal
+  - "Save & Continue" button for rapid data entry workflow
+  - Modal stays open for adding multiple transactions in sequence
+
+- **Persistent Transaction Type Selection**
+  - Income/expense button state remembered across modal openings
+  - Stored in localStorage for session persistence
+  - Defaults to last selected type when adding new transactions
+
+### Changed
+- **Cash Counter Modal** - Swapped button positions
+  - "With Names" button now appears before "Anonymous"
+  - Improved workflow alignment with user patterns
+
+### Fixed
+- **Chart Currency Filtering** - Pie charts now exclude mismatched currencies
+  - Amount calculations use only matching currency transactions
+  - Prevents incorrect totals from multi-currency data
+
+- **Recent Transactions Currency Display** - Shows actual transaction currency
+  - Changed from project currency to transaction's currency_code
+  - Users can now see multi-currency transactions accurately
+
+### Technical
+- Currency filtering utility functions: `getCurrencyStatus()`, `filterByCurrency()`, `isTransactionIncluded()`
+- Transaction status indicator component with visual warnings
+- Case-insensitive currency comparison with whitespace normalization
+
 ## [2.3.4] - 2026-03-03
 
 ### Added
