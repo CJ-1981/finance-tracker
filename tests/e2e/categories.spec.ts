@@ -72,7 +72,7 @@ test.describe('Category Management', () => {
         await waitForPageReady(page);
       }
 
-      const categoryInput = page.locator('input[type="text"]').filter({ placeholder:  });
+      const categoryInput = page.locator('input[type="text"]').first();
       const hasInput = await categoryInput.count().then(c => c > 0);
 
       if (hasInput) {
@@ -586,8 +586,8 @@ test.describe('Category Management', () => {
           await expect(categorySelect.first()).toBeAttached();
 
           // Verify options are available
-          const options = await categorySelect.first().locator("option");
-          expect(options.length).toBeGreaterThan(0);
+          const optionCount = await categorySelect.first().locator("option").count();
+          expect(optionCount).toBeGreaterThan(0);
         }
       }
     });
@@ -632,8 +632,8 @@ test.describe('Category Management', () => {
             const hasSelect = await categorySelect.count().then(c => c > 0);
 
             if (hasSelect) {
-              const options = await categorySelect.locator("option");
-              const hasNewCategory = options.some(opt => opt.includes(uniqueName) || uniqueName.includes(opt));
+              const optionTexts = await categorySelect.locator("option").allTextContents();
+              const hasNewCategory = optionTexts.some(text => text.includes(uniqueName) || uniqueName.includes(text));
               expect(hasNewCategory).toBe(true);
             }
           }
@@ -664,10 +664,10 @@ test.describe('Category Management', () => {
         const hasCategorySelect = await categorySelect.count().then(c => c > 0);
 
         if (hasCategorySelect) {
-          const options = await categorySelect.first().locator("option");
-          const hasUncategorized = options.some(opt => {
-            const text = opt.toUpperCase ? opt.toString().toUpperCase() : '';
-            return text.includes('UNCATEGORIZED') || text.includes('NO CATEGORY');
+          const optionTexts = await categorySelect.first().locator("option").allTextContents();
+          const hasUncategorized = optionTexts.some(text => {
+            const upperText = text.toUpperCase();
+            return upperText.includes('UNCATEGORIZED') || upperText.includes('NO CATEGORY');
           });
           expect(hasUncategorized).toBe(true);
         }
