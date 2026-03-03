@@ -64,7 +64,7 @@ interface StoredCashData {
 
 export default function CashCounterModal({ isOpen, onClose, project, totalTransactionsAmount }: CashCounterModalProps) {
   const { t } = useTranslation()
-  const [category, setCategory] = useState<'named' | 'anonymous'>('anonymous')
+  const [category, setCategory] = useState<'named' | 'anonymous'>('named')
   const [entryName, setEntryName] = useState('')
 
   // Separate counts for anonymous and named entries
