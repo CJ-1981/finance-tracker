@@ -163,6 +163,10 @@ export default function ProjectsPage() {
         addDebugMessage(`Retrying in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
         setRetryCount(nextAttempt)
 
+        // Reset Supabase client before retry to fix stale connections
+        addDebugMessage('Resetting Supabase client...')
+        resetSupabaseClient()
+
         await new Promise(resolve => setTimeout(resolve, backoffDelay))
         return fetchProjectsWithRetry(nextAttempt)
       }
