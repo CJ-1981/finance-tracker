@@ -311,18 +311,17 @@ test.describe('Category Management', () => {
         const newName = `Updated ${Date.now()}`;
         await editInput.fill(newName);
 
-          // Look for save button
-          const saveButton = page.locator('button:has-text("Save"), button:has-text("Update")').first();
-          const hasSave = await saveButton.count().then(c => c > 0);
+        // Look for save button
+        const saveButton = page.locator('button:has-text("Save"), button:has-text("Update")').first();
+        const hasSave = await saveButton.count().then(c => c > 0);
 
-          if (hasSave) {
-            await saveButton.click();
-            await page.waitForTimeout(1000);
+        if (hasSave) {
+          await saveButton.click();
+          await page.waitForTimeout(1000);
 
-            // Verify updated name appears
-            const updatedName = page.locator('text=' + newName);
-            await expect(updatedName.first()).toBeAttached();
-          }
+          // Verify updated name appears
+          const updatedName = page.locator('text=' + newName);
+          await expect(updatedName.first()).toBeAttached();
         }
       }
     });
