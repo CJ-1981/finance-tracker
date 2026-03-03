@@ -36,6 +36,20 @@ export default function ConfigPage() {
     password: '',
   })
   const [signingIn, setSigningIn] = useState(false)
+  const [debugPanelEnabled, setDebugPanelEnabled] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('debugPanelEnabled') === 'true'
+    }
+    return false
+  })
+
+  const toggleDebugPanel = () => {
+    const newValue = !debugPanelEnabled
+    setDebugPanelEnabled(newValue)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('debugPanelEnabled', String(newValue))
+    }
+  }
 
   // Check if Supabase is already configured and if user is authenticated
   useEffect(() => {
@@ -326,6 +340,12 @@ export default function ConfigPage() {
                   className="w-full btn btn-secondary"
                 >
                   {t('config.editSupabaseConfig')}
+                </button>
+                <button
+                  onClick={toggleDebugPanel}
+                  className={`w-full btn ${debugPanelEnabled ? 'btn-primary' : 'btn-secondary'}`}
+                >
+                  {debugPanelEnabled ? '🐛 Debug Enabled' : '🐛 Enable Debug Panel'}
                 </button>
                 <button
                   onClick={async () => {

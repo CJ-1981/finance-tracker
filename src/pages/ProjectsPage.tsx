@@ -16,12 +16,7 @@ export default function ProjectsPage() {
   const [projectsLoading, setProjectsLoading] = useState(true)
   const [projectsError, setProjectsError] = useState<string | null>(null)
   const [debugMessages, setDebugMessages] = useState<string[]>([])
-  const [showDebugPanel, setShowDebugPanel] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('debugPanelEnabled') === 'true'
-    }
-    return false
-  })
+  const showDebugPanel = typeof window !== 'undefined' && localStorage.getItem('debugPanelEnabled') === 'true'
   const [retryCount, setRetryCount] = useState(0)
   const maxRetries = 3
   const [formData, setFormData] = useState({
@@ -50,14 +45,6 @@ export default function ProjectsPage() {
     const formattedMessage = `[${timestamp}] ${message}`
     setDebugMessages(prev => [...prev.slice(-9), formattedMessage])
     console.log('[DEBUG]', formattedMessage)
-  }
-
-  const toggleDebugPanel = () => {
-    const newValue = !showDebugPanel
-    setShowDebugPanel(newValue)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('debugPanelEnabled', String(newValue))
-    }
   }
 
   // Network change detection - detect WiFi ↔ Cellular switching
@@ -396,13 +383,6 @@ export default function ProjectsPage() {
               </button>
               <button onClick={() => { navigate('/config') }} className="btn btn-secondary text-sm whitespace-nowrap hidden sm:inline-flex" title={t('projects.reconfigure')}>
                 ⚙️ {t('common.settings')}
-              </button>
-              <button
-                onClick={toggleDebugPanel}
-                className={`btn text-sm whitespace-nowrap ${showDebugPanel ? 'btn-primary' : 'btn-secondary'}`}
-                title={showDebugPanel ? 'Hide Debug Panel' : 'Show Debug Panel'}
-              >
-                🐛
               </button>
               <button onClick={handleLogout} className="btn border border-red-200 text-red-600 hover:bg-red-50 text-sm whitespace-nowrap px-4 py-2 rounded-xl font-semibold transition-all">
                 <span className="hidden sm:inline">{t('common.logout')}</span>

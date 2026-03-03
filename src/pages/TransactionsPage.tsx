@@ -22,12 +22,7 @@ export default function TransactionsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [debugMessages, setDebugMessages] = useState<string[]>([])
-  const [showDebugPanel, setShowDebugPanel] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('debugPanelEnabled') === 'true'
-    }
-    return false
-  })
+  const showDebugPanel = typeof window !== 'undefined' && localStorage.getItem('debugPanelEnabled') === 'true'
   const [retryCount, setRetryCount] = useState(0)
   const maxRetries = 3
   const [showSettings, setShowSettings] = useState(false)
@@ -67,14 +62,6 @@ export default function TransactionsPage() {
     const formattedMessage = `[${timestamp}] ${message}`
     setDebugMessages(prev => [...prev.slice(-9), formattedMessage])
     console.log('[DEBUG]', formattedMessage)
-  }
-
-  const toggleDebugPanel = () => {
-    const newValue = !showDebugPanel
-    setShowDebugPanel(newValue)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('debugPanelEnabled', String(newValue))
-    }
   }
 
   // Network change detection - detect WiFi ↔ Cellular switching
@@ -1024,13 +1011,6 @@ export default function TransactionsPage() {
             <div className="flex gap-2 flex-wrap">
               <button onClick={() => setShowSettings(!showSettings)} className="btn btn-secondary text-sm whitespace-nowrap">
                 {showSettings ? t('transactions.closeSettings') : `⚙️ ${t('common.settings')}`}
-              </button>
-              <button
-                onClick={toggleDebugPanel}
-                className={`btn text-sm whitespace-nowrap ${showDebugPanel ? 'btn-primary' : 'btn-secondary'}`}
-                title={showDebugPanel ? 'Hide Debug Panel' : 'Show Debug Panel'}
-              >
-                🐛
               </button>
               <button onClick={() => {
                 setEditingTransactionId(null)
