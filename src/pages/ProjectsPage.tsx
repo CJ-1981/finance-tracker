@@ -47,23 +47,14 @@ export default function ProjectsPage() {
     setProjectsLoading(true)
     setProjectsError(null)
 
-    // Add timeout using Promise.race
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Projects fetch timeout after 10s')), 10000)
-    )
-
     try {
       const supabase = getSupabaseClient()
-      console.log('Fetching projects for user:', user.id)
+      console.log('Fetching projects for user:', user.id, 'Supabase client:', !!supabase)
 
-      // Race between fetch and timeout
-      const { data, error } = await Promise.race([
-        supabase
-          .from('project_members')
-          .select('role, project_id, projects(*)')
-          .eq('user_id', user.id),
-        timeoutPromise
-      ]) as any
+      const { data, error } = await supabase
+        .from('project_members')
+        .select('role, project_id, projects(*)')
+        .eq('user_id', user.id)
 
       if (error) {
         console.error('Supabase error:', error)

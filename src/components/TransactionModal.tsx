@@ -255,18 +255,14 @@ export default function TransactionModal({
                         <label htmlFor="modal-date" className="block text-sm font-medium text-gray-700 mb-1">
                             {t('transactions.date')} *
                         </label>
-                        <div className="relative">
-                            <input
-                                id="modal-date"
-                                type="date"
-                                className="input pr-10 w-full"
-                                placeholder={t('transactionModal.datePlaceholder')}
-                                value={formData.date}
-                                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                required
-                            />
-                            <ClearButton show={!!formData.date} onClick={() => setFormData({ ...formData, date: '' })} />
-                        </div>
+                        <input
+                            id="modal-date"
+                            type="date"
+                            className="input"
+                            value={formData.date}
+                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                            required
+                        />
                     </div>
 
                     <div>
@@ -338,16 +334,13 @@ export default function TransactionModal({
                                     ))}
                                 </select>
                             ) : (
-                                <div className="relative">
-                                    <input
-                                        id={`modal-${field.name}`}
-                                        type="date"
-                                        className="input pr-10 w-full"
-                                        value={customData[field.name] || ''}
-                                        onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
-                                    />
-                                    <ClearButton show={!!customData[field.name]} onClick={() => setCustomData({ ...customData, [field.name]: '' })} />
-                                </div>
+                                <input
+                                    id={`modal-${field.name}`}
+                                    type="date"
+                                    className="input"
+                                    value={customData[field.name] || ''}
+                                    onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
+                                />
                             )}
                         </div>
                     ))}
