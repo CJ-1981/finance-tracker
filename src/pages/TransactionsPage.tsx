@@ -8,6 +8,7 @@ import { softDeleteTransaction, restoreTransaction, permanentlyDeleteTransaction
 import { exportToCSV } from '../utils/csvExport'
 import type { Project, Transaction, Category } from '../types'
 import TransactionModal from '../components/TransactionModal'
+import TransactionStatusIndicator, { getTransactionRowClassName } from '../components/TransactionStatusIndicator'
 
 export default function TransactionsPage() {
   const { t } = useTranslation()
@@ -1670,7 +1671,9 @@ export default function TransactionsPage() {
                   {getFilteredAndSortedTransactions().map((transaction) => (
                     <tr
                       key={transaction.id}
-                      className={`border-b border-gray-100 hover:bg-gray-50 ${isMultiSelectMode && selectedTransactions.has(transaction.id) ? 'bg-blue-50' : ''}`}
+                      className={`border-b border-gray-100 hover:bg-gray-50 ${
+                        isMultiSelectMode && selectedTransactions.has(transaction.id) ? 'bg-blue-50' : ''
+                      } ${getTransactionRowClassName(transaction.currency_code, project?.settings?.currency || null)}`}
                     >
                       {isMultiSelectMode && (
                         <td className="text-center py-3 px-4">
@@ -1691,8 +1694,14 @@ export default function TransactionsPage() {
                           {transaction.custom_data?.[field.name] || '-'}
                         </td>
                       ))}
-                      <td className="py-3 px-4 text-sm text-right text-gray-600">
-                        {transaction.currency_code || 'USD'}
+                      <td className="py-3 px-4 text-sm text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <span className="text-gray-600">{transaction.currency_code || 'N/A'}</span>
+                          <TransactionStatusIndicator
+                            currencyCode={transaction.currency_code}
+                            projectCurrency={project?.settings?.currency || null}
+                          />
+                        </div>
                       </td>
                       <td className={`py-3 px-4 text-sm text-right font-semibold ${
                         transaction.amount < 0 ? 'text-rose-600' : 'text-emerald-600'

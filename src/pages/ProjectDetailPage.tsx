@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getSupabaseClient, resetSupabaseClient } from '../lib/supabase'
@@ -10,6 +10,7 @@ import CashCounterModal from '../components/CashCounterModal'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Filler } from 'chart.js'
 import { Pie, Line } from 'react-chartjs-2'
 import { useAuth } from '../hooks/useAuth'
+import { filterByCurrency } from '../utils/currencyFilter'
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Filler)
 
@@ -877,7 +878,16 @@ export default function ProjectDetailPage() {
     return [...standardOptions, ...numberFields]
   }
 
-  const totalSpent = filteredTransactions.reduce((sum, t) => sum + t.amount, 0)
+  // Filter transactions by project currency before calculating totals
+  // Memoize to avoid recalculation on every render
+  const { included: transactionsForCalculation } = useMemo(
+    () => filterByCurrency(
+      filteredTransactions,
+      project?.settings?.currency || null
+    ),
+    [filteredTransactions, project?.settings?.currency]
+  )
+  const totalSpent = transactionsForCalculation.reduce((sum, t) => sum + t.amount, 0)
 
   if (loading) {
     return (
@@ -1409,7 +1419,7 @@ export default function ProjectDetailPage() {
           isOpen={showCashCounterModal}
           onClose={() => setShowCashCounterModal(false)}
           project={project}
-          totalTransactionsAmount={filteredTransactions.reduce((sum, t) => sum + t.amount, 0)}
+          totalTransactionsAmount={transactionsForCalculation.reduce((sum, t) => sum + t.amount, 0)}
         />
       )}
     </div>

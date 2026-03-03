@@ -121,3 +121,13 @@ export interface ProjectWithMemberInfo extends Project {
   member_count?: number
   user_role?: Role
 }
+
+// Currency filtering types
+// @MX:NOTE: CurrencyFilteredResult separates transactions into included/excluded based on currency match
+export interface CurrencyFilteredResult<T = Transaction> {
+  included: T[]
+  excluded: T[]
+}
+
+// @MX:NOTE: CurrencyMatchStatus indicates the currency matching state for a transaction
+export type CurrencyMatchStatus = 'matched' | 'mismatched' | 'missing'
