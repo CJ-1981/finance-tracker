@@ -53,11 +53,9 @@ test.describe('Category Management', () => {
 
       // Look for category creation section
       const categoryInput = page.locator('input[placeholder*="category" i], input#new-category').first();
-      const hasCategoryInput = await categoryInput.count().then(c => c > 0);
 
-      if (hasCategoryInput) {
-        await expect(categoryInput).toBeAttached();
-      }
+      // Assert input exists - fail test if missing
+      await expect(categoryInput).toBeAttached({ timeout: 5000 });
     });
 
     test('Should have name input field for new category', async ({ page }) => {
@@ -73,11 +71,9 @@ test.describe('Category Management', () => {
       }
 
       const categoryInput = page.locator('input[type="text"]').first();
-      const hasInput = await categoryInput.count().then(c => c > 0);
 
-      if (hasInput) {
-        await expect(categoryInput.first()).toBeAttached();
-      }
+      // Assert input exists - fail test if missing
+      await expect(categoryInput).toBeAttached({ timeout: 5000 });
     });
 
     test('Should create category when add button is clicked', async ({ page }) => {
@@ -253,13 +249,14 @@ test.describe('Category Management', () => {
       }
 
       // Look for category names (typically text elements)
-      const categoryNames = page.locator('span, div, li').filter(async elem => {
+      // Use evaluateAll for custom async filtering
+      const allElements = await page.locator('span, div, li').all();
+      const categoryElements = allElements.filter(async elem => {
         const text = await elem.textContent();
         return text && text.trim().length > 0 && text !== 'Category';
       });
 
-      const hasCategories = await categoryNames.count().then(c => c > 0);
-      expect(hasCategories).toBe(true);
+      expect(categoryElements.length).toBeGreaterThan(0);
     });
   });
 
@@ -305,16 +302,14 @@ test.describe('Category Management', () => {
         await editButtons.click();
         await page.waitForTimeout(500);
 
-        // Look for edit input
-        const editInput = page.locator('input[type="text"]').filter(async elem => {
-          return await elem.isVisible();
-        }).first();
+        // Look for edit input - use visible selector
+        const editInput = page.locator('input[type="text"]:visible').first();
 
-        const hasEditInput = await editInput.count().then(c => c > 0);
+        // Assert edit input exists
+        await expect(editInput).toBeAttached({ timeout: 5000 });
 
-        if (hasEditInput) {
-          const newName = `Updated ${Date.now()}`;
-          await editInput.fill(newName);
+        const newName = `Updated ${Date.now()}`;
+        await editInput.fill(newName);
 
           // Look for save button
           const saveButton = page.locator('button:has-text("Save"), button:has-text("Update")').first();
@@ -755,11 +750,8 @@ test.describe('Category Management', () => {
         await waitForPageReady(page);
       }
 
-      // Check button sizes
-      const actionButtons = page.locator('button').filter(async btn => {
-        const text = await btn.textContent();
-        return text && (text.includes('Edit') || text.includes('Delete'));
-      });
+      // Check button sizes - use hasText filter for buttons
+      const actionButtons = page.locator('button').filter({ hasText: /Edit|Delete/ });
 
       const buttonCount = await actionButtons.count();
 

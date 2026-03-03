@@ -45,19 +45,17 @@ test.describe('Multi-Currency Support', () => {
 
       // Look for create project button
       const createButton = page.locator('button:has-text("New Project"), button:has-text("Create")').first();
-      const hasCreateButton = await createButton.count().then(c => c > 0);
+      await expect(createButton).toBeAttached({ timeout: 5000 });
 
-      if (hasCreateButton) {
-        await createButton.click();
-        await page.waitForTimeout(1000);
+      await createButton.click();
+      await page.waitForTimeout(1000);
 
-        // Look for currency selector
-        const currencySelect = page.locator('select[name="currency"], select#currency, select:has-text("Currency")');
-        const hasCurrencySelect = await currencySelect.count().then(c => c > 0);
+      // Look for currency selector
+      const currencySelect = page.locator('select[name="currency"], select#currency, select:has-text("Currency")');
+      const hasCurrencySelect = await currencySelect.count().then(c => c > 0);
 
-        if (hasCurrencySelect) {
-          await expect(currencySelect.first()).toBeAttached();
-        }
+      if (hasCurrencySelect) {
+        await expect(currencySelect.first()).toBeAttached();
       }
     });
 
@@ -77,11 +75,8 @@ test.describe('Multi-Currency Support', () => {
 
         if (hasCurrencySelect) {
           // Check if EUR is an option
-          const options = await currencySelect.locator("option");
-          const hasEUR = options.some(opt => {
-            const text = opt.toString().toUpperCase();
-            return text.includes('EUR') || text.includes('€');
-          });
+          const optionTexts = await currencySelect.locator("option").allTextContents();
+          const hasEUR = optionTexts.some(text => text.toUpperCase().includes('EUR') || text.includes('€'));
 
           expect(hasEUR).toBe(true);
         }
@@ -103,11 +98,8 @@ test.describe('Multi-Currency Support', () => {
         const hasCurrencySelect = await currencySelect.count().then(c => c > 0);
 
         if (hasCurrencySelect) {
-          const options = await currencySelect.locator("option");
-          const hasUSD = options.some(opt => {
-            const text = opt.toString().toUpperCase();
-            return text.includes('USD') || text.includes('$');
-          });
+          const optionTexts = await currencySelect.locator("option").allTextContents();
+          const hasUSD = optionTexts.some(text => text.toUpperCase().includes('USD') || text.includes('$'));
 
           expect(hasUSD).toBe(true);
         }
@@ -129,11 +121,8 @@ test.describe('Multi-Currency Support', () => {
         const hasCurrencySelect = await currencySelect.count().then(c => c > 0);
 
         if (hasCurrencySelect) {
-          const options = await currencySelect.locator("option");
-          const hasGBP = options.some(opt => {
-            const text = opt.toString().toUpperCase();
-            return text.includes('GBP') || text.includes('£') || text.includes('POUND');
-          });
+          const optionTexts = await currencySelect.locator("option").allTextContents();
+          const hasGBP = optionTexts.some(text => text.toUpperCase().includes('GBP') || text.includes('£') || text.toUpperCase().includes('POUND'));
 
           expect(hasGBP).toBe(true);
         }
@@ -155,11 +144,8 @@ test.describe('Multi-Currency Support', () => {
         const hasCurrencySelect = await currencySelect.count().then(c => c > 0);
 
         if (hasCurrencySelect) {
-          const options = await currencySelect.locator("option");
-          const hasJPY = options.some(opt => {
-            const text = opt.toString().toUpperCase();
-            return text.includes('JPY') || text.includes('¥') || text.includes('YEN');
-          });
+          const optionTexts = await currencySelect.locator("option").allTextContents();
+          const hasJPY = optionTexts.some(text => text.toUpperCase().includes('JPY') || text.includes('¥') || text.toUpperCase().includes('YEN'));
 
           expect(hasJPY).toBe(true);
         }
@@ -181,11 +167,8 @@ test.describe('Multi-Currency Support', () => {
         const hasCurrencySelect = await currencySelect.count().then(c => c > 0);
 
         if (hasCurrencySelect) {
-          const options = await currencySelect.locator("option");
-          const hasKRW = options.some(opt => {
-            const text = opt.toString().toUpperCase();
-            return text.includes('KRW') || text.includes('₩') || text.includes('WON');
-          });
+          const optionTexts = await currencySelect.locator("option").allTextContents();
+          const hasKRW = optionTexts.some(text => text.toUpperCase().includes('KRW') || text.includes('₩') || text.toUpperCase().includes('WON'));
 
           expect(hasKRW).toBe(true);
         }
@@ -433,10 +416,10 @@ test.describe('Multi-Currency Support', () => {
           await page.waitForTimeout(1000);
 
           const currencySelect = page.locator('select#modal-currency, select').filter({ hasText: /USD|EUR/i });
-          const hasCurrencySelect = await currencySelect.count().then(c => c > 0);
+          const currencySelectCount = await currencySelect.count();
 
-          if (hasCurrencySelect) {
-            const selectedValue = await currencySelect.inputValue();
+          if (currencySelectCount > 0) {
+            const selectedValue = await currencySelect.first().inputValue();
             expect(selectedValue.toUpperCase()).toContain(projectCurrency.toUpperCase());
           }
         }

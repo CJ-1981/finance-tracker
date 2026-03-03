@@ -50,25 +50,21 @@ test.describe('CSV Export', () => {
 
       // Look for a project card to click
       const projectCard = page.locator('[data-testid^="project-card"], a[href*="/projects/"]').first();
-      const hasProjectCard = await projectCard.count().then(c => c > 0);
+      await expect(projectCard).toBeAttached({ timeout: 5000 });
 
-      if (hasProjectCard) {
-        await projectCard.click();
-        await waitForPageReady(page);
+      await projectCard.click();
+      await waitForPageReady(page);
 
-        // Look for transactions link or tab
-        const transactionsLink = page.locator('a[href*="transactions"], button:has-text("Transactions")').first();
-        const hasTransactionsLink = await transactionsLink.count().then(c => c > 0);
+      // Look for transactions link or tab
+      const transactionsLink = page.locator('a[href*="transactions"], button:has-text("Transactions")').first();
+      await expect(transactionsLink).toBeAttached({ timeout: 5000 });
 
-        if (hasTransactionsLink) {
-          await transactionsLink.click();
-          await waitForPageReady(page);
+      await transactionsLink.click();
+      await waitForPageReady(page);
 
-          // Verify we're on transactions page
-          const currentUrl = page.url();
-          expect(currentUrl).toContain('transaction');
-        }
-      }
+      // Verify we're on transactions page
+      const currentUrl = page.url();
+      expect(currentUrl).toContain('transaction');
     });
 
     test('Should display transactions list on page load', async ({ page }) => {
@@ -137,26 +133,22 @@ test.describe('CSV Export', () => {
       await waitForPageReady(page);
 
       const projectCard = page.locator('[data-testid^="project-card"], a[href*="/projects/"]').first();
-      const hasProjectCard = await projectCard.count().then(c => c > 0);
+      await expect(projectCard).toBeAttached({ timeout: 5000 });
 
-      if (hasProjectCard) {
-        await projectCard.click();
-        await waitForPageReady(page);
+      await projectCard.click();
+      await waitForPageReady(page);
 
-        const transactionsLink = page.locator('a[href*="transactions"], button:has-text("Transactions")').first();
-        const hasTransactionsLink = await transactionsLink.count().then(c => c > 0);
+      const transactionsLink = page.locator('a[href*="transactions"], button:has-text("Transactions")').first();
+      await expect(transactionsLink).toBeAttached({ timeout: 5000 });
 
-        if (hasTransactionsLink) {
-          await transactionsLink.click();
-          await waitForPageReady(page);
+      await transactionsLink.click();
+      await waitForPageReady(page);
 
-          const dateInputs = page.locator('input[type="date"]');
-          const dateCount = await dateInputs.count();
+      const dateInputs = page.locator('input[type="date"]');
+      const dateCount = await dateInputs.count();
 
-          // Should have at least 2 date inputs (start and end)
-          expect(dateCount).toBeGreaterThanOrEqual(1);
-        }
-      }
+      // Should have at least 2 date inputs (start and end)
+      expect(dateCount).toBeGreaterThanOrEqual(2);
     });
 
     test('Should filter transactions when date range is applied', async ({ page }) => {
@@ -292,12 +284,13 @@ test.describe('CSV Export', () => {
           const hasExportButton = await exportButton.count().then(c => c > 0);
 
           if (hasExportButton) {
-            // Check for download icon (SVG or unicode)
-            const hasIcon = await exportButton.first().locator('svg, span:has-text("⬇")').count().then(c => c > 0);
+            // Check for download icon (SVG or unicode arrow)
+            const hasIcon = await exportButton.first().locator('svg, span:has-text("⬇"), span:has-text("↓")').count().then(c => c > 0);
 
             // Icon is optional but if present, verify it
             if (hasIcon) {
-              await expect(exportButton.locator('svg').first()).toBeAttached();
+              const iconLocator = exportButton.first().locator('svg, span:has-text("⬇"), span:has-text("↓")');
+              await expect(iconLocator.first()).toBeAttached();
             }
           }
         }
@@ -329,20 +322,14 @@ test.describe('CSV Export', () => {
           const hasExportButton = await exportButton.count().then(c => c > 0);
 
           if (hasExportButton) {
-            // Set up download handler
-            let downloadTriggered = false;
-            page.on('download', () => {
-              downloadTriggered = true;
-            });
-
-            await exportButton.click();
-            await page.waitForTimeout(2000);
+            // Use Promise.all to avoid race condition
+            const [download] = await Promise.all([
+              page.waitForEvent('download', { timeout: 10000 }).catch(() => null),
+              exportButton.click()
+            ]);
 
             // Download should be triggered
-            // Note: In test environment, actual download may not complete
-            // but we verify the button action works
-            const download = (page as any).lastDownload;
-            expect(download || downloadTriggered).toBeTruthy();
+            expect(download || (page as any).lastDownload).toBeTruthy();
           }
         }
       }

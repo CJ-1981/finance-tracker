@@ -45,16 +45,14 @@ test.describe('Transaction Management', () => {
 
       // Look for add transaction button
       const addButton = page.locator('button:has-text("Add"), button:has-text("New"), button[aria-label*="add" i]').first();
-      const hasAddButton = await addButton.count().then(c => c > 0);
+      await expect(addButton).toBeAttached({ timeout: 5000 });
 
-      if (hasAddButton) {
-        await addButton.click();
-        await waitForPageReady(page);
+      await addButton.click();
+      await waitForPageReady(page);
 
-        // Modal should be visible
-        const modal = page.locator('.fixed.inset-0, [role="dialog"]');
-        await expect(modal.first()).toBeVisible();
-      }
+      // Modal should be visible
+      const modal = page.locator('.fixed.inset-0, [role="dialog"]');
+      await expect(modal.first()).toBeVisible();
     });
 
     test('Should have income/expense toggle buttons', async ({ page }) => {
@@ -364,15 +362,28 @@ test.describe('Transaction Management', () => {
 
       // Look for show deleted toggle and enable it
       const showDeletedToggle = page.locator('input[type="checkbox"][id*="deleted"], label:has-text("Show deleted")');
-      const hasToggle = await showDeletedToggle.count().then(c => c > 0);
+      const toggleCount = await showDeletedToggle.count();
 
-      if (hasToggle) {
-        const checkbox = showDeletedToggle.locator('input[type="checkbox"]').first();
-        const isChecked = await checkbox.isChecked();
+      if (toggleCount > 0) {
+        // Determine if the locator found the input or label
+        const isInput = await showDeletedToggle.first().evaluate(el => el.tagName === 'INPUT');
 
-        if (!isChecked) {
-          await showDeletedToggle.first().click();
-          await page.waitForTimeout(1000);
+        if (isInput) {
+          const checkbox = showDeletedToggle.first();
+          const isChecked = await checkbox.isChecked();
+
+          if (!isChecked) {
+            await checkbox.click();
+            await page.waitForTimeout(1000);
+          }
+        } else {
+          const checkbox = showDeletedToggle.locator('input[type="checkbox"]').first();
+          const isChecked = await checkbox.isChecked();
+
+          if (!isChecked) {
+            await showDeletedToggle.first().click();
+            await page.waitForTimeout(1000);
+          }
         }
 
         // Look for restore button
@@ -398,15 +409,28 @@ test.describe('Transaction Management', () => {
       }
 
       const showDeletedToggle = page.locator('input[type="checkbox"][id*="deleted"], label:has-text("Show deleted")');
-      const hasToggle = await showDeletedToggle.count().then(c => c > 0);
+      const toggleCount = await showDeletedToggle.count();
 
-      if (hasToggle) {
-        const checkbox = showDeletedToggle.locator('input[type="checkbox"]').first();
-        const isChecked = await checkbox.isChecked();
+      if (toggleCount > 0) {
+        // Determine if the locator found the input or label
+        const isInput = await showDeletedToggle.first().evaluate(el => el.tagName === 'INPUT');
 
-        if (!isChecked) {
-          await checkbox.click();
-          await page.waitForTimeout(1000);
+        if (isInput) {
+          const checkbox = showDeletedToggle.first();
+          const isChecked = await checkbox.isChecked();
+
+          if (!isChecked) {
+            await checkbox.click();
+            await page.waitForTimeout(1000);
+          }
+        } else {
+          const checkbox = showDeletedToggle.locator('input[type="checkbox"]').first();
+          const isChecked = await checkbox.isChecked();
+
+          if (!isChecked) {
+            await checkbox.click();
+            await page.waitForTimeout(1000);
+          }
         }
 
         const restoreButton = page.locator('button:has-text("Restore")').first();
@@ -442,15 +466,28 @@ test.describe('Transaction Management', () => {
       }
 
       const showDeletedToggle = page.locator('input[type="checkbox"][id*="deleted"], label:has-text("Show deleted")');
-      const hasToggle = await showDeletedToggle.count().then(c => c > 0);
+      const toggleCount = await showDeletedToggle.count();
 
-      if (hasToggle) {
-        const checkbox = showDeletedToggle.locator('input[type="checkbox"]').first();
-        const isChecked = await checkbox.isChecked();
+      if (toggleCount > 0) {
+        // Determine if the locator found the input or label
+        const isInput = await showDeletedToggle.first().evaluate(el => el.tagName === 'INPUT');
 
-        if (!isChecked) {
-          await checkbox.click();
-          await page.waitForTimeout(1000);
+        if (isInput) {
+          const checkbox = showDeletedToggle.first();
+          const isChecked = await checkbox.isChecked();
+
+          if (!isChecked) {
+            await checkbox.click();
+            await page.waitForTimeout(1000);
+          }
+        } else {
+          const checkbox = showDeletedToggle.locator('input[type="checkbox"]').first();
+          const isChecked = await checkbox.isChecked();
+
+          if (!isChecked) {
+            await checkbox.click();
+            await page.waitForTimeout(1000);
+          }
         }
 
         // Look for permanently delete button
@@ -476,15 +513,28 @@ test.describe('Transaction Management', () => {
       }
 
       const showDeletedToggle = page.locator('input[type="checkbox"][id*="deleted"], label:has-text("Show deleted")');
-      const hasToggle = await showDeletedToggle.count().then(c => c > 0);
+      const toggleCount = await showDeletedToggle.count();
 
-      if (hasToggle) {
-        const checkbox = showDeletedToggle.locator('input[type="checkbox"]').first();
-        const isChecked = await checkbox.isChecked();
+      if (toggleCount > 0) {
+        // Determine if the locator found the input or label
+        const isInput = await showDeletedToggle.first().evaluate(el => el.tagName === 'INPUT');
 
-        if (!isChecked) {
-          await checkbox.click();
-          await page.waitForTimeout(1000);
+        if (isInput) {
+          const checkbox = showDeletedToggle.first();
+          const isChecked = await checkbox.isChecked();
+
+          if (!isChecked) {
+            await checkbox.click();
+            await page.waitForTimeout(1000);
+          }
+        } else {
+          const checkbox = showDeletedToggle.locator('input[type="checkbox"]').first();
+          const isChecked = await checkbox.isChecked();
+
+          if (!isChecked) {
+            await checkbox.click();
+            await page.waitForTimeout(1000);
+          }
         }
 
         const permanentDeleteButton = page.locator('button:has-text("Permanently")').first();
@@ -493,7 +543,7 @@ test.describe('Transaction Management', () => {
         if (hasPermanentDelete) {
           // Set up dialog handler
           page.on('dialog', async dialog => {
-            expect(dialog.message()).toContain(/permanently|forever|delete/i);
+            expect(dialog.message()).toMatch(/permanently|forever|delete/i);
             await dialog.dismiss();
           });
 
@@ -610,12 +660,15 @@ test.describe('Transaction Management', () => {
         // Select a category option (assuming there are options)
         const optionCount = await categoryFilter.locator('option').count();
         if (optionCount > 1) {
+          // Get initial count
+          const initialCount = await transactionRows.count();
+
           await categoryFilter.selectOption({ index: 1 });
           await page.waitForTimeout(1000);
 
           // Count should change or stay same
           const filteredCount = await transactionRows.count();
-          expect(filteredCount).toBeGreaterThanOrEqual(0);
+          expect(filteredCount).toBeLessThanOrEqual(initialCount);
         }
       }
     });

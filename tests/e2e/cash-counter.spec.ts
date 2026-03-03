@@ -51,22 +51,21 @@ test.describe('Cash Counter Modal', () => {
       if (currentUrl.includes('/projects')) {
         const cashCounterButton = page.locator('button:has-text("Cash"), button:has-text("Counter"), button[title*="cash" i]').first();
 
-        const hasButton = await cashCounterButton.count().then(count => count > 0);
+        // Assert button exists - fail test if missing
+        await expect(cashCounterButton).toBeAttached({ timeout: 5000 });
 
-        if (hasButton) {
-          await cashCounterButton.click();
-          await waitForPageReady(page);
+        await cashCounterButton.click();
+        await waitForPageReady(page);
 
-          // Check for bill denominations
-          const expectedBills = ['200', '100', '50', '20', '10', '5'];
+        // Check for bill denominations
+        const expectedBills = ['200', '100', '50', '20', '10', '5'];
 
-          for (const bill of expectedBills) {
-            const billElement = page.locator(`text=/.*${bill}.*/`).filter({ hasText: bill });
-            const hasBill = await billElement.count().then(c => c > 0);
+        for (const bill of expectedBills) {
+          const billElement = page.locator(`text=/.*${bill}.*/`).filter({ hasText: bill });
+          const hasBill = await billElement.count().then(c => c > 0);
 
-            if (hasBill) {
-              await expect(billElement.first()).toBeVisible();
-            }
+          if (hasBill) {
+            await expect(billElement.first()).toBeVisible();
           }
         }
       }
@@ -77,22 +76,22 @@ test.describe('Cash Counter Modal', () => {
       await waitForPageReady(page);
 
       const cashCounterButton = page.locator('button:has-text("Cash"), button:has-text("Counter")').first();
-      const hasButton = await cashCounterButton.count().then(count => count > 0);
 
-      if (hasButton) {
-        await cashCounterButton.click();
-        await waitForPageReady(page);
+      // Assert button exists - fail test if missing
+      await expect(cashCounterButton).toBeAttached({ timeout: 5000 });
 
-        // Check for coin denominations
-        const expectedCoins = ['2', '1', '0.50', '0.20', '0.10', '0.05', '0.02', '0.01'];
+      await cashCounterButton.click();
+      await waitForPageReady(page);
 
-        for (const coin of expectedCoins) {
-          const coinElement = page.locator(`text=/.*${coin}.*/`).filter({ hasText: coin });
-          const hasCoin = await coinElement.count().then(c => c > 0);
+      // Check for coin denominations
+      const expectedCoins = ['2', '1', '0.50', '0.20', '0.10', '0.05', '0.02', '0.01'];
 
-          if (hasCoin) {
-            await expect(coinElement.first()).toBeVisible();
-          }
+      for (const coin of expectedCoins) {
+        const coinElement = page.locator(`text=/.*${coin}.*/`).filter({ hasText: coin });
+        const hasCoin = await coinElement.count().then(c => c > 0);
+
+        if (hasCoin) {
+          await expect(coinElement.first()).toBeVisible();
         }
       }
     });
@@ -141,8 +140,9 @@ test.describe('Cash Counter Modal', () => {
         if (hasPlusButtons) {
           const firstPlus = plusButtons.first();
 
-          // Get initial value from the input
-          const inputField = firstPlus.locator('xpath=../../../..').locator('input[type="number"]').first();
+          // Get initial value from the input - use stable ancestor selector
+          const row = firstPlus.locator('xpath=ancestor::*[.//input[@type="number"]][1]');
+          const inputField = row.locator('input[type="number"]').first();
           const initialValue = await inputField.inputValue();
 
           // Click the + button
@@ -183,8 +183,9 @@ test.describe('Cash Counter Modal', () => {
           const hasMinusButtons = await minusButtons.count().then(c => c > 0);
 
           if (hasMinusButtons) {
-            const inputContainer = firstPlus.locator('xpath=../../../..');
-            const inputField = inputContainer.locator('input[type="number"]').first();
+            // Use stable ancestor selector to find the input field
+            const row = firstPlus.locator('xpath=ancestor::*[.//input[@type="number"]][1]');
+            const inputField = row.locator('input[type="number"]').first();
             const valueBeforeDecrement = await inputField.inputValue();
 
             const firstMinus = minusButtons.first();
