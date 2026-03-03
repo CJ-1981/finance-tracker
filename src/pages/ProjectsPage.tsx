@@ -101,13 +101,12 @@ export default function ProjectsPage() {
       if (sessionError || !session) {
         console.error('Session invalid or expired:', sessionError)
         addDebugMessage(`Session failed: ${sessionError?.message || 'No session'}`)
-        // Only clear projects on initial attempt or when not retrying
+        // Only clear projects on initial attempt
         if (attemptNumber === 0) {
           setProjects([])
         }
-        setProjectsLoading(false)
-        setProjectsError(t('projectDetail.sessionExpired'))
-        return false
+        // Throw error to trigger retry logic instead of returning false
+        throw new Error(sessionError?.message || 'Session not available')
       }
 
       addDebugMessage(`Session OK${retryLabel}`)
@@ -150,11 +149,15 @@ export default function ProjectsPage() {
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error'
       const isTimeout = errorMsg === 'Request timeout'
+      // Retry on both timeout errors and session/network errors
+      const isRetryable = isTimeout || errorMsg.includes('Session') || errorMsg.includes('session') ||
+                          errorMsg.includes('Network') || errorMsg.includes('network') ||
+                          errorMsg.includes('fetch')
 
       addDebugMessage(`ERROR${retryLabel}: ${errorMsg}`)
 
-      // Automatic retry with exponential backoff for timeout errors
-      if (isTimeout && attemptNumber < maxRetries) {
+      // Automatic retry with exponential backoff for retryable errors
+      if (isRetryable && attemptNumber < maxRetries) {
         const backoffDelay = Math.pow(2, attemptNumber) * 1000 // 1s, 2s, 4s
         const nextAttempt = attemptNumber + 1
         addDebugMessage(`Retrying in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
@@ -164,13 +167,16 @@ export default function ProjectsPage() {
         return fetchProjectsWithRetry(nextAttempt)
       }
 
-      // Max retries reached or non-timeout error - only clear projects on final failure
+      // Max retries reached or non-retryable error
       const errorMessage = isTimeout
         ? `Request failed after ${maxRetries + 1} attempts. Please try again.`
         : (error instanceof Error ? error.message : String(error))
 
       console.error('Error fetching projects:', error)
-      setProjects([])
+      // Only clear projects on final failure, not during retry attempts
+      if (attemptNumber >= maxRetries || !isRetryable) {
+        setProjects([])
+      }
       setProjectsError(errorMessage)
       setProjectsLoading(false)
       return false

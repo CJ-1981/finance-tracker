@@ -138,9 +138,8 @@ export default function TransactionsPage() {
 
       if (sessionError || !session) {
         console.error('Session invalid or expired:', sessionError)
-        setError(t('projectDetail.sessionExpired'))
-        setLoading(false)
-        return false
+        // Throw error to trigger retry logic instead of returning false
+        throw new Error(sessionError?.message || 'Session not available')
       }
 
       // Fetch project with timeout
@@ -198,11 +197,15 @@ export default function TransactionsPage() {
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error'
       const isTimeout = errorMsg === 'Request timeout'
+      // Retry on both timeout errors and session/network errors
+      const isRetryable = isTimeout || errorMsg.includes('Session') || errorMsg.includes('session') ||
+                          errorMsg.includes('Network') || errorMsg.includes('network') ||
+                          errorMsg.includes('fetch')
 
       addDebugMessage(`ERROR${retryLabel}: ${errorMsg}`)
 
-      // Automatic retry with exponential backoff for timeout errors
-      if (isTimeout && attemptNumber < maxRetries) {
+      // Automatic retry with exponential backoff for retryable errors
+      if (isRetryable && attemptNumber < maxRetries) {
         const backoffDelay = Math.pow(2, attemptNumber) * 1000 // 1s, 2s, 4s
         const nextAttempt = attemptNumber + 1
         addDebugMessage(`Retrying in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
@@ -212,7 +215,7 @@ export default function TransactionsPage() {
         return fetchProjectWithRetry(nextAttempt)
       }
 
-      // Max retries reached or non-timeout error
+      // Max retries reached or non-retryable error
       const errorMessage = isTimeout
         ? `Request failed after ${maxRetries + 1} attempts. Please try again.`
         : t('projectDetail.projectLoadError')
