@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getSupabaseClient, resetSupabaseClient } from '../lib/supabase'
+import { getConfig } from '../lib/config'
 import { getPendingInvitation } from '../lib/invitations'
 import type { Project, Transaction, Category } from '../types'
 import TransactionModal from '../components/TransactionModal'
@@ -95,9 +96,9 @@ export default function ProjectDetailPage() {
 
   // Network change detection - detect WiFi ↔ Cellular switching
   useEffect(() => {
-    const handleOnline = () => {
+    const handleOnline = async () => {
       addDebugMessage('Network online - resetting Supabase client and retrying...')
-      resetSupabaseClient()
+      await resetSupabaseClient(getConfig())
       fetchProject()
     }
 
@@ -301,7 +302,7 @@ export default function ProjectDetailPage() {
         setRetryCount(retryCount + 1)
 
         // Reset Supabase client and retry once more
-        resetSupabaseClient()
+        await resetSupabaseClient(getConfig())
         await new Promise(resolve => setTimeout(resolve, 1000))
 
         // Retry with incremented attempt number
@@ -343,7 +344,7 @@ export default function ProjectDetailPage() {
 
         // Reset Supabase client before retry to fix stale connections
         addDebugMessage('Resetting Supabase client...')
-        resetSupabaseClient()
+        await resetSupabaseClient(getConfig())
 
         await new Promise(resolve => setTimeout(resolve, backoffDelay))
         return fetchProjectWithRetry(nextAttempt)

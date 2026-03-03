@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react'
 import { User } from '@supabase/supabase-js'
 import type { User as AppUser, AuthState } from '../types'
-import { getSupabaseClient, resetSupabaseClient, createSupabaseClient } from '../lib/supabase'
+import { getSupabaseClient, resetSupabaseClient } from '../lib/supabase'
 import { getConfig } from '../lib/config'
 
 interface AuthContextType extends AuthState {
@@ -247,12 +247,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAuthState({ user: null, session: null, loading: false })
   }
 
-  const reinitialize = () => {
+  const reinitialize = async () => {
     const config = getConfig()
     if (config) {
       try {
-        resetSupabaseClient()
-        createSupabaseClient(config)
+        await resetSupabaseClient(config)
         setAuthState(prev => ({ ...prev, loading: true }))
       } catch (error) {
         console.error('Failed to reinitialize Supabase:', error)

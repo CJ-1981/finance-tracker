@@ -84,10 +84,27 @@ export function getSupabaseClient(): SupabaseClient<Database> {
   return supabaseInstance
 }
 
-export function resetSupabaseClient() {
+export async function resetSupabaseClient(config?: SupabaseConfig | null) {
+  // If there's an existing client, sign out to clean up the old session
+  if (supabaseInstance) {
+    try {
+      await supabaseInstance.auth.signOut()
+    } catch (e) {
+      // Ignore signOut errors - client might already be disconnected
+      if (import.meta.env.DEV) {
+        console.log('Sign out during reset (expected if disconnected):', e)
+      }
+    }
+  }
+
   supabaseInstance = null
   if (typeof window !== 'undefined') {
     delete (window as any).__supabaseInstance
+  }
+
+  // If config is provided, create a new client immediately
+  if (config) {
+    return createSupabaseClient(config)
   }
 }
 
