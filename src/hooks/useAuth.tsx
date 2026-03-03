@@ -30,6 +30,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loadingRef.current = authState.loading
   }, [authState.loading])
 
+  // Ref to track polling interval so we can clear it on sign out
+  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
   const refreshSessionWithTimeout = async (
     supabase: ReturnType<typeof getSupabaseClient>,
     source: string
@@ -146,6 +149,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         case 'SIGNED_OUT':
           // User explicitly signed out or session expired
+          // Stop polling to prevent unnecessary session refresh attempts
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current)
+            pollingIntervalRef.current = null
+          }
           setAuthState({ user: null, session: null, loading: false })
           break
 
@@ -190,7 +198,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    const pollingIntervalId: ReturnType<typeof setInterval> = setInterval(onPollingInterval, 5 * 60 * 1000)
+    pollingIntervalRef.current = setInterval(onPollingInterval, 5 * 60 * 1000)
 
     document.addEventListener('visibilitychange', onVisibilityChange)
     window.addEventListener('focus', onFocus)
@@ -198,7 +206,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
       clearTimeout(timeoutId)
-      clearInterval(pollingIntervalId)
+      if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current)
       subscription.unsubscribe()
       document.removeEventListener('visibilitychange', onVisibilityChange)
       window.removeEventListener('focus', onFocus)
