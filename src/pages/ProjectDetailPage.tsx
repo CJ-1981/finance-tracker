@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { getSupabaseClient } from '../lib/supabase'
+import { getSupabaseClient, resetSupabaseClient } from '../lib/supabase'
 import { getPendingInvitation } from '../lib/invitations'
 import type { Project, Transaction, Category } from '../types'
 import TransactionModal from '../components/TransactionModal'
@@ -23,6 +23,8 @@ export default function ProjectDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [debugMessages, setDebugMessages] = useState<string[]>([])
+  const [retryCount, setRetryCount] = useState(0)
+  const maxRetries = 3
   const [isEditing, setIsEditing] = useState(false)
   const [editFormData, setEditFormData] = useState({ name: '', description: '', currency: 'USD' })
   const [showInviteModal, setShowInviteModal] = useState(false)
