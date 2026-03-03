@@ -248,11 +248,11 @@ export default function ProjectDetailPage() {
       const supabase = getSupabaseClient()
 
       // Check session validity before making queries (with timeout)
-      addDebugMessage(`Session check${retryLabel} (5s timeout)...`)
+      addDebugMessage(`Session check${retryLabel} (3s timeout)...`)
       const { data: { session }, error: sessionError } = await Promise.race([
         supabase.auth.getSession(),
         new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 5000)
+          setTimeout(() => reject(new Error('Request timeout')), 3000)
         )
       ])
       addDebugMessage(`Session check: ${session ? 'OK' : 'FAILED'} ${sessionError ? `(${sessionError.message})` : ''}`)
@@ -264,13 +264,13 @@ export default function ProjectDetailPage() {
       }
 
       // Fetch project with timeout
-      addDebugMessage(`Fetching project${retryLabel} (5s timeout)...`)
+      addDebugMessage(`Fetching project${retryLabel} (3s timeout)...`)
       const startTime = Date.now()
 
       const { data, error } = await Promise.race([
         supabase.from('projects').select('*').eq('id', id).single(),
         new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 5000)
+          setTimeout(() => reject(new Error('Request timeout')), 3000)
         )
       ])
 
@@ -372,7 +372,7 @@ export default function ProjectDetailPage() {
       const { data, error } = await Promise.race([
         supabase.from('transactions').select('*').eq('project_id', id).is('deleted_at', null).order('date', { ascending: false }),
         new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 5000)
+          setTimeout(() => reject(new Error('Request timeout')), 3000)
         )
       ])
 
@@ -393,7 +393,7 @@ export default function ProjectDetailPage() {
       const { data, error } = await Promise.race([
         supabase.from('categories').select('*').eq('project_id', id).order('order', { ascending: true }),
         new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 5000)
+          setTimeout(() => reject(new Error('Request timeout')), 3000)
         )
       ])
 

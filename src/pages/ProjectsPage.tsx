@@ -115,13 +115,13 @@ export default function ProjectsPage() {
 
     try {
       const supabase = getSupabaseClient()
-      addDebugMessage(`Session check${retryLabel} (5s timeout)...`)
+      addDebugMessage(`Session check${retryLabel} (3s timeout)...`)
 
       // Check session validity before making queries (with timeout)
       const { data: { session }, error: sessionError } = await Promise.race([
         supabase.auth.getSession(),
         new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 5000)
+          setTimeout(() => reject(new Error('Request timeout')), 3000)
         )
       ])
 
@@ -139,13 +139,13 @@ export default function ProjectsPage() {
       addDebugMessage(`Session OK${retryLabel}`)
 
       // Fetch projects with timeout
-      addDebugMessage(`Fetching projects${retryLabel} (5s timeout)...`)
+      addDebugMessage(`Fetching projects${retryLabel} (3s timeout)...`)
       const startTime = Date.now()
 
       const { data, error } = await Promise.race([
         supabase.from('project_members').select('role, project_id, projects(*)').eq('user_id', user.id),
         new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 5000)
+          setTimeout(() => reject(new Error('Request timeout')), 3000)
         )
       ])
 
