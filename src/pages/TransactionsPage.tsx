@@ -282,9 +282,12 @@ export default function TransactionsPage() {
       const newHash = createDataHash(project, transactions)
       const suspiciousZeroResult = transactions.length === 0 && previousDataHash && previousDataHash !== 'no-project' && newHash !== previousDataHash
 
-      if (suspiciousZeroResult) {
-        console.log('⚠️ Suspicious: Got 0 transactions when we previously had data')
+      if (suspiciousZeroResult && retryCount < maxRetries) {
+        console.log(`⚠️ Suspicious: Got 0 transactions when we previously had data (retry ${retryCount + 1}/${maxRetries})`)
         console.log('Triggering safety check retry...')
+
+        // Increment retry count to prevent infinite loops
+        setRetryCount(retryCount + 1)
 
         // Reset Supabase client and retry once
         resetSupabaseClient()
@@ -303,17 +306,19 @@ export default function TransactionsPage() {
             console.log('✓ Safety retry succeeded')
             setTransactions(retryData)
             setPreviousDataHash(createDataHash(project, retryData))
+            setRetryCount(0) // Reset retry count on success
             return
           }
         } catch (retryError) {
           console.error('Safety retry failed:', retryError)
         }
 
-        console.log('⚠️ Safety retry also failed, accepting 0 transactions')
-        setPreviousDataHash(newHash)
+        console.log(`⚠️ Safety retry ${retryCount + 1}/${maxRetries} failed`)
+        // Don't set previousDataHash - allow retry on next fetch if we haven't exhausted retries
       } else {
         // Normal path: update the tracking state
         setPreviousDataHash(newHash)
+        setRetryCount(0) // Reset retry count on successful fetch
       }
 
       setTransactions(transactions)

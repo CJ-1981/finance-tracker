@@ -225,7 +225,7 @@ export default function ProjectDetailPage() {
     }
   }
 
-  const fetchProjectWithRetry = async (attemptNumber: number = 0, isSafetyRetry: boolean = false): Promise<boolean> => {
+  const fetchProjectWithRetry = async (attemptNumber: number = 0): Promise<boolean> => {
     if (!id) return false
 
     // Check if user is authenticated before fetching
@@ -291,24 +291,27 @@ export default function ProjectDetailPage() {
 
       // Safety check: Validate project data integrity
       const newHash = createDataHash(data)
-      const suspiciousResult = !data.id || !data.name || (previousDataHash && newHash === previousDataHash && !isSafetyRetry)
+      const suspiciousResult = !data.id || !data.name || (previousDataHash && newHash === previousDataHash)
 
-      if (suspiciousResult && previousDataHash && !isSafetyRetry) {
-        addDebugMessage(`⚠️ Suspicious: Project data looks invalid or unchanged (${newHash})`)
+      if (suspiciousResult && previousDataHash && retryCount < maxRetries) {
+        addDebugMessage(`⚠️ Suspicious: Project data looks invalid or unchanged (${newHash}) (safety retry ${retryCount + 1}/${maxRetries})`)
         addDebugMessage('Triggering safety check retry...')
+
+        // Increment retry count to prevent infinite loops
+        setRetryCount(retryCount + 1)
 
         // Reset Supabase client and retry once more
         resetSupabaseClient()
         await new Promise(resolve => setTimeout(resolve, 1000))
 
-        // Mark as safety retry to prevent infinite loop
-        const safetyResult = await fetchProjectWithRetry(attemptNumber, true)
+        // Retry with incremented attempt number
+        const safetyResult = await fetchProjectWithRetry(attemptNumber + 1)
 
         if (safetyResult) {
           addDebugMessage('✓ Safety retry succeeded')
         } else {
-          addDebugMessage('⚠️ Safety retry also failed')
-          setPreviousDataHash(newHash)
+          addDebugMessage(`⚠️ Safety retry ${retryCount}/${maxRetries} failed`)
+          // Don't set previousDataHash - allow retry on next fetch if we haven't exhausted retries
         }
       } else {
         // Normal path: update the tracking state
