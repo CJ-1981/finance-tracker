@@ -794,10 +794,13 @@ export default function ProjectDetailPage() {
   }
 
   const getChartData = (groupBy: string = 'category', metric: string = 'amount') => {
+    // Use currency-filtered transactions for amount calculations
+    const transactionsForCharts = metric === 'amount' ? transactionsForCalculation : filteredTransactions
+
     const groupTotals: Record<string, number> = {}
     const groupColors: Record<string, string> = {}
 
-    filteredTransactions.forEach((t) => {
+    transactionsForCharts.forEach((t) => {
       const groupingKey = getGroupingKey(t, groupBy)
       const value = getTransactionValue(t, metric)
       groupTotals[groupingKey] = (groupTotals[groupingKey] || 0) + value
