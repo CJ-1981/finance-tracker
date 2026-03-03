@@ -328,6 +328,7 @@
     "projectLoadFailed": "Failed to load project. Please try again.",
     "projectLoadError": "An error occurred while loading the project",
     "errorLoadingProject": "Error Loading Project",
+    "requestTimeout": "Request timeout. Please check your connection and try again.",
     "tryAgain": "Try Again"
   },
   "cashCounter": {

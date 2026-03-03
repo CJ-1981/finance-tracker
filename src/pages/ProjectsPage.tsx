@@ -51,8 +51,17 @@ export default function ProjectsPage() {
       const supabase = getSupabaseClient()
       console.log('Fetching projects for user:', user.id, 'Supabase client:', !!supabase)
 
-      // Check session validity before making queries
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      // Timeout wrapper to prevent indefinite hanging
+      const withTimeout = <T,>(ms: number, promise: Promise<T>): Promise<T> =>
+        Promise.race([
+          promise,
+          new Promise<T>((_, reject) =>
+            setTimeout(() => reject(new Error('Request timeout')), ms)
+          )
+        ])
+
+      // Check session validity before making queries (with timeout)
+      const { data: { session }, error: sessionError } = await withTimeout(5000, supabase.auth.getSession())
       if (sessionError || !session) {
         console.error('Session invalid or expired:', sessionError)
         setProjects([])
@@ -61,10 +70,15 @@ export default function ProjectsPage() {
         return
       }
 
-      const { data, error } = await supabase
-        .from('project_members')
-        .select('role, project_id, projects(*)')
-        .eq('user_id', user.id)
+      // Fetch projects with timeout - wrap in Promise since Supabase returns a builder
+      const { data, error } = await withTimeout(5000,
+        (async () => {
+          return await supabase
+            .from('project_members')
+            .select('role, project_id, projects(*)')
+            .eq('user_id', user.id)
+        })()
+      )
 
       if (error) {
         console.error('Supabase error:', error)
@@ -87,7 +101,10 @@ export default function ProjectsPage() {
       setProjects(projectsWithRoles)
       setProjectsError(null)
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
+      // Check if error is due to timeout
+      const errorMessage = (error instanceof Error && error.message === 'Request timeout')
+        ? t('projectDetail.requestTimeout')
+        : (error instanceof Error ? error.message : String(error))
       console.error('Error fetching projects:', error)
       console.error('Error details:', {
         message: errorMessage,

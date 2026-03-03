@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - TransactionsPage: Added error state, session validation, and retry UI
   - All pages now validate session before making Supabase queries
   - Users can retry loading when session expires instead of being stuck
+- **Timeout Protection** - Added request timeout wrappers to prevent indefinite hanging
+  - All Supabase queries now have 5-second timeout (session checks: 5000ms, data fetches: 5000ms)
+  - ProjectDetailPage: Timeout on session check and project fetch
+  - ProjectsPage: Timeout on session check and projects query
+  - TransactionsPage: Timeout on session check, project fetch, and role fetch
+  - Uses Promise.race() pattern to enforce timeout limits
+  - Added timeout error messages in English and Korean
+  - Users see clear "Request timeout" message instead of infinite loading
 - **Projects Page Loading** - Decoupled UI from Supabase loading to prevent stuck page issues
   - Page header now renders immediately with interactive elements
   - Projects load asynchronously with skeleton loading states

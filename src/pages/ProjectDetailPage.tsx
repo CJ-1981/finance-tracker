@@ -174,11 +174,21 @@ export default function ProjectDetailPage() {
       return
     }
 
+    // Timeout wrapper to prevent hanging
+    const withTimeout = <T,>(ms: number, promise: Promise<T>): Promise<T> =>
+      Promise.race([
+        promise,
+        new Promise<T>((_, reject) =>
+          setTimeout(() => reject(new Error('Request timeout')), ms)
+        )
+      ])
+
     try {
       const supabase = getSupabaseClient()
 
-      // Check session validity before making queries
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      // Check session validity before making queries (with timeout)
+      const { data: { session }, error: sessionError } = await withTimeout(5000, supabase.auth.getSession())
+
       if (sessionError || !session) {
         console.error('Session invalid or expired:', sessionError)
         setError(t('projectDetail.sessionExpired'))
@@ -186,11 +196,16 @@ export default function ProjectDetailPage() {
         return
       }
 
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('id', id)
-        .single()
+      // Fetch project with timeout - wrap in Promise since Supabase returns a builder
+      const { data, error } = await withTimeout(5000,
+        (async () => {
+          return await supabase
+            .from('projects')
+            .select('*')
+            .eq('id', id)
+            .single()
+        })()
+      )
 
       if (error) {
         // Project not found or permission denied
@@ -211,7 +226,10 @@ export default function ProjectDetailPage() {
       setError(null)
     } catch (error) {
       console.error('Error fetching project:', error)
-      setError(t('projectDetail.projectLoadError'))
+      const errorMessage = (error as Error).message === 'Request timeout'
+        ? t('projectDetail.requestTimeout')
+        : t('projectDetail.projectLoadError')
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }

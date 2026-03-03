@@ -79,11 +79,21 @@ export default function TransactionsPage() {
       return
     }
 
+    // Timeout wrapper to prevent hanging
+    const withTimeout = <T,>(ms: number, promise: Promise<T>): Promise<T> =>
+      Promise.race([
+        promise,
+        new Promise<T>((_, reject) =>
+          setTimeout(() => reject(new Error('Request timeout')), ms)
+        )
+      ])
+
     try {
       const supabase = getSupabaseClient()
 
-      // Check session validity before making queries
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      // Check session validity before making queries (with timeout)
+      const { data: { session }, error: sessionError } = await withTimeout(5000, supabase.auth.getSession())
+
       if (sessionError || !session) {
         console.error('Session invalid or expired:', sessionError)
         setError(t('projectDetail.sessionExpired'))
@@ -91,11 +101,16 @@ export default function TransactionsPage() {
         return
       }
 
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('id', projectId)
-        .single()
+      // Fetch project with timeout
+      const { data, error } = await withTimeout(5000,
+        (async () => {
+          return await supabase
+            .from('projects')
+            .select('*')
+            .eq('id', projectId)
+            .single()
+        })()
+      )
 
       if (error) {
         console.error('Error fetching project:', error)
@@ -113,24 +128,36 @@ export default function TransactionsPage() {
 
       setProject(data)
 
-      // Fetch user role for this project
+      // Fetch user role for this project (with timeout)
       if (user?.id) {
-        const { data: memberData } = await supabase
-          .from('project_members')
-          .select('role')
-          .eq('project_id', projectId)
-          .eq('user_id', user.id)
-          .single()
+        try {
+          const { data: memberData } = await withTimeout(3000,
+            (async () => {
+              return await supabase
+                .from('project_members')
+                .select('role')
+                .eq('project_id', projectId)
+                .eq('user_id', user.id)
+                .single()
+            })()
+          )
 
-        if (memberData && 'role' in memberData) {
-          setUserRole((memberData as any).role)
+          if (memberData && 'role' in memberData) {
+            setUserRole((memberData as any).role)
+          }
+        } catch (roleError) {
+          console.error('Error fetching user role:', roleError)
+          // Non-critical error, don't fail the whole page
         }
       }
 
       setError(null)
     } catch (error) {
       console.error('Error fetching project:', error)
-      setError(t('projectDetail.projectLoadError'))
+      const errorMessage = (error as Error).message === 'Request timeout'
+        ? t('projectDetail.requestTimeout')
+        : t('projectDetail.projectLoadError')
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
