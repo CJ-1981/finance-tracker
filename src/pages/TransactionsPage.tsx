@@ -30,6 +30,16 @@ export default function TransactionsPage() {
   })
   const [retryCount, setRetryCount] = useState(0)
   const maxRetries = 3
+
+  // Safety check: Track previous data to detect suspicious "0 transactions" results
+  const [previousDataHash, setPreviousDataHash] = useState<string>('')
+
+  // Simple hash function for data validation
+  const createDataHash = (project: any, transactions: any[]): string => {
+    if (!project) return 'no-project'
+    return `${project.id}-${transactions.length}-${JSON.stringify(transactions.map(t => t.id)).slice(0, 100)}`
+  }
+
   const [showSettings, setShowSettings] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
   const [newCategoryColor, setNewCategoryColor] = useState('#' + Math.floor(Math.random() * 16777215).toString(16).padEnd(6, '0'))
@@ -265,7 +275,48 @@ export default function TransactionsPage() {
         .order('date', { ascending: false })
 
       if (error) throw error
-      setTransactions(data || [])
+
+      const transactions = data || []
+
+      // Safety check: Detect suspicious "0 transactions" results
+      const newHash = createDataHash(project, transactions)
+      const suspiciousZeroResult = transactions.length === 0 && previousDataHash && previousDataHash !== 'no-project' && newHash !== previousDataHash
+
+      if (suspiciousZeroResult) {
+        console.log('⚠️ Suspicious: Got 0 transactions when we previously had data')
+        console.log('Triggering safety check retry...')
+
+        // Reset Supabase client and retry once
+        resetSupabaseClient()
+        await new Promise(resolve => setTimeout(resolve, 1000))
+
+        // Retry once more
+        try {
+          const { data: retryData, error: retryError } = await supabase
+            .from('transactions')
+            .select('*')
+            .eq('project_id', projectId)
+            .is('deleted_at', null)
+            .order('date', { ascending: false })
+
+          if (!retryError && retryData) {
+            console.log('✓ Safety retry succeeded')
+            setTransactions(retryData)
+            setPreviousDataHash(createDataHash(project, retryData))
+            return
+          }
+        } catch (retryError) {
+          console.error('Safety retry failed:', retryError)
+        }
+
+        console.log('⚠️ Safety retry also failed, accepting 0 transactions')
+        setPreviousDataHash(newHash)
+      } else {
+        // Normal path: update the tracking state
+        setPreviousDataHash(newHash)
+      }
+
+      setTransactions(transactions)
     } catch (error) {
       console.error('Error fetching transactions:', error)
     }

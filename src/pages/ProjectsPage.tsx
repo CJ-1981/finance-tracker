@@ -24,6 +24,16 @@ export default function ProjectsPage() {
   })
   const [retryCount, setRetryCount] = useState(0)
   const maxRetries = 3
+
+  // Safety check: Track previous data count to detect suspicious "0" results
+  const [previousDataCount, setPreviousDataCount] = useState(0)
+  const [lastValidHash, setLastValidHash] = useState<string>('')
+
+  // Simple hash function for data validation
+  const createDataHash = (data: any[]): string => {
+    return `${data.length}-${JSON.stringify(data.map((p: any) => p.id)).slice(0, 100)}`
+  }
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -85,7 +95,7 @@ export default function ProjectsPage() {
     }
   }, [user])
 
-  const fetchProjectsWithRetry = async (attemptNumber: number = 0): Promise<boolean> => {
+  const fetchProjectsWithRetry = async (attemptNumber: number = 0, isSafetyRetry: boolean = false): Promise<boolean> => {
     // If user is not authenticated, clear projects and return early
     if (!user?.id) {
       setProjects([])
@@ -156,6 +166,36 @@ export default function ProjectsPage() {
           userRole
         }
       }).filter((p: any) => p.id !== undefined) || []
+
+      // Safety check: Detect suspicious "0" results when we previously had data
+      const newHash = createDataHash(projectsWithRoles)
+      const suspiciousZeroResult = projectsWithRoles.length === 0 && previousDataCount > 0 && newHash !== lastValidHash
+
+      if (suspiciousZeroResult && !isSafetyRetry) {
+        addDebugMessage(`⚠️ Suspicious: Got 0 projects when we previously had ${previousDataCount}`)
+        addDebugMessage('Triggering safety check retry...')
+
+        // Reset Supabase client and retry once more
+        resetSupabaseClient()
+        await new Promise(resolve => setTimeout(resolve, 1000))
+
+        // Mark as safety retry to prevent infinite loop
+        const safetyResult = await fetchProjectsWithRetry(attemptNumber, true)
+
+        if (safetyResult) {
+          // If safety retry succeeded, update hash and continue normally
+          addDebugMessage('✓ Safety retry succeeded')
+        } else {
+          // Safety retry also failed, accept the 0 result but update state
+          addDebugMessage('⚠️ Safety retry also failed, accepting 0 projects')
+          setPreviousDataCount(0)
+          setLastValidHash(newHash)
+        }
+      } else {
+        // Normal path: update the tracking state
+        setPreviousDataCount(projectsWithRoles.length)
+        setLastValidHash(newHash)
+      }
 
       setProjects(projectsWithRoles)
       setProjectsError(null)

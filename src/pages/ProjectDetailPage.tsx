@@ -31,6 +31,17 @@ export default function ProjectDetailPage() {
   })
   const [retryCount, setRetryCount] = useState(0)
   const maxRetries = 3
+
+  // Safety check: Track previous data to detect suspicious empty results
+  const [previousDataHash, setPreviousDataHash] = useState<string>('')
+
+  // Simple hash function for data validation
+  const createDataHash = (data: any): string => {
+    if (!data) return 'null'
+    if (Array.isArray(data)) return `${data.length}-${JSON.stringify(data.map(d => d.id)).slice(0, 100)}`
+    return JSON.stringify(data).slice(0, 100)
+  }
+
   const [isEditing, setIsEditing] = useState(false)
   const [editFormData, setEditFormData] = useState({ name: '', description: '', currency: 'USD' })
   const [showInviteModal, setShowInviteModal] = useState(false)
@@ -214,7 +225,7 @@ export default function ProjectDetailPage() {
     }
   }
 
-  const fetchProjectWithRetry = async (attemptNumber: number = 0): Promise<boolean> => {
+  const fetchProjectWithRetry = async (attemptNumber: number = 0, isSafetyRetry: boolean = false): Promise<boolean> => {
     if (!id) return false
 
     // Check if user is authenticated before fetching
@@ -276,6 +287,32 @@ export default function ProjectDetailPage() {
         setError(t('projectDetail.projectNotFound'))
         setLoading(false)
         return false
+      }
+
+      // Safety check: Validate project data integrity
+      const newHash = createDataHash(data)
+      const suspiciousResult = !data.id || !data.name || (previousDataHash && newHash === previousDataHash && !isSafetyRetry)
+
+      if (suspiciousResult && previousDataHash && !isSafetyRetry) {
+        addDebugMessage(`⚠️ Suspicious: Project data looks invalid or unchanged (${newHash})`)
+        addDebugMessage('Triggering safety check retry...')
+
+        // Reset Supabase client and retry once more
+        resetSupabaseClient()
+        await new Promise(resolve => setTimeout(resolve, 1000))
+
+        // Mark as safety retry to prevent infinite loop
+        const safetyResult = await fetchProjectWithRetry(attemptNumber, true)
+
+        if (safetyResult) {
+          addDebugMessage('✓ Safety retry succeeded')
+        } else {
+          addDebugMessage('⚠️ Safety retry also failed')
+          setPreviousDataHash(newHash)
+        }
+      } else {
+        // Normal path: update the tracking state
+        setPreviousDataHash(newHash)
       }
 
       setProject(data)
