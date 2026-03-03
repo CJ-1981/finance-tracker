@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../hooks/useAuth'
-import { getSupabaseClient } from '../lib/supabase'
+import { getSupabaseClient, resetSupabaseClient } from '../lib/supabase'
 import { getPendingInvitation } from '../lib/invitations'
 import type { Project } from '../types'
 import LanguageSelector from '../components/LanguageSelector'
@@ -16,6 +16,8 @@ export default function ProjectsPage() {
   const [projectsLoading, setProjectsLoading] = useState(true)
   const [projectsError, setProjectsError] = useState<string | null>(null)
   const [debugMessages, setDebugMessages] = useState<string[]>([])
+  const [retryCount, setRetryCount] = useState(0)
+  const maxRetries = 3
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -44,21 +46,48 @@ export default function ProjectsPage() {
     console.log('[DEBUG]', formattedMessage)
   }
 
-  const fetchProjects = async () => {
+  // Network change detection - detect WiFi ↔ Cellular switching
+  useEffect(() => {
+    const handleOnline = () => {
+      addDebugMessage('Network online - resetting Supabase client and retrying...')
+      resetSupabaseClient()
+      fetchProjects()
+    }
+
+    const handleOffline = () => {
+      addDebugMessage('Network offline - waiting for connection...')
+    }
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [user])
+
+  const fetchProjectsWithRetry = async (attemptNumber: number = 0): Promise<boolean> => {
     // If user is not authenticated, clear projects and return early
     if (!user?.id) {
       setProjects([])
       setProjectsLoading(false)
       setProjectsError(null)
-      return
+      return false
     }
 
-    setProjectsLoading(true)
-    setProjectsError(null)
+    if (attemptNumber === 0) {
+      setProjectsLoading(true)
+      setProjectsError(null)
+      setRetryCount(0)
+    }
+
+    const retryLabel = attemptNumber > 0 ? ` (retry ${attemptNumber}/${maxRetries})` : ''
+    addDebugMessage(`Starting fetch${retryLabel}...`)
 
     try {
       const supabase = getSupabaseClient()
-      addDebugMessage('Starting session check (5s timeout)...')
+      addDebugMessage(`Session check${retryLabel} (5s timeout)...`)
 
       // Check session validity before making queries (with timeout)
       const { data: { session }, error: sessionError } = await Promise.race([
@@ -67,18 +96,20 @@ export default function ProjectsPage() {
           setTimeout(() => reject(new Error('Request timeout')), 5000)
         )
       ])
-      addDebugMessage(`Session check: ${session ? 'OK' : 'FAILED'} ${sessionError ? `(${sessionError.message})` : ''}`)
 
       if (sessionError || !session) {
         console.error('Session invalid or expired:', sessionError)
+        addDebugMessage(`Session failed: ${sessionError?.message || 'No session'}`)
         setProjects([])
         setProjectsLoading(false)
         setProjectsError(t('projectDetail.sessionExpired'))
-        return
+        return false
       }
 
+      addDebugMessage(`Session OK${retryLabel}`)
+
       // Fetch projects with timeout
-      addDebugMessage('Starting projects fetch (5s timeout)...')
+      addDebugMessage(`Fetching projects${retryLabel} (5s timeout)...`)
       const startTime = Date.now()
 
       const { data, error } = await Promise.race([
@@ -89,7 +120,7 @@ export default function ProjectsPage() {
       ])
 
       const elapsed = Date.now() - startTime
-      addDebugMessage(`Projects fetch completed in ${elapsed}ms (${data?.length || 0} projects)`)
+      addDebugMessage(`Fetch completed${retryLabel} in ${elapsed}ms (${data?.length || 0} projects)`)
 
       if (error) {
         console.error('Supabase error:', error)
@@ -108,19 +139,43 @@ export default function ProjectsPage() {
 
       setProjects(projectsWithRoles)
       setProjectsError(null)
+      setRetryCount(0) // Reset retry count on success
+      return true
     } catch (error) {
-      // Check if error is due to timeout
       const errorMsg = error instanceof Error ? error.message : 'Unknown error'
-      addDebugMessage(`ERROR: ${errorMsg}`)
-      const errorMessage = (error instanceof Error && error.message === 'Request timeout')
-        ? t('projectDetail.requestTimeout')
+      const isTimeout = errorMsg === 'Request timeout'
+
+      addDebugMessage(`ERROR${retryLabel}: ${errorMsg}`)
+
+      // Automatic retry with exponential backoff for timeout errors
+      if (isTimeout && attemptNumber < maxRetries) {
+        const backoffDelay = Math.pow(2, attemptNumber) * 1000 // 1s, 2s, 4s
+        const nextAttempt = attemptNumber + 1
+        addDebugMessage(`Retrying in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
+        setRetryCount(nextAttempt)
+
+        await new Promise(resolve => setTimeout(resolve, backoffDelay))
+        return fetchProjectsWithRetry(nextAttempt)
+      }
+
+      // Max retries reached or non-timeout error
+      const errorMessage = isTimeout
+        ? `Request failed after ${maxRetries + 1} attempts. Please try again.`
         : (error instanceof Error ? error.message : String(error))
+
       console.error('Error fetching projects:', error)
       setProjects([])
       setProjectsError(errorMessage)
+      return false
     } finally {
-      setProjectsLoading(false)
+      if (retryCount === 0 || retryCount >= maxRetries) {
+        setProjectsLoading(false)
+      }
     }
+  }
+
+  const fetchProjects = () => {
+    fetchProjectsWithRetry(0)
   }
 
   const handleCreateProject = async (e: React.FormEvent<HTMLFormElement>) => {
