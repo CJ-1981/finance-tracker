@@ -16,7 +16,12 @@ export default function ProjectsPage() {
   const [projectsLoading, setProjectsLoading] = useState(true)
   const [projectsError, setProjectsError] = useState<string | null>(null)
   const [debugMessages, setDebugMessages] = useState<string[]>([])
-  const showDebugPanel = typeof window !== 'undefined' && localStorage.getItem('debugPanelEnabled') === 'true'
+  const [showDebugPanel, setShowDebugPanel] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('debugPanelEnabled') === 'true'
+    }
+    return false
+  })
   const [retryCount, setRetryCount] = useState(0)
   const maxRetries = 3
   const [formData, setFormData] = useState({
@@ -38,6 +43,18 @@ export default function ProjectsPage() {
   useEffect(() => {
     fetchProjects()
   }, [user])
+
+  // Sync debug panel state with localStorage changes (e.g., from config page)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'debugPanelEnabled') {
+        setShowDebugPanel(e.newValue === 'true')
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [])
 
   // Debug logger helper
   const addDebugMessage = (message: string) => {

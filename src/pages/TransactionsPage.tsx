@@ -22,7 +22,12 @@ export default function TransactionsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [debugMessages, setDebugMessages] = useState<string[]>([])
-  const showDebugPanel = typeof window !== 'undefined' && localStorage.getItem('debugPanelEnabled') === 'true'
+  const [showDebugPanel, setShowDebugPanel] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('debugPanelEnabled') === 'true'
+    }
+    return false
+  })
   const [retryCount, setRetryCount] = useState(0)
   const maxRetries = 3
   const [showSettings, setShowSettings] = useState(false)
@@ -63,6 +68,18 @@ export default function TransactionsPage() {
     setDebugMessages(prev => [...prev.slice(-9), formattedMessage])
     console.log('[DEBUG]', formattedMessage)
   }
+
+  // Sync debug panel state with localStorage changes (e.g., from config page)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'debugPanelEnabled') {
+        setShowDebugPanel(e.newValue === 'true')
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [])
 
   // Network change detection - detect WiFi ↔ Cellular switching
   useEffect(() => {
