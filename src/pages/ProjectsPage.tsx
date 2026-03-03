@@ -435,18 +435,24 @@ export default function ProjectsPage() {
             </div>
 
             {/* Debug Panel */}
-            {showDebugPanel && debugMessages.length > 0 && (
-              <div className="mt-8 p-4 bg-gray-900 rounded-lg max-w-md mx-auto">
-                <h3 className="text-white text-sm font-bold mb-2 flex items-center gap-2">
-                  <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
-                  Debug Log
-                </h3>
-                <div className="space-y-1 max-h-48 overflow-y-auto">
-                  {debugMessages.map((msg, i) => (
-                    <div key={i} className="text-xs font-mono text-green-400">
-                      {msg}
-                    </div>
-                  ))}
+            {showDebugPanel && (
+              <div className="fixed bottom-0 left-0 right-0 p-4 bg-gray-900 border-t border-gray-700 z-50">
+                <div className="max-w-md mx-auto">
+                  <h3 className="text-white text-sm font-bold mb-2 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
+                    Debug Log
+                  </h3>
+                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                    {debugMessages.length === 0 ? (
+                      <div className="text-xs font-mono text-gray-500">No debug messages yet</div>
+                    ) : (
+                      debugMessages.map((msg, i) => (
+                        <div key={i} className="text-xs font-mono text-green-400">
+                          {msg}
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -466,18 +472,24 @@ export default function ProjectsPage() {
             </button>
 
             {/* Debug Panel */}
-            {showDebugPanel && debugMessages.length > 0 && (
-              <div className="mt-6 p-4 bg-gray-900 rounded-lg text-left">
-                <h3 className="text-white text-sm font-bold mb-2 flex items-center gap-2">
-                  <span className="w-2 h-2 bg-red-400 rounded-full"></span>
-                  Debug Log (Last 10 messages)
-                </h3>
-                <div className="space-y-1 max-h-48 overflow-y-auto">
-                  {debugMessages.map((msg, i) => (
-                    <div key={i} className="text-xs font-mono text-green-400">
-                      {msg}
-                    </div>
-                  ))}
+            {showDebugPanel && (
+              <div className="fixed bottom-0 left-0 right-0 p-4 bg-gray-900 border-t border-gray-700 z-50">
+                <div className="max-w-md mx-auto">
+                  <h3 className="text-white text-sm font-bold mb-2 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-red-400 rounded-full"></span>
+                    Debug Log (Last 10 messages)
+                  </h3>
+                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                    {debugMessages.length === 0 ? (
+                      <div className="text-xs font-mono text-gray-500">No debug messages yet</div>
+                    ) : (
+                      debugMessages.map((msg, i) => (
+                        <div key={i} className="text-xs font-mono text-green-400">
+                          {msg}
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
             )}
