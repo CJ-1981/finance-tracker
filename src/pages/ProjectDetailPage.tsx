@@ -1072,13 +1072,13 @@ export default function ProjectDetailPage() {
           {filteredTransactions.length > 0 && (
             <>
               {/* Pie Chart and Recent Transactions in same row */}
-              <div className="lg:col-span-2 card border-t-4 border-t-primary-500">
-                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-6">
-                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                    <span className="w-2 h-6 bg-primary-500 rounded-full"></span>
-                    {getChartTitle(categoryChartMetric, categoryChartGroupBy)}
+              <div className="lg:col-span-2 card border-t-4 border-t-primary-500 overflow-hidden">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-6 min-w-0">
+                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 min-w-0">
+                    <span className="w-2 h-6 bg-primary-500 rounded-full flex-shrink-0"></span>
+                    <span className="truncate">{getChartTitle(categoryChartMetric, categoryChartGroupBy)}</span>
                   </h2>
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 min-w-0">
                     <select
                       value={categoryChartGroupBy}
                       onChange={(e) => setCategoryChartGroupBy(e.target.value)}
@@ -1146,8 +1146,8 @@ export default function ProjectDetailPage() {
                           <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider truncate">{transaction.date}</div>
                         </div>
                       </div>
-                      <div className="text-right flex-shrink-0">
-                        <div className={`font-extrabold text-sm break-words ${
+                      <div className="text-right min-w-0">
+                        <div className={`font-extrabold text-sm break-all ${
                           transaction.amount < 0 ? 'text-rose-600' : 'text-emerald-600'
                         }`}>
                           {transaction.amount < 0 ? '-' : ''}{project.settings?.currency || 'USD'} {Math.abs(transaction.amount).toFixed(2)}
@@ -1165,11 +1165,11 @@ export default function ProjectDetailPage() {
 
               {datePeriod !== 'today' && (
                 <div className="lg:col-span-3 card border-t-4 border-t-primary-500 overflow-hidden">
-                  <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-4">
-                    <h2 className="text-lg font-semibold truncate pr-2">
+                  <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-4 min-w-0">
+                    <h2 className="text-lg font-semibold truncate pr-2 min-w-0">
                       {t('projectDetail.chartOverTimeTitle', { title: getChartTitle(timeChartMetric, timeChartGroupBy) })}
                     </h2>
-                    <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
+                    <div className="flex flex-wrap items-center gap-2 min-w-0">
                       <select
                         value={timeChartGroupBy}
                         onChange={(e) => setTimeChartGroupBy(e.target.value)}
