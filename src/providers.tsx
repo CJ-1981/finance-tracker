@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { BrowserRouter } from 'react-router-dom'
+import { HashRouter } from 'react-router-dom'
 import { AuthProvider } from './hooks/useAuth'
 
 interface ProvidersProps {
@@ -8,10 +8,10 @@ interface ProvidersProps {
 
 export function Providers({ children }: ProvidersProps) {
   return (
-    <BrowserRouter basename={import.meta.env.BASE_URL}>
+    <HashRouter>
       <AuthProvider>
         {children}
       </AuthProvider>
-    </BrowserRouter>
+    </HashRouter>
   )
 }

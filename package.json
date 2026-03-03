@@ -3,7 +3,7 @@
   "version": "2.3.4",
   "description": "Financial Tracking Web Application",
   "type": "module",
-  "homepage": "https://chimin.github.io/finance-tracker/",
+  "homepage": "https://cj-1981.github.io/finance-tracker/",
   "scripts": {
     "dev": "vite",
     "build": "node scripts/generate-version.js && tsc && vite build && cp dist/index.html dist/404.html",
