@@ -64,6 +64,27 @@ export default function ProjectDetailPage() {
     console.log('[DEBUG]', formattedMessage)
   }
 
+  // Network change detection - detect WiFi ↔ Cellular switching
+  useEffect(() => {
+    const handleOnline = () => {
+      addDebugMessage('Network online - resetting Supabase client and retrying...')
+      resetSupabaseClient()
+      fetchProject()
+    }
+
+    const handleOffline = () => {
+      addDebugMessage('Network offline - waiting for connection...')
+    }
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [id])
+
   // Update time every second
   useEffect(() => {
     const timer = setInterval(() => {
@@ -175,21 +196,30 @@ export default function ProjectDetailPage() {
     }
   }
 
-  const fetchProject = async () => {
-    if (!id) return
+  const fetchProjectWithRetry = async (attemptNumber: number = 0): Promise<boolean> => {
+    if (!id) return false
 
     // Check if user is authenticated before fetching
     if (!user?.id) {
       setError(t('projectDetail.notAuthenticated'))
       setLoading(false)
-      return
+      return false
     }
+
+    if (attemptNumber === 0) {
+      setLoading(true)
+      setError(null)
+      setRetryCount(0)
+    }
+
+    const retryLabel = attemptNumber > 0 ? ` (retry ${attemptNumber}/${maxRetries})` : ''
+    addDebugMessage(`Starting project fetch${retryLabel}...`)
 
     try {
       const supabase = getSupabaseClient()
 
       // Check session validity before making queries (with timeout)
-      addDebugMessage('Starting session check (5s timeout)...')
+      addDebugMessage(`Session check${retryLabel} (5s timeout)...`)
       const { data: { session }, error: sessionError } = await Promise.race([
         supabase.auth.getSession(),
         new Promise<any>((_, reject) =>
@@ -202,11 +232,11 @@ export default function ProjectDetailPage() {
         console.error('Session invalid or expired:', sessionError)
         setError(t('projectDetail.sessionExpired'))
         setLoading(false)
-        return
+        return false
       }
 
-      // Fetch project with timeout - use Promise.race directly
-      addDebugMessage('Starting project fetch (5s timeout)...')
+      // Fetch project with timeout
+      addDebugMessage(`Fetching project${retryLabel} (5s timeout)...`)
       const startTime = Date.now()
 
       const { data, error } = await Promise.race([
@@ -217,37 +247,58 @@ export default function ProjectDetailPage() {
       ])
 
       const elapsed = Date.now() - startTime
-      addDebugMessage(`Project fetch completed in ${elapsed}ms`)
+      addDebugMessage(`Project fetch completed${retryLabel} in ${elapsed}ms`)
 
       if (error) {
-        // Project not found or permission denied
         console.error('Error fetching project:', error)
-        setError(t('projectDetail.projectLoadFailed'))
-        setLoading(false)
-        return
+        throw error
       }
 
       if (!data) {
         console.error('Project not found')
         setError(t('projectDetail.projectNotFound'))
         setLoading(false)
-        return
+        return false
       }
 
       setProject(data)
       setError(null)
+      setRetryCount(0) // Reset retry count on success
+      return true
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error'
-      addDebugMessage(`ERROR: ${errorMsg}`)
-      console.error('Error fetching project:', error)
+      const isTimeout = errorMsg === 'Request timeout'
 
-      const errorMessage = (error instanceof Error && error.message === 'Request timeout')
-        ? t('projectDetail.requestTimeout')
+      addDebugMessage(`ERROR${retryLabel}: ${errorMsg}`)
+
+      // Automatic retry with exponential backoff for timeout errors
+      if (isTimeout && attemptNumber < maxRetries) {
+        const backoffDelay = Math.pow(2, attemptNumber) * 1000 // 1s, 2s, 4s
+        const nextAttempt = attemptNumber + 1
+        addDebugMessage(`Retrying in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
+        setRetryCount(nextAttempt)
+
+        await new Promise(resolve => setTimeout(resolve, backoffDelay))
+        return fetchProjectWithRetry(nextAttempt)
+      }
+
+      // Max retries reached or non-timeout error
+      const errorMessage = isTimeout
+        ? `Request failed after ${maxRetries + 1} attempts. Please try again.`
         : t('projectDetail.projectLoadError')
+
+      console.error('Error fetching project:', error)
       setError(errorMessage)
+      return false
     } finally {
-      setLoading(false)
+      if (retryCount === 0 || retryCount >= maxRetries) {
+        setLoading(false)
+      }
     }
+  }
+
+  const fetchProject = () => {
+    fetchProjectWithRetry(0)
   }
 
   const fetchTransactions = async () => {

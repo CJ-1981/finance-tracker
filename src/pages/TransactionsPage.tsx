@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../hooks/useAuth'
-import { getSupabaseClient } from '../lib/supabase'
+import { getSupabaseClient, resetSupabaseClient } from '../lib/supabase'
 import { softDeleteTransaction, restoreTransaction, permanentlyDeleteTransaction } from '../lib/supabase'
 import { exportToCSV } from '../utils/csvExport'
 import type { Project, Transaction, Category } from '../types'
@@ -21,6 +21,9 @@ export default function TransactionsPage() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [debugMessages, setDebugMessages] = useState<string[]>([])
+  const [retryCount, setRetryCount] = useState(0)
+  const maxRetries = 3
   const [showSettings, setShowSettings] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
   const [newCategoryColor, setNewCategoryColor] = useState('#' + Math.floor(Math.random() * 16777215).toString(16).padEnd(6, '0'))
@@ -52,6 +55,37 @@ export default function TransactionsPage() {
   const [customStartDate, setCustomStartDate] = useState('')
   const [customEndDate, setCustomEndDate] = useState('')
 
+  // Debug logger helper
+  const addDebugMessage = (message: string) => {
+    const timestamp = new Date().toLocaleTimeString()
+    const formattedMessage = `[${timestamp}] ${message}`
+    setDebugMessages(prev => [...prev.slice(-9), formattedMessage])
+    console.log('[DEBUG]', formattedMessage)
+  }
+
+  // Network change detection - detect WiFi ↔ Cellular switching
+  useEffect(() => {
+    const handleOnline = () => {
+      addDebugMessage('Network online - resetting Supabase client and retrying...')
+      resetSupabaseClient()
+      if (projectId) {
+        fetchProject()
+      }
+    }
+
+    const handleOffline = () => {
+      addDebugMessage('Network offline - waiting for connection...')
+    }
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [projectId])
+
   useEffect(() => {
     if (projectId) {
       fetchProject()
@@ -69,35 +103,49 @@ export default function TransactionsPage() {
     }
   }, [projectId])
 
-  const fetchProject = async () => {
-    if (!projectId) return
+  const fetchProjectWithRetry = async (attemptNumber: number = 0): Promise<boolean> => {
+    if (!projectId) return false
 
     // Check if user is authenticated before fetching
     if (!user?.id) {
       setError(t('projectDetail.notAuthenticated'))
       setLoading(false)
-      return
+      return false
     }
+
+    if (attemptNumber === 0) {
+      setLoading(true)
+      setError(null)
+      setRetryCount(0)
+    }
+
+    const retryLabel = attemptNumber > 0 ? ` (retry ${attemptNumber}/${maxRetries})` : ''
+    addDebugMessage(`Starting project fetch${retryLabel}...`)
 
     try {
       const supabase = getSupabaseClient()
 
       // Check session validity before making queries (with timeout)
+      addDebugMessage(`Session check${retryLabel} (5s timeout)...`)
       const { data: { session }, error: sessionError } = await Promise.race([
         supabase.auth.getSession(),
         new Promise<any>((_, reject) =>
           setTimeout(() => reject(new Error('Request timeout')), 5000)
         )
       ])
+      addDebugMessage(`Session check: ${session ? 'OK' : 'FAILED'} ${sessionError ? `(${sessionError.message})` : ''}`)
 
       if (sessionError || !session) {
         console.error('Session invalid or expired:', sessionError)
         setError(t('projectDetail.sessionExpired'))
         setLoading(false)
-        return
+        return false
       }
 
       // Fetch project with timeout
+      addDebugMessage(`Fetching project${retryLabel} (5s timeout)...`)
+      const startTime = Date.now()
+
       const { data, error } = await Promise.race([
         supabase.from('projects').select('*').eq('id', projectId).single(),
         new Promise<any>((_, reject) =>
@@ -105,23 +153,24 @@ export default function TransactionsPage() {
         )
       ])
 
+      const elapsed = Date.now() - startTime
+      addDebugMessage(`Project fetch completed${retryLabel} in ${elapsed}ms`)
+
       if (error) {
         console.error('Error fetching project:', error)
-        setError(t('projectDetail.projectLoadFailed'))
-        setLoading(false)
-        return
+        throw error
       }
 
       if (!data) {
         console.error('Project not found')
         setError(t('projectDetail.projectNotFound'))
         setLoading(false)
-        return
+        return false
       }
 
       setProject(data)
 
-      // Fetch user role for this project (with timeout)
+      // Fetch user role for this project (with timeout) - non-critical
       if (user?.id) {
         try {
           const { data: memberData } = await Promise.race([
@@ -141,15 +190,42 @@ export default function TransactionsPage() {
       }
 
       setError(null)
+      setRetryCount(0) // Reset retry count on success
+      return true
     } catch (error) {
-      console.error('Error fetching project:', error)
-      const errorMessage = (error as Error).message === 'Request timeout'
-        ? t('projectDetail.requestTimeout')
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+      const isTimeout = errorMsg === 'Request timeout'
+
+      addDebugMessage(`ERROR${retryLabel}: ${errorMsg}`)
+
+      // Automatic retry with exponential backoff for timeout errors
+      if (isTimeout && attemptNumber < maxRetries) {
+        const backoffDelay = Math.pow(2, attemptNumber) * 1000 // 1s, 2s, 4s
+        const nextAttempt = attemptNumber + 1
+        addDebugMessage(`Retrying in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
+        setRetryCount(nextAttempt)
+
+        await new Promise(resolve => setTimeout(resolve, backoffDelay))
+        return fetchProjectWithRetry(nextAttempt)
+      }
+
+      // Max retries reached or non-timeout error
+      const errorMessage = isTimeout
+        ? `Request failed after ${maxRetries + 1} attempts. Please try again.`
         : t('projectDetail.projectLoadError')
+
+      console.error('Error fetching project:', error)
       setError(errorMessage)
+      return false
     } finally {
-      setLoading(false)
+      if (retryCount === 0 || retryCount >= maxRetries) {
+        setLoading(false)
+      }
     }
+  }
+
+  const fetchProject = () => {
+    fetchProjectWithRetry(0)
   }
 
   const fetchTransactions = async () => {
@@ -829,8 +905,28 @@ export default function TransactionsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 mb-4">Loading...</p>
+
+          {/* Debug Panel */}
+          {debugMessages.length > 0 && (
+            <div className="mt-8 p-4 bg-gray-900 rounded-lg max-w-md mx-auto text-left">
+              <h3 className="text-white text-sm font-bold mb-2 flex items-center gap-2">
+                <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
+                Debug Log
+              </h3>
+              <div className="space-y-1 max-h-48 overflow-y-auto">
+                {debugMessages.map((msg, i) => (
+                  <div key={i} className="text-xs font-mono text-green-400">
+                    {msg}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     )
   }
@@ -856,6 +952,23 @@ export default function TransactionsPage() {
                 {t('projectDetail.backToProjectsList')}
               </Link>
             </div>
+
+            {/* Debug Panel */}
+            {debugMessages.length > 0 && (
+              <div className="mt-6 p-4 bg-gray-900 rounded-lg text-left">
+                <h3 className="text-white text-sm font-bold mb-2 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-red-400 rounded-full"></span>
+                  Debug Log (Last 10 messages)
+                </h3>
+                <div className="space-y-1 max-h-48 overflow-y-auto">
+                  {debugMessages.map((msg, i) => (
+                    <div key={i} className="text-xs font-mono text-green-400">
+                      {msg}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
