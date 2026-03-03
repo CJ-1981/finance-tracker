@@ -5,6 +5,57 @@ All notable changes to the Finance Tracker application will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.4] - 2026-03-03
+
+### Added
+- **Delete Transaction Loading Indicator** - Spinner shows during transaction deletion
+  - Visual feedback while deletion is in progress
+  - Delete button disabled during operation to prevent double-clicks
+
+- **Safety Check for Suspicious Empty Results** - Hash-based data validation with auto-retry
+  - Detects when queries return 0 data but previously had data
+  - Automatically triggers one additional retry with client reset
+  - Prevents infinite retry loops with safety flag
+  - Applied to ProjectsPage, ProjectDetailPage, and TransactionsPage
+
+### Changed
+- **Request Timeout Reduced** - Timeout reduced from 5s → 3s → 2s
+  - Faster user feedback on slow connections
+  - Combined with retry mechanism for robustness
+
+- **Debug Panel Visibility** - Debug panel now persists at bottom of screen
+  - Changed from conditional rendering to always-visible when enabled
+  - Fixed positioning at screen bottom with z-50
+  - Shows "No debug messages yet" when log is empty
+
+### Fixed
+- **Session Error Retry Handling** - Session errors now throw exceptions instead of returning false
+  - Enables retry logic for session validation failures
+  - Expanded retry eligibility to Session, Network, and fetch errors
+
+- **Projects Array Preservation** - Projects array only cleared on initial fetch attempt
+  - Prevents "No projects available" during successful retry
+  - Improved loading state management by removing finally blocks
+
+- **ProjectDetailPage Mobile Overflow** - Comprehensive mobile responsiveness fixes
+  - Header action buttons: Added flex-wrap, removed flex-shrink-0
+  - Chart cards: Added overflow-hidden to prevent content overflow
+  - Chart controls: Added min-w-0 to allow shrinking
+  - Chart titles: Wrapped in truncate spans
+  - Transaction amounts: Changed to break-all for aggressive wrapping
+  - Removed redundant md:px-6 from header padding
+
+- **TransactionsPage Settings Modal Mobile Overflow** - Fixed modal layout issues
+  - Categories card: Added overflow-hidden, min-w-0 to forms
+  - Custom fields card: Added overflow-hidden and responsive layouts
+  - Field items: Changed to flex-col sm:flex-row for vertical stacking on mobile
+  - Add field form: Full width inputs on mobile
+  - Action buttons: Added flex-wrap and proper spacing
+
+- **Debug Panel Reactivity** - Fixed debug panel to respond to toggle changes
+  - Changed from localStorage read to useState with storage event listener
+  - State syncs across all pages when toggled from config
+
 ## [2.3.3] - 2026-03-03
 
 ### Changed

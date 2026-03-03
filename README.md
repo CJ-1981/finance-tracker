@@ -239,6 +239,32 @@ finance-tracker/
 
 ## Recent Updates
 
+### v2.3.4 - Mobile Responsiveness & Safety Improvements
+
+**New Features:**
+- ✅ Delete transaction loading spinner for visual feedback
+- ✅ Safety check system with hash-based validation and auto-retry
+  - Detects suspicious "0 data" results
+  - Automatically retries with client reset
+  - Prevents false empty results
+
+**Improvements:**
+- ✅ Reduced request timeout from 5s → 3s → 2s for faster feedback
+- ✅ Debug panel now persists at bottom of screen when enabled
+- ✅ Enhanced state sync across pages via storage event listeners
+
+**Bug Fixes:**
+- ✅ Fixed ProjectDetailPage mobile overflow (header, charts, transactions)
+- ✅ Fixed TransactionsPage settings modal mobile overflow
+- ✅ Fixed custom fields panel narrow width and overlapping issues
+- ✅ Fixed projects array clearing during retry attempts
+- ✅ Fixed debug panel reactivity with localStorage state sync
+
+**Mobile Responsiveness:**
+- All modals and pages now properly adapt to 375px screens
+- Vertical stacking on mobile for settings panel items
+- Improved button wrapping and spacing
+
 ### v2.3.3 - Connection Retry & Debug Panel Improvements
 
 **Improvements:**
