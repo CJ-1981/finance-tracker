@@ -51,6 +51,16 @@ export default function ProjectsPage() {
       const supabase = getSupabaseClient()
       console.log('Fetching projects for user:', user.id, 'Supabase client:', !!supabase)
 
+      // Check session validity before making queries
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      if (sessionError || !session) {
+        console.error('Session invalid or expired:', sessionError)
+        setProjects([])
+        setProjectsLoading(false)
+        setProjectsError(t('projectDetail.sessionExpired'))
+        return
+      }
+
       const { data, error } = await supabase
         .from('project_members')
         .select('role, project_id, projects(*)')
