@@ -50,6 +50,23 @@ export default function TransactionModal({
         return values
     }, [project?.settings?.custom_field_values])
 
+    // Load saved transaction type from localStorage
+    useEffect(() => {
+        if (!transaction && isOpen) {
+            const savedType = localStorage.getItem('transactionType')
+            if (savedType === 'income' || savedType === 'expense') {
+                setFormData(prev => ({ ...prev, transactionType: savedType }))
+            }
+        }
+    }, [isOpen, transaction])
+
+    // Save transaction type to localStorage whenever it changes
+    useEffect(() => {
+        if (formData.transactionType) {
+            localStorage.setItem('transactionType', formData.transactionType)
+        }
+    }, [formData.transactionType])
+
     useEffect(() => {
         if (transaction) {
             setFormData({
@@ -70,8 +87,10 @@ export default function TransactionModal({
             })
             setCustomData(initialCustomData)
         } else {
+            // Load saved transaction type for new transactions
+            const savedType = localStorage.getItem('transactionType')
             setFormData({
-                transactionType: 'expense',
+                transactionType: (savedType === 'income' || savedType === 'expense') ? savedType : 'expense',
                 amount: '',
                 currency_code: project?.settings?.currency || 'USD',
                 category_id: categories.length > 0 ? categories[0].id : '',
