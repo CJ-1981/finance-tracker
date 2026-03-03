@@ -22,13 +22,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Use ref to track loading state without causing re-renders or stale closures
   const loadingRef = useRef(true)
 
+  // Use ref to track cancellation state to avoid stale closures in async handlers
+  const cancelledRef = useRef(false)
+
   // Sync ref with authState.loading changes
   useEffect(() => {
     loadingRef.current = authState.loading
   }, [authState.loading])
 
   useEffect(() => {
-    let cancelled = false
+    cancelledRef.current = false
 
     // Try to get Supabase client - it might not be initialized yet
     let supabase
@@ -44,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Dead-man fallback: if onAuthStateChange never fires (network issue, etc.),
     // unblock the UI after 8 seconds.
     const timeoutId = setTimeout(() => {
-      if (!cancelled && loadingRef.current) {
+      if (!cancelledRef.current && loadingRef.current) {
         console.warn('Auth initialization timed out after 8s — forcing loading to false.')
         setAuthState(prev => prev.loading ? { ...prev, loading: false } : prev)
       }
@@ -64,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // This gives instant auth resolution on every page load.
     // ──────────────────────────────────────────────────────────────────────────
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (cancelled) return
+      if (cancelledRef.current) return
       clearTimeout(timeoutId)
 
       // Handle specific auth events
@@ -76,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (session?.user) {
             await fetchUserProfile(session.user, supabase).catch(err => {
               console.error('Error fetching user profile:', err)
-              if (!cancelled) setAuthState({ user: null, session: null, loading: false })
+              if (!cancelledRef.current) setAuthState({ user: null, session: null, loading: false })
             })
           } else {
             setAuthState({ user: null, session: null, loading: false })
@@ -93,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (session?.user) {
             await fetchUserProfile(session.user, supabase).catch(err => {
               console.error('Error fetching user profile:', err)
-              if (!cancelled) setAuthState({ user: null, session: null, loading: false })
+              if (!cancelledRef.current) setAuthState({ user: null, session: null, loading: false })
             })
           } else {
             setAuthState({ user: null, session: null, loading: false })
@@ -102,26 +105,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     // Handle page visibility changes - refresh session when user returns to tab
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && !cancelled) {
-        // User returned to the tab after being away
-        // Trigger a silent session refresh
-        supabase.auth.getSession().then(({ error }) => {
-          if (error) {
-            console.error('Error refreshing session on visibility change:', error)
-          }
-          // Session will be automatically refreshed if valid, or cleared if expired
-          // The onAuthStateChange listener above will handle the state update
-        }).catch(err => {
-          console.error('Failed to refresh session:', err)
-        })
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState !== 'visible') return
+      if (cancelledRef.current) return
+
+      // User returned to the tab after being away
+      // Trigger a silent session refresh
+      try {
+        const { error } = await supabase.auth.getSession()
+        if (cancelledRef.current) return
+        if (error) {
+          console.error('Error refreshing session on visibility change:', error)
+        }
+        // Session will be automatically refreshed if valid, or cleared if expired
+        // The onAuthStateChange listener above will handle the state update
+      } catch (err) {
+        if (cancelledRef.current) return
+        console.error('Failed to refresh session:', err)
       }
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
-      cancelled = true
+      cancelledRef.current = true
       clearTimeout(timeoutId)
       subscription.unsubscribe()
       document.removeEventListener('visibilitychange', handleVisibilityChange)
