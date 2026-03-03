@@ -1117,13 +1117,13 @@ export default function TransactionsPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {showSettings && (
-          <div className="grid md:grid-cols-2 gap-6 mb-8 mt-2">
-            <div className="card border-t-4 border-t-primary-500">
+          <div className="grid md:grid-cols-2 gap-6 mb-8 mt-2 overflow-x-hidden">
+            <div className="card border-t-4 border-t-primary-500 overflow-hidden">
               <h2 className="text-xl font-extrabold text-slate-900 mb-6 flex items-center gap-2">
                 <span className="p-1.5 bg-primary-100 text-primary-600 rounded-lg">🏷️</span>
                 {t('transactions.manageCategories')}
               </h2>
-              <form onSubmit={handleAddCategory} className="flex gap-2 mb-6 bg-slate-50 p-3 rounded-xl border border-slate-100">
+              <form onSubmit={handleAddCategory} className="flex gap-2 mb-6 bg-slate-50 p-3 rounded-xl border border-slate-100 min-w-0">
                 <input
                   type="color"
                   value={newCategoryColor}
@@ -1188,7 +1188,7 @@ export default function TransactionsPage() {
                             <span className="absolute -left-1 -top-1 w-2 h-2 bg-primary-500 rounded-full animate-ping"></span>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 text-xs">
+                        <div className="flex items-center gap-2 text-xs min-w-0 flex-wrap">
                           <div className="flex bg-white rounded-lg border border-slate-100 p-0.5">
                             <button disabled={index === 0} onClick={() => handleMoveCategory(index, 'up')} className="p-1 text-slate-400 hover:text-primary-600 disabled:opacity-20 transition-colors" title="Move Up">↑</button>
                             <button disabled={index === categories.length - 1} onClick={() => handleMoveCategory(index, 'down')} className="p-1 text-slate-400 hover:text-primary-600 disabled:opacity-20 transition-colors" title="Move Down">↓</button>
@@ -1206,15 +1206,15 @@ export default function TransactionsPage() {
                 ))}
               </ul>
             </div>
-            <div className="card border-t-4 border-t-teal-500" id="manage-custom-fields">
+            <div className="card border-t-4 border-t-teal-500 overflow-hidden" id="manage-custom-fields">
               <h2 className="text-xl font-extrabold text-slate-900 mb-6 flex items-center gap-2">
                 <span className="p-1.5 bg-teal-100 text-teal-600 rounded-lg">📋</span>
                 {t('transactions.customFields')}
               </h2>
-              <form onSubmit={handleAddField} className="flex flex-col gap-3 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <form onSubmit={handleAddField} className="flex flex-col gap-3 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100 min-w-0">
                 <div className="flex gap-2">
-                  <input type="text" className="input flex-1" placeholder="Field Name (e.g., Note, Tag)" value={newFieldName} onChange={e => setNewFieldName(e.target.value)} required />
-                  <select className="input w-32" value={newFieldType} onChange={e => setNewFieldType(e.target.value as any)}>
+                  <input type="text" className="input flex-1 min-w-0" placeholder="Field Name (e.g., Note, Tag)" value={newFieldName} onChange={e => setNewFieldName(e.target.value)} required />
+                  <select className="input w-32 flex-shrink-0" value={newFieldType} onChange={e => setNewFieldType(e.target.value as any)}>
                     <option value="text">Text</option>
                     <option value="number">Number</option>
                     <option value="date">Date</option>
@@ -1236,7 +1236,7 @@ export default function TransactionsPage() {
               </form>
               <div className="space-y-3">
                 {project?.settings?.custom_fields?.map((f, index) => (
-                  <div key={f.name} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded">
+                  <div key={f.name} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded min-w-0 gap-2">
                     {editingFieldOriginalName === f.name ? (
                       <div className="flex-1 flex gap-2 flex-col">
                         <input
@@ -1264,8 +1264,8 @@ export default function TransactionsPage() {
                       </div>
                     ) : (
                       <>
-                        <div className="flex-1">
-                          <div>
+                        <div className="flex-1 min-w-0">
+                          <div className="truncate">
                             <span className="font-semibold">{f.name}</span> <span className="text-gray-500 text-xs">({f.type})</span>
                             {f.type === 'select' && f.options && (
                               <span className="text-gray-400 text-xs ml-2">[{f.options.length} options]</span>
@@ -1284,7 +1284,7 @@ export default function TransactionsPage() {
                             </div>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 text-xs">
+                        <div className="flex items-center gap-2 text-xs min-w-0 flex-wrap">
                           <button disabled={index === 0} onClick={() => handleMoveField(index, 'up')} className="text-gray-500 hover:text-blue-600 disabled:opacity-30">↑</button>
                           <button disabled={index === (project.settings?.custom_fields?.length || 0) - 1} onClick={() => handleMoveField(index, 'down')} className="text-gray-500 hover:text-blue-600 disabled:opacity-30">↓</button>
                           {f.type === 'text' && (
