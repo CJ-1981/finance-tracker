@@ -97,7 +97,7 @@ This document defines the acceptance criteria for the currency filtering and vis
 
 ---
 
-## Scenario 5: Case Insensitive Currency Matching
+## Scenario 5: Case-Insensitive Currency Matching
 
 **Feature:** Case-insensitive currency code comparison
 

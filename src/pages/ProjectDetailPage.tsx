@@ -820,11 +820,14 @@ export default function ProjectDetailPage() {
   }
 
   const getAreaChartData = (groupBy: string = 'category', metric: string = 'amount') => {
-    // Get all unique dates from filtered transactions, sorted
-    const dates = Array.from(new Set(filteredTransactions.map(t => t.date))).sort()
+    // Use currency-filtered transactions for amount calculations
+    const transactionsForCharts = metric === 'amount' ? transactionsForCalculation : filteredTransactions
+
+    // Get all unique dates from transactions, sorted
+    const dates = Array.from(new Set(transactionsForCharts.map(t => t.date))).sort()
 
     // Get all unique grouping keys
-    const groupingKeys = Array.from(new Set(filteredTransactions.map(t => getGroupingKey(t, groupBy)))).sort()
+    const groupingKeys = Array.from(new Set(transactionsForCharts.map(t => getGroupingKey(t, groupBy)))).sort()
 
     // Build dataset for each grouping key
     const datasets = groupingKeys.map((groupingKey) => {
@@ -833,7 +836,7 @@ export default function ProjectDetailPage() {
       // Calculate metric for each date based on chart mode
       let cumulative = 0
       const data = dates.map(date => {
-        const dayTransactions = filteredTransactions
+        const dayTransactions = transactionsForCharts
           .filter(t => t.date === date && getGroupingKey(t, groupBy) === groupingKey)
 
         const dayTotal = dayTransactions.reduce((sum, t) => sum + getTransactionValue(t, metric), 0)

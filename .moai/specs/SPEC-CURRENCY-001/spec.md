@@ -32,7 +32,7 @@ issue: "#17"
 
 ## Assumptions
 
-1. **Project Currency Exists:** Each project has a defined `currency_code` field (e.g., "USD", "EUR")
+1. **Project Currency Exists:** Each project has a defined `settings.currency` field (e.g., "USD", "EUR")
 2. **Transaction Currency Storage:** Each transaction stores its `currency_code` (currently displayed but not filtered)
 3. **No Currency Conversion:** Multi-currency conversion is out of scope; this is purely about inclusion/exclusion
 4. **Visual Distinction:** Yellow/warning theme is appropriate for excluded transactions
@@ -51,11 +51,11 @@ issue: "#17"
 
 ### Event-Driven Requirements
 
-**ED-001:** **WHEN** a user views the transaction list, **THEN** the system **shall** apply visual distinction to transactions with `currency_code` mismatching the project currency.
+**ED-001:** **WHEN** a user views the transaction list, **THEN** the system **shall** apply visual distinction to transactions with `currency_code` mismatching the project `settings.currency`.
 
 **ED-002:** **WHEN** a user hovers over a visually distinguished transaction, **THEN** the system **shall** display a tooltip explaining the exclusion reason.
 
-**ED-003:** **WHEN** calculation functions execute (sum, average, totals), **THEN** the system **shall** only include transactions where `transaction.currency_code === project.currency_code`.
+**ED-003:** **WHEN** calculation functions execute (sum, average, totals), **THEN** the system **shall** only include transactions where `transaction.currency_code === project.settings.currency`.
 
 **ED-004:** **WHEN** a project currency changes, **THEN** the system **shall** re-evaluate all transaction inclusion/exclusion status.
 

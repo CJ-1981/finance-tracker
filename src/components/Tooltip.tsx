@@ -1,4 +1,4 @@
-import { useState, useRef, ReactNode } from "react";
+import { useState, useRef, ReactNode, useEffect } from "react";
 
 interface TooltipProps {
   content: string;
@@ -10,6 +10,7 @@ interface TooltipProps {
 /**
  * Tooltip component with configurable hover delay.
  * Provides accessible tooltip information with ARIA attributes.
+ * Supports both mouse and touch interactions.
  *
  * @param content - The tooltip text to display
  * @param children - The element that triggers the tooltip on hover
@@ -23,32 +24,72 @@ export default function Tooltip({
   className = "",
 }: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const touchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  const handleMouseEnter = () => {
+  // Clear any pending timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      if (touchTimerRef.current) {
+        clearTimeout(touchTimerRef.current);
+      }
+    };
+  }, []);
+
+  const showTooltip = () => {
+    // Clear any existing timeout before setting a new one
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
     timeoutRef.current = setTimeout(() => {
       setIsVisible(true);
     }, delay);
+  };
+
+  const hideTooltip = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = undefined;
+    }
+    if (touchTimerRef.current) {
+      clearTimeout(touchTimerRef.current);
+      touchTimerRef.current = undefined;
+    }
+    setIsVisible(false);
+  };
+
+  const handleMouseEnter = () => {
+    showTooltip();
   };
 
   const handleMouseLeave = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    setIsVisible(false);
+    hideTooltip();
   };
 
   const handleFocus = () => {
-    timeoutRef.current = setTimeout(() => {
-      setIsVisible(true);
-    }, delay);
+    showTooltip();
   };
 
   const handleBlur = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
+    hideTooltip();
+  };
+
+  const handleTouchStart = () => {
+    // Tap-and-hold for mobile: show tooltip after 500ms
+    touchTimerRef.current = setTimeout(() => {
+      setIsVisible(true);
+    }, 500);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchTimerRef.current) {
+      clearTimeout(touchTimerRef.current);
+      touchTimerRef.current = undefined;
     }
-    setIsVisible(false);
+    // Don't immediately hide on touch end - let user tap elsewhere to dismiss
   };
 
   return (
@@ -58,6 +99,8 @@ export default function Tooltip({
       onMouseLeave={handleMouseLeave}
       onFocus={handleFocus}
       onBlur={handleBlur}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       {children}
       {isVisible && (

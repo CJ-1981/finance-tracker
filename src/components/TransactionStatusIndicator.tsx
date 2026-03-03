@@ -61,12 +61,13 @@ export default function TransactionStatusIndicator({
   return (
     <Tooltip content={tooltipContent} delay={300}>
       <span
-        className={`${bgColor} ${borderColor} border rounded px-2 py-1 text-xs font-medium ${iconColor} ${className}`}
+        className={`${bgColor} ${borderColor} border rounded px-2 py-1 text-xs font-medium ${iconColor} ${className} cursor-help`}
         role="status"
         aria-live="polite"
         aria-label={tooltipContent}
+        tabIndex={0}
       >
-        {showIcon && <span className="mr-1">⚠️</span>}
+        {showIcon && <span className="mr-1" aria-hidden="true">⚠️</span>}
         {status === "missing" ? "No Currency" : `${currencyCode}`}
       </span>
     </Tooltip>

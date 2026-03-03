@@ -1668,13 +1668,18 @@ export default function TransactionsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {getFilteredAndSortedTransactions().map((transaction) => (
-                    <tr
-                      key={transaction.id}
-                      className={`border-b border-gray-100 hover:bg-gray-50 ${
-                        isMultiSelectMode && selectedTransactions.has(transaction.id) ? 'bg-blue-50' : ''
-                      } ${getTransactionRowClassName(transaction.currency_code, project?.settings?.currency || null)}`}
-                    >
+                  {getFilteredAndSortedTransactions().map((transaction) => {
+                    const currencyRowClass = getTransactionRowClassName(transaction.currency_code, project?.settings?.currency || null);
+                    const isSelected = isMultiSelectMode && selectedTransactions.has(transaction.id);
+                    const baseClasses = "border-b border-gray-100";
+                    const hoverClasses = isSelected || currencyRowClass ? "" : "hover:bg-gray-50";
+                    const selectedClasses = isSelected ? "bg-blue-50" : "";
+
+                    return (
+                      <tr
+                        key={transaction.id}
+                        className={`${baseClasses} ${hoverClasses} ${selectedClasses} ${currencyRowClass}`}
+                      >
                       {isMultiSelectMode && (
                         <td className="text-center py-3 px-4">
                           <input
@@ -1739,7 +1744,8 @@ export default function TransactionsPage() {
                         </td>
                       )}
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

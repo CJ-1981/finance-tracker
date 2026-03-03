@@ -879,7 +879,7 @@ test.describe('Multi-Currency Support', () => {
       }
     });
 
-    test('Scenario 7: Empty transaction list should not cause errors', async ({ page }) => {
+    test('Edge Case: Empty transaction list should not cause errors', async ({ page }) => {
       await page.goto('/projects');
       await waitForPageReady(page);
 
@@ -912,6 +912,21 @@ test.describe('Multi-Currency Support', () => {
           expect(hasContent).toBe(true);
         }
       }
+    });
+
+    test.skip('Scenario 7: Project currency change triggers re-evaluation', async ({ page }) => {
+      // NOTE: This test requires UI support for changing project currency
+      // When project settings/edit UI is available, this test should:
+      // 1. Create a project with currency="USD"
+      // 2. Add a transaction with currency="EUR" (should show yellow warning)
+      // 3. Change project currency to "EUR"
+      // 4. Verify transaction no longer shows warning (standard styling)
+      // 5. Verify transaction is now included in calculations
+
+      test.info().annotations.push({
+        type: 'issue',
+        description: 'Requires project settings UI for currency changes'
+      });
     });
   });
 
