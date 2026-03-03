@@ -22,6 +22,7 @@ export default function ProjectDetailPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [debugMessages, setDebugMessages] = useState<string[]>([])
   const [isEditing, setIsEditing] = useState(false)
   const [editFormData, setEditFormData] = useState({ name: '', description: '', currency: 'USD' })
   const [showInviteModal, setShowInviteModal] = useState(false)
@@ -52,6 +53,14 @@ export default function ProjectDetailPage() {
 
   // Current date and time state
   const [currentDateTime, setCurrentDateTime] = useState(new Date())
+
+  // Debug logger helper
+  const addDebugMessage = (message: string) => {
+    const timestamp = new Date().toLocaleTimeString()
+    const formattedMessage = `[${timestamp}] ${message}`
+    setDebugMessages(prev => [...prev.slice(-9), formattedMessage]) // Keep last 10 messages
+    console.log('[DEBUG]', formattedMessage)
+  }
 
   // Update time every second
   useEffect(() => {
@@ -187,9 +196,9 @@ export default function ProjectDetailPage() {
       const supabase = getSupabaseClient()
 
       // Check session validity before making queries (with timeout)
-      console.log('[DEBUG] Starting session check with 5000ms timeout...')
+      addDebugMessage('Starting session check (5s timeout)...')
       const { data: { session }, error: sessionError } = await withTimeout(5000, supabase.auth.getSession())
-      console.log('[DEBUG] Session check completed:', { session: !!session, sessionError })
+      addDebugMessage(`Session check: ${session ? 'OK' : 'FAILED'} ${sessionError ? `(${sessionError.message})` : ''}`)
 
       if (sessionError || !session) {
         console.error('Session invalid or expired:', sessionError)
@@ -199,7 +208,9 @@ export default function ProjectDetailPage() {
       }
 
       // Fetch project with timeout - wrap in Promise since Supabase returns a builder
-      console.log('[DEBUG] Starting project fetch with 5000ms timeout...')
+      addDebugMessage('Starting project fetch (5s timeout)...')
+      const startTime = Date.now()
+
       const { data, error } = await withTimeout(5000,
         (async () => {
           return await supabase
@@ -209,7 +220,9 @@ export default function ProjectDetailPage() {
             .single()
         })()
       )
-      console.log('[DEBUG] Project fetch completed:', { data: !!data, error })
+
+      const elapsed = Date.now() - startTime
+      addDebugMessage(`Project fetch completed in ${elapsed}ms`)
 
       if (error) {
         // Project not found or permission denied
@@ -229,16 +242,13 @@ export default function ProjectDetailPage() {
       setProject(data)
       setError(null)
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+      addDebugMessage(`ERROR: ${errorMsg}`)
       console.error('Error fetching project:', error)
-      console.error('[DEBUG] Error details:', {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        name: error instanceof Error ? error.name : 'Unknown',
-        stack: error instanceof Error ? error.stack : undefined
-      })
+
       const errorMessage = (error instanceof Error && error.message === 'Request timeout')
         ? t('projectDetail.requestTimeout')
         : t('projectDetail.projectLoadError')
-      console.log('[DEBUG] Setting error message:', errorMessage)
       setError(errorMessage)
     } finally {
       setLoading(false)
@@ -705,8 +715,28 @@ export default function ProjectDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 mb-4">Loading...</p>
+
+          {/* Debug Panel */}
+          {debugMessages.length > 0 && (
+            <div className="mt-8 p-4 bg-gray-900 rounded-lg max-w-md mx-auto text-left">
+              <h3 className="text-white text-sm font-bold mb-2 flex items-center gap-2">
+                <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
+                Debug Log
+              </h3>
+              <div className="space-y-1 max-h-48 overflow-y-auto">
+                {debugMessages.map((msg, i) => (
+                  <div key={i} className="text-xs font-mono text-green-400">
+                    {msg}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     )
   }
@@ -732,6 +762,23 @@ export default function ProjectDetailPage() {
                 {t('projectDetail.backToProjectsList')}
               </Link>
             </div>
+
+            {/* Debug Panel */}
+            {debugMessages.length > 0 && (
+              <div className="mt-6 p-4 bg-gray-900 rounded-lg text-left">
+                <h3 className="text-white text-sm font-bold mb-2 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-red-400 rounded-full"></span>
+                  Debug Log (Last 10 messages)
+                </h3>
+                <div className="space-y-1 max-h-48 overflow-y-auto">
+                  {debugMessages.map((msg, i) => (
+                    <div key={i} className="text-xs font-mono text-green-400">
+                      {msg}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
