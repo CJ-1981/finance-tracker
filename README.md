@@ -239,6 +239,38 @@ finance-tracker/
 
 ## Recent Updates
 
+### v2.3.5 - Multi-Currency Support & UX Improvements
+
+**New Features:**
+- ✅ Multi-Currency Transaction Filtering (SPEC-CURRENCY-001)
+  - Filter transactions by project currency for accurate calculations
+  - Case-insensitive and whitespace-normalized currency matching
+  - Visual indicators for mismatched currencies in transaction list
+  - Tooltip explanations for currency exclusions
+- ✅ Other Currency Totals Display
+  - Shows breakdown of amounts by non-matching currencies
+  - Displays in Total Amount widget below main total
+  - Sorted alphabetically by currency code
+- ✅ Transaction Modal UX Improvements
+  - Close button (X) on top-right corner for easy dismissal
+  - "Save & Continue" button for rapid data entry workflow
+  - Modal stays open for adding multiple transactions in sequence
+- ✅ Persistent Transaction Type Selection
+  - Income/expense button state remembered across modal openings
+  - Stored in localStorage for session persistence
+  - Defaults to income when adding new transactions
+  - Defaults to "With Names" in Cash Counter modal
+
+**Bug Fixes:**
+- ✅ Chart currency filtering - Pie charts now exclude mismatched currencies
+- ✅ Recent transactions currency display - Shows actual transaction currency
+- ✅ Swapped Cash Counter Modal button positions (With Names first)
+
+**Technical:**
+- Currency filtering utility functions: `getCurrencyStatus()`, `filterByCurrency()`, `isTransactionIncluded()`
+- Transaction status indicator component with visual warnings
+- Case-insensitive currency comparison with whitespace normalization
+
 ### v2.3.4 - Mobile Responsiveness & Safety Improvements
 
 **New Features:**
