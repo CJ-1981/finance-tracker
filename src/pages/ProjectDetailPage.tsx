@@ -366,13 +366,17 @@ export default function ProjectDetailPage() {
     fetchProjectWithRetry(0)
   }
 
-  const fetchTransactions = async () => {
-    if (!id) return
+  const fetchTransactionsWithRetry = async (attemptNumber: number = 0): Promise<boolean> => {
+    if (!id) return false
+
+    const retryLabel = attemptNumber > 0 ? ` (retry ${attemptNumber}/${maxRetries})` : ''
+    addDebugMessage(`Starting transactions fetch${retryLabel}...`)
 
     try {
       const supabase = getSupabaseClient()
 
       // Fetch transactions with timeout
+      const startTime = Date.now()
       const { data, error } = await Promise.race([
         supabase.from('transactions').select('*').eq('project_id', id).is('deleted_at', null).order('date', { ascending: false }),
         new Promise<any>((_, reject) =>
@@ -380,21 +384,60 @@ export default function ProjectDetailPage() {
         )
       ])
 
-      if (error) throw error
+      const elapsed = Date.now() - startTime
+      addDebugMessage(`Transactions fetch completed${retryLabel} in ${elapsed}ms`)
+
+      if (error) {
+        console.error('Error fetching transactions:', error)
+        throw error
+      }
+
       setTransactions(data || [])
+      addDebugMessage(`✓ Transactions loaded: ${data?.length || 0} items`)
+      return true
     } catch (error) {
-      console.error('Error fetching transactions:', error)
-      setLoading(false)
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+      const isTimeout = errorMsg === 'Request timeout'
+      const isRetryable = isTimeout || errorMsg.includes('Network') || errorMsg.includes('network') ||
+                          errorMsg.includes('fetch') || errorMsg.includes('timeout')
+
+      addDebugMessage(`ERROR fetching transactions${retryLabel}: ${errorMsg}`)
+
+      // Automatic retry with exponential backoff for retryable errors
+      if (isRetryable && attemptNumber < maxRetries) {
+        const backoffDelay = Math.pow(2, attemptNumber) * 1000 // 1s, 2s, 4s
+        const nextAttempt = attemptNumber + 1
+        addDebugMessage(`Retrying transactions in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
+
+        // Reset Supabase client before retry to fix stale connections
+        addDebugMessage('Resetting Supabase client...')
+        await resetSupabaseClient(getConfig())
+
+        await new Promise(resolve => setTimeout(resolve, backoffDelay))
+        return fetchTransactionsWithRetry(nextAttempt)
+      }
+
+      // Max retries reached or non-retryable error
+      console.error('Error fetching transactions after retries:', error)
+      return false
     }
   }
 
-  const fetchCategories = async () => {
-    if (!id) return
+  const fetchTransactions = () => {
+    fetchTransactionsWithRetry(0)
+  }
+
+  const fetchCategoriesWithRetry = async (attemptNumber: number = 0): Promise<boolean> => {
+    if (!id) return false
+
+    const retryLabel = attemptNumber > 0 ? ` (retry ${attemptNumber}/${maxRetries})` : ''
+    addDebugMessage(`Starting categories fetch${retryLabel}...`)
 
     try {
       const supabase = getSupabaseClient()
 
       // Fetch categories with timeout
+      const startTime = Date.now()
       const { data, error } = await Promise.race([
         supabase.from('categories').select('*').eq('project_id', id).order('order', { ascending: true }),
         new Promise<any>((_, reject) =>
@@ -402,12 +445,47 @@ export default function ProjectDetailPage() {
         )
       ])
 
-      if (error) throw error
+      const elapsed = Date.now() - startTime
+      addDebugMessage(`Categories fetch completed${retryLabel} in ${elapsed}ms`)
+
+      if (error) {
+        console.error('Error fetching categories:', error)
+        throw error
+      }
+
       setCategories(data || [])
+      addDebugMessage(`✓ Categories loaded: ${data?.length || 0} items`)
+      return true
     } catch (error) {
-      console.error('Error fetching categories:', error)
-      setLoading(false)
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+      const isTimeout = errorMsg === 'Request timeout'
+      const isRetryable = isTimeout || errorMsg.includes('Network') || errorMsg.includes('network') ||
+                          errorMsg.includes('fetch') || errorMsg.includes('timeout')
+
+      addDebugMessage(`ERROR fetching categories${retryLabel}: ${errorMsg}`)
+
+      // Automatic retry with exponential backoff for retryable errors
+      if (isRetryable && attemptNumber < maxRetries) {
+        const backoffDelay = Math.pow(2, attemptNumber) * 1000 // 1s, 2s, 4s
+        const nextAttempt = attemptNumber + 1
+        addDebugMessage(`Retrying categories in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
+
+        // Reset Supabase client before retry to fix stale connections
+        addDebugMessage('Resetting Supabase client...')
+        await resetSupabaseClient(getConfig())
+
+        await new Promise(resolve => setTimeout(resolve, backoffDelay))
+        return fetchCategoriesWithRetry(nextAttempt)
+      }
+
+      // Max retries reached or non-retryable error
+      console.error('Error fetching categories after retries:', error)
+      return false
     }
+  }
+
+  const fetchCategories = () => {
+    fetchCategoriesWithRetry(0)
   }
 
   const handleEditProject = async (e: React.FormEvent) => {
