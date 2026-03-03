@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.3.2] - 2026-03-02
 
+### Added
+- **Debug Panel for Mobile Testing** - Added on-screen debug panel to diagnose timeout issues on mobile devices
+  - Shows last 10 debug messages with timestamps
+  - Displays request duration, timeout status, and errors
+  - Black background with green monospace text for visibility
+  - Loading state: Yellow indicator (active), Error state: Red indicator (error)
+  - Eliminates need for Mac/Safari Web Inspector when debugging iOS devices
+
+### Changed
+- **Timeout Implementation Simplified** - Refactored timeout wrappers to use Promise.race() directly
+  - Removed async IIFE wrapper that was adding unnecessary complexity
+  - Removed withTimeout<T>() helper function
+  - Cleaner code while maintaining same timeout protection
+  - **Race Condition Discovery**: The original async IIFE wrapper may have been fixing a race condition
+    by adding a microtask delay, allowing Supabase client to initialize properly
+    - Further testing needed to confirm if hanging issue is truly resolved
+
 ### Fixed
 - **Session Timeout Navigation** - Fixed navigation stuck issue after Supabase session timeout across all pages
   - ProjectDetailPage: Added session validation and error handling with retry option
