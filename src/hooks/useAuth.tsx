@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react'
 import { User } from '@supabase/supabase-js'
 import type { User as AppUser, AuthState } from '../types'
 import { getSupabaseClient, resetSupabaseClient, createSupabaseClient } from '../lib/supabase'
@@ -19,6 +19,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading: true,
   })
 
+  // Use ref to track loading state without causing re-renders or stale closures
+  const loadingRef = useRef(true)
+
+  // Sync ref with authState.loading changes
+  useEffect(() => {
+    loadingRef.current = authState.loading
+  }, [authState.loading])
+
   useEffect(() => {
     let cancelled = false
 
@@ -36,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Dead-man fallback: if onAuthStateChange never fires (network issue, etc.),
     // unblock the UI after 8 seconds.
     const timeoutId = setTimeout(() => {
-      if (!cancelled) {
+      if (!cancelled && loadingRef.current) {
         console.warn('Auth initialization timed out after 8s — forcing loading to false.')
         setAuthState(prev => prev.loading ? { ...prev, loading: false } : prev)
       }
