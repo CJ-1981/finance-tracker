@@ -51,17 +51,13 @@ export default function ProjectsPage() {
       const supabase = getSupabaseClient()
       console.log('Fetching projects for user:', user.id, 'Supabase client:', !!supabase)
 
-      // Timeout wrapper to prevent indefinite hanging
-      const withTimeout = <T,>(ms: number, promise: Promise<T>): Promise<T> =>
-        Promise.race([
-          promise,
-          new Promise<T>((_, reject) =>
-            setTimeout(() => reject(new Error('Request timeout')), ms)
-          )
-        ])
-
       // Check session validity before making queries (with timeout)
-      const { data: { session }, error: sessionError } = await withTimeout(5000, supabase.auth.getSession())
+      const { data: { session }, error: sessionError } = await Promise.race([
+        supabase.auth.getSession(),
+        new Promise<any>((_, reject) =>
+          setTimeout(() => reject(new Error('Request timeout')), 5000)
+        )
+      ])
       if (sessionError || !session) {
         console.error('Session invalid or expired:', sessionError)
         setProjects([])
@@ -70,15 +66,13 @@ export default function ProjectsPage() {
         return
       }
 
-      // Fetch projects with timeout - wrap in Promise since Supabase returns a builder
-      const { data, error } = await withTimeout(5000,
-        (async () => {
-          return await supabase
-            .from('project_members')
-            .select('role, project_id, projects(*)')
-            .eq('user_id', user.id)
-        })()
-      )
+      // Fetch projects with timeout
+      const { data, error } = await Promise.race([
+        supabase.from('project_members').select('role, project_id, projects(*)').eq('user_id', user.id),
+        new Promise<any>((_, reject) =>
+          setTimeout(() => reject(new Error('Request timeout')), 5000)
+        )
+      ])
 
       if (error) {
         console.error('Supabase error:', error)

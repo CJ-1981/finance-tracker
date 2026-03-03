@@ -183,21 +183,17 @@ export default function ProjectDetailPage() {
       return
     }
 
-    // Timeout wrapper to prevent hanging
-    const withTimeout = <T,>(ms: number, promise: Promise<T>): Promise<T> =>
-      Promise.race([
-        promise,
-        new Promise<T>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), ms)
-        )
-      ])
-
     try {
       const supabase = getSupabaseClient()
 
       // Check session validity before making queries (with timeout)
       addDebugMessage('Starting session check (5s timeout)...')
-      const { data: { session }, error: sessionError } = await withTimeout(5000, supabase.auth.getSession())
+      const { data: { session }, error: sessionError } = await Promise.race([
+        supabase.auth.getSession(),
+        new Promise<any>((_, reject) =>
+          setTimeout(() => reject(new Error('Request timeout')), 5000)
+        )
+      ])
       addDebugMessage(`Session check: ${session ? 'OK' : 'FAILED'} ${sessionError ? `(${sessionError.message})` : ''}`)
 
       if (sessionError || !session) {
@@ -207,19 +203,16 @@ export default function ProjectDetailPage() {
         return
       }
 
-      // Fetch project with timeout - wrap in Promise since Supabase returns a builder
+      // Fetch project with timeout - use Promise.race directly
       addDebugMessage('Starting project fetch (5s timeout)...')
       const startTime = Date.now()
 
-      const { data, error } = await withTimeout(5000,
-        (async () => {
-          return await supabase
-            .from('projects')
-            .select('*')
-            .eq('id', id)
-            .single()
-        })()
-      )
+      const { data, error } = await Promise.race([
+        supabase.from('projects').select('*').eq('id', id).single(),
+        new Promise<any>((_, reject) =>
+          setTimeout(() => reject(new Error('Request timeout')), 5000)
+        )
+      ])
 
       const elapsed = Date.now() - startTime
       addDebugMessage(`Project fetch completed in ${elapsed}ms`)
@@ -258,29 +251,16 @@ export default function ProjectDetailPage() {
   const fetchTransactions = async () => {
     if (!id) return
 
-    // Timeout wrapper
-    const withTimeout = <T,>(ms: number, promise: Promise<T>): Promise<T> =>
-      Promise.race([
-        promise,
-        new Promise<T>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), ms)
-        )
-      ])
-
     try {
       const supabase = getSupabaseClient()
 
       // Fetch transactions with timeout
-      const { data, error } = await withTimeout(5000,
-        (async () => {
-          return await supabase
-            .from('transactions')
-            .select('*')
-            .eq('project_id', id)
-            .is('deleted_at', null)
-            .order('date', { ascending: false })
-        })()
-      )
+      const { data, error } = await Promise.race([
+        supabase.from('transactions').select('*').eq('project_id', id).is('deleted_at', null).order('date', { ascending: false }),
+        new Promise<any>((_, reject) =>
+          setTimeout(() => reject(new Error('Request timeout')), 5000)
+        )
+      ])
 
       if (error) throw error
       setTransactions(data || [])
@@ -292,28 +272,16 @@ export default function ProjectDetailPage() {
   const fetchCategories = async () => {
     if (!id) return
 
-    // Timeout wrapper
-    const withTimeout = <T,>(ms: number, promise: Promise<T>): Promise<T> =>
-      Promise.race([
-        promise,
-        new Promise<T>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), ms)
-        )
-      ])
-
     try {
       const supabase = getSupabaseClient()
 
       // Fetch categories with timeout
-      const { data, error } = await withTimeout(5000,
-        (async () => {
-          return await supabase
-            .from('categories')
-            .select('*')
-            .eq('project_id', id)
-            .order('order', { ascending: true })
-        })()
-      )
+      const { data, error } = await Promise.race([
+        supabase.from('categories').select('*').eq('project_id', id).order('order', { ascending: true }),
+        new Promise<any>((_, reject) =>
+          setTimeout(() => reject(new Error('Request timeout')), 5000)
+        )
+      ])
 
       if (error) throw error
       setCategories(data || [])

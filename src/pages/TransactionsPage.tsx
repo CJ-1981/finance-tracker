@@ -79,20 +79,16 @@ export default function TransactionsPage() {
       return
     }
 
-    // Timeout wrapper to prevent hanging
-    const withTimeout = <T,>(ms: number, promise: Promise<T>): Promise<T> =>
-      Promise.race([
-        promise,
-        new Promise<T>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), ms)
-        )
-      ])
-
     try {
       const supabase = getSupabaseClient()
 
       // Check session validity before making queries (with timeout)
-      const { data: { session }, error: sessionError } = await withTimeout(5000, supabase.auth.getSession())
+      const { data: { session }, error: sessionError } = await Promise.race([
+        supabase.auth.getSession(),
+        new Promise<any>((_, reject) =>
+          setTimeout(() => reject(new Error('Request timeout')), 5000)
+        )
+      ])
 
       if (sessionError || !session) {
         console.error('Session invalid or expired:', sessionError)
@@ -102,15 +98,12 @@ export default function TransactionsPage() {
       }
 
       // Fetch project with timeout
-      const { data, error } = await withTimeout(5000,
-        (async () => {
-          return await supabase
-            .from('projects')
-            .select('*')
-            .eq('id', projectId)
-            .single()
-        })()
-      )
+      const { data, error } = await Promise.race([
+        supabase.from('projects').select('*').eq('id', projectId).single(),
+        new Promise<any>((_, reject) =>
+          setTimeout(() => reject(new Error('Request timeout')), 5000)
+        )
+      ])
 
       if (error) {
         console.error('Error fetching project:', error)
@@ -131,16 +124,12 @@ export default function TransactionsPage() {
       // Fetch user role for this project (with timeout)
       if (user?.id) {
         try {
-          const { data: memberData } = await withTimeout(3000,
-            (async () => {
-              return await supabase
-                .from('project_members')
-                .select('role')
-                .eq('project_id', projectId)
-                .eq('user_id', user.id)
-                .single()
-            })()
-          )
+          const { data: memberData } = await Promise.race([
+            supabase.from('project_members').select('role').eq('project_id', projectId).eq('user_id', user.id).single(),
+            new Promise<any>((_, reject) =>
+              setTimeout(() => reject(new Error('Request timeout')), 3000)
+            )
+          ])
 
           if (memberData && 'role' in memberData) {
             setUserRole((memberData as any).role)
