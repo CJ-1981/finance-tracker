@@ -155,11 +155,11 @@ export default function TransactionsPage() {
       const supabase = getSupabaseClient()
 
       // Check session validity before making queries (with timeout)
-      addDebugMessage(`Session check${retryLabel} (3s timeout)...`)
+      addDebugMessage(`Session check${retryLabel} (2s timeout)...`)
       const { data: { session }, error: sessionError } = await Promise.race([
         supabase.auth.getSession(),
         new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 3000)
+          setTimeout(() => reject(new Error('Request timeout')), 2000)
         )
       ])
       addDebugMessage(`Session check: ${session ? 'OK' : 'FAILED'} ${sessionError ? `(${sessionError.message})` : ''}`)
@@ -171,13 +171,13 @@ export default function TransactionsPage() {
       }
 
       // Fetch project with timeout
-      addDebugMessage(`Fetching project${retryLabel} (3s timeout)...`)
+      addDebugMessage(`Fetching project${retryLabel} (2s timeout)...`)
       const startTime = Date.now()
 
       const { data, error } = await Promise.race([
         supabase.from('projects').select('*').eq('id', projectId).single(),
         new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 3000)
+          setTimeout(() => reject(new Error('Request timeout')), 2000)
         )
       ])
 
@@ -204,7 +204,7 @@ export default function TransactionsPage() {
           const { data: memberData } = await Promise.race([
             supabase.from('project_members').select('role').eq('project_id', projectId).eq('user_id', user.id).single(),
             new Promise<any>((_, reject) =>
-              setTimeout(() => reject(new Error('Request timeout')), 3000)
+              setTimeout(() => reject(new Error('Request timeout')), 2000)
             )
           ])
 
