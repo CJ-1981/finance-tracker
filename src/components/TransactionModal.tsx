@@ -258,7 +258,7 @@ export default function TransactionModal({
                         <input
                             id="modal-date"
                             type="date"
-                            className="input"
+                            className="input w-40"
                             value={formData.date}
                             onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                             required
@@ -337,7 +337,7 @@ export default function TransactionModal({
                                 <input
                                     id={`modal-${field.name}`}
                                     type="date"
-                                    className="input"
+                                    className="input w-40"
                                     value={customData[field.name] || ''}
                                     onChange={(e) => setCustomData({ ...customData, [field.name]: e.target.value })}
                                 />
