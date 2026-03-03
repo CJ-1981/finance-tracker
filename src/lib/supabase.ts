@@ -85,18 +85,9 @@ export function getSupabaseClient(): SupabaseClient<Database> {
 }
 
 export async function resetSupabaseClient(config?: SupabaseConfig | null) {
-  // If there's an existing client, sign out to clean up the old session
-  if (supabaseInstance) {
-    try {
-      await supabaseInstance.auth.signOut()
-    } catch (e) {
-      // Ignore signOut errors - client might already be disconnected
-      if (import.meta.env.DEV) {
-        console.log('Sign out during reset (expected if disconnected):', e)
-      }
-    }
-  }
-
+  // Clear the instance WITHOUT signing out
+  // Signing out clears the session from localStorage, which breaks retries
+  // We preserve the session so the new client can recover it immediately
   supabaseInstance = null
   if (typeof window !== 'undefined') {
     delete (window as any).__supabaseInstance
