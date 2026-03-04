@@ -50,6 +50,7 @@ export function QRScannerModal({
 }: QRScannerModalProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const scannerRef = useRef<QrScannerType | null>(null)
+  const hasScannedRef = useRef(false)
   const [hasCamera, setHasCamera] = useState<boolean | null>(null)
   const [permissionDenied, setPermissionDenied] = useState(false)
   const [scanError, setScanError] = useState<string | null>(null)
@@ -61,6 +62,7 @@ export function QRScannerModal({
       setPermissionDenied(false)
       setScanError(null)
       setIsHttpsRequired(false)
+      hasScannedRef.current = false
     }
   }, [isOpen])
 
@@ -99,6 +101,19 @@ export function QRScannerModal({
     const scanner = new QrScanner(
       videoRef.current,
       (result) => {
+        // Prevent duplicate scan delivery
+        if (hasScannedRef.current) {
+          return
+        }
+        hasScannedRef.current = true
+
+        // Stop scanner immediately
+        if (scannerRef.current) {
+          scannerRef.current.stop()
+          scannerRef.current.destroy()
+          scannerRef.current = null
+        }
+
         // QR code detected successfully
         onScan(result.data)
         onClose()

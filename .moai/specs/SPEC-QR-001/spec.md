@@ -198,7 +198,7 @@ The system **SHALL NOT** require camera access for users who prefer manual input
 
 ```json
 {
-  "qrCode": {
+  "qr": {
     "title": "QR Code Invitation",
     "generateQR": "Generate QR Code",
     "showQR": "Show QR Code",

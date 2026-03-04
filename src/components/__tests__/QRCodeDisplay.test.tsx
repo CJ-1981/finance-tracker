@@ -12,25 +12,44 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { QRCodeDisplay } from '../QRCodeDisplay'
 
-// Mock navigator.clipboard
-const mockClipboard = {
-  writeText: vi.fn().mockResolvedValue(undefined),
-}
-
-Object.assign(navigator, {
-  clipboard: mockClipboard,
-})
-
-// Mock window.alert
-const mockAlert = vi.fn()
-Object.assign(window, { alert: mockAlert })
-
 describe('QRCodeDisplay', () => {
   const mockUrl = 'https://example.com/invite?token=abc123'
   const t = (key: string) => key // Simplified i18n mock
 
+  let mockClipboard: { writeText: ReturnType<typeof vi.fn> }
+  let mockAlert: ReturnType<typeof vi.fn>
+  let originalClipboard: typeof navigator.clipboard | undefined
+  let originalAlert: typeof window.alert | undefined
+
   beforeEach(() => {
     vi.clearAllMocks()
+
+    // Setup mocks
+    mockClipboard = { writeText: vi.fn().mockResolvedValue(undefined) }
+    mockAlert = vi.fn()
+
+    // Save originals
+    originalClipboard = navigator.clipboard
+    originalAlert = window.alert
+
+    // Apply mocks
+    Object.assign(navigator, { clipboard: mockClipboard })
+    Object.assign(window, { alert: mockAlert })
+  })
+
+  afterEach(() => {
+    // Restore originals
+    if (originalClipboard) {
+      Object.assign(navigator, { clipboard: originalClipboard })
+    } else {
+      delete (navigator as any).clipboard
+    }
+
+    if (originalAlert) {
+      Object.assign(window, { alert: originalAlert })
+    } else {
+      delete (window as any).alert
+    }
   })
 
   describe('Rendering', () => {
@@ -108,7 +127,7 @@ describe('QRCodeDisplay', () => {
       mockClipboard.writeText.mockRejectedValueOnce(new Error('Clipboard error'))
 
       // Mock document.execCommand (not available in jsdom)
-      const originalExecCommand = (document as any).execCommand
+      const originalDescriptor = Object.getOwnPropertyDescriptor(document, 'execCommand')
       Object.defineProperty(document, 'execCommand', {
         value: vi.fn().mockReturnValue(false),
         writable: true,
@@ -117,22 +136,24 @@ describe('QRCodeDisplay', () => {
 
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-      render(<QRCodeDisplay url={mockUrl} t={t} />)
+      try {
+        render(<QRCodeDisplay url={mockUrl} t={t} />)
 
-      const copyButton = screen.getByRole('button', { name: /qr.copy/i })
-      fireEvent.click(copyButton)
+        const copyButton = screen.getByRole('button', { name: /qr.copy/i })
+        fireEvent.click(copyButton)
 
-      await waitFor(() => {
-        expect(consoleSpy).toHaveBeenCalled()
-      })
-
-      consoleSpy.mockRestore()
-      // Clean up
-      Object.defineProperty(document, 'execCommand', {
-        value: originalExecCommand,
-        writable: true,
-        configurable: true,
-      })
+        await waitFor(() => {
+          expect(consoleSpy).toHaveBeenCalled()
+        })
+      } finally {
+        consoleSpy.mockRestore()
+        // Restore original descriptor
+        if (originalDescriptor) {
+          Object.defineProperty(document, 'execCommand', originalDescriptor)
+        } else {
+          delete (document as any).execCommand
+        }
+      }
     })
   })
 
@@ -166,9 +187,14 @@ describe('QRCodeDisplay', () => {
 
       render(<QRCodeDisplay url={longUrl} t={t} />)
 
-      // Should truncate display URL
-      const displayedUrl = screen.getByText(/https:\/\/example\.com\/aaaaa/)
+      // Should truncate display URL with ellipsis
+      const displayedUrl = screen.getByText((content) => {
+        return content.includes('https://example.com/') && content.includes('...')
+      })
       expect(displayedUrl).toBeInTheDocument()
+
+      // Check that truncated text is within expected max length (60 chars)
+      expect(displayedUrl.textContent?.length).toBeLessThanOrEqual(60)
     })
   })
 })

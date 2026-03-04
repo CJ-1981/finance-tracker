@@ -42,17 +42,21 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false }: QRCodeDi
       textArea.value = url
       textArea.style.position = 'fixed'
       textArea.style.left = '-999999px'
-      document.body.appendChild(textArea)
-      textArea.select()
-      const success = document.execCommand('copy')
-      if (success) {
-        setCopied(true)
-        alert(t('qr.copied'))
-        setTimeout(() => setCopied(false), 2000)
-      } else {
-        console.error('execCommand copy failed')
+
+      try {
+        document.body.appendChild(textArea)
+        textArea.select()
+        const success = document.execCommand('copy')
+        if (success) {
+          setCopied(true)
+          alert(t('qr.copied'))
+          setTimeout(() => setCopied(false), 2000)
+        } else {
+          console.error('execCommand copy failed')
+        }
+      } finally {
+        document.body.removeChild(textArea)
       }
-      document.body.removeChild(textArea)
     }
   }
 

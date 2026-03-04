@@ -89,10 +89,10 @@
 - **Charting**: Chart.js v4.5.1
 - **I18n**: i18next v25.8.13
 
-### Missing Dependencies for QR Feature
-- **QR Code Library**: `qrcode` or `react-qr-code` for generating QR codes
-- **Camera Access**: `react-webcam` or similar for camera functionality
-- **QR Code Scanning**: `jsqr` or `qr-scanner` for QR code decoding
+### Selected Dependencies for QR Feature
+- **QR Code Generation**: `react-qr-code@^2.0.18` (installed)
+- **QR Code Scanning**: `qr-scanner@^1.4.2` (installed)
+- **Testing**: `vitest`, `@testing-library/react`, `jsdom` (installed)
 
 ## 5. Critical Implementation Questions
 
