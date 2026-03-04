@@ -117,11 +117,19 @@ export default function LandingPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            to="/login"
+          <a
+            href="https://supabase.com/dashboard/sign-up"
+            target="_blank"
+            rel="noopener noreferrer"
             className="btn btn-primary px-8 py-3 text-lg"
           >
             {text('landing.getStarted', 'Get Started')}
+          </a>
+          <Link
+            to="/login"
+            className="btn btn-secondary px-8 py-3 text-lg"
+          >
+            {text('landing.signIn', 'Sign In')}
           </Link>
           <Link
             to="/config"

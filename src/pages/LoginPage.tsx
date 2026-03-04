@@ -7,12 +7,10 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()
-  const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [message, setMessage] = useState('')
   const [isConfigured, setIsConfigured] = useState(true)
 
   // Helper: navigate to the saved redirect path after login, then clear it
@@ -64,7 +62,6 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement, SubmitEvent>) => {
     e.preventDefault()
     setError('')
-    setMessage('')
     setLoading(true)
 
     try {
@@ -78,34 +75,21 @@ export default function LoginPage() {
         return
       }
 
-      if (isSignUp) {
-        // Sign up
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: window.location.origin + import.meta.env.BASE_URL + 'login'
-          }
-        })
-        if (error) throw error
-        setMessage(t('auth.registrationSuccess'))
-      } else {
-        // Sign in
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
-        if (error) throw error
+      // Sign in
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      if (error) throw error
 
-        // After successful login, redirect to saved path or projects
-        setTimeout(() => {
-          if (inviteToken) {
-            navigate(`/invite?token=${inviteToken}`)
-          } else {
-            navigateAfterLogin()
-          }
-        }, 100)
-      }
+      // After successful login, redirect to saved path or projects
+      setTimeout(() => {
+        if (inviteToken) {
+          navigate(`/invite?token=${inviteToken}`)
+        } else {
+          navigateAfterLogin()
+        }
+      }, 100)
     } catch (err: any) {
       const errorMessage = err.message || t('auth.authenticationFailed')
       if (errorMessage.includes('Invalid login credentials')) {
@@ -129,7 +113,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <h1 className="text-4xl font-black text-slate-900 dark:text-slate-100 tracking-tight">{t('auth.financialTrackerFull')}</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
-            {isSignUp ? t('auth.createAccount') : t('auth.welcomeBack')}
+            {t('auth.welcomeBack')}
           </p>
         </div>
 
@@ -184,30 +168,18 @@ export default function LoginPage() {
                 id="password"
                 type="password"
                 className="input"
-                placeholder="•••••••••"
+                placeholder="••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={8}
                 autoComplete="current-password"
                 data-testid="password-input"
               />
-              {isSignUp && (
-                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  {t('auth.passwordRequirements')}
-                </p>
-              )}
             </div>
 
             {error && (
               <div className="rounded-md p-4 text-sm bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-400" data-testid="error-message">
                 {error}
-              </div>
-            )}
-
-            {message && (
-              <div className="rounded-md p-4 text-sm bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-400" data-testid="success-message">
-                {message}
               </div>
             )}
 
@@ -217,22 +189,20 @@ export default function LoginPage() {
               className="w-full btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
               data-testid="submit-button"
             >
-              {loading ? t('common.loading') : (isSignUp ? t('auth.signUp') : t('auth.signIn'))}
+              {loading ? t('common.loading') : t('auth.signIn')}
             </button>
           </form>
 
           <div className="mt-6 text-center text-sm">
-            <button
-              onClick={() => {
-                setIsSignUp(!isSignUp)
-                setError('')
-                setMessage('')
-              }}
+            <a
+              href="https://supabase.com/dashboard/sign-up"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
-              data-testid="toggle-auth-mode-button"
+              data-testid="signup-link"
             >
-              {isSignUp ? t('auth.toggleToSignIn') : t('auth.toggleToSignUp')}
-            </button>
+              {t('auth.needAccount')}
+            </a>
           </div>
 
           <p className="mt-4 text-xs text-gray-500 dark:text-gray-400 text-center">
