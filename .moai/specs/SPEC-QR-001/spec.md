@@ -7,7 +7,7 @@ SPEC_ID: SPEC-QR-001
 TITLE: QR Code for Invitation and Supabase Config Setup
 DOMAIN: UI + AUTH
 PRIORITY: Medium
-STATUS: Implemented
+STATUS: Completed
 CREATED: 2025-03-04
 ISSUE: #24
 ```

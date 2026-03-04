@@ -5,6 +5,30 @@ All notable changes to the Finance Tracker application will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] - 2026-03-04
+
+### Added
+- **QR Code for Invitations** (SPEC-QR-001, fixes #24) - Generate QR codes for project invitations
+  - QR code display in invite success modal
+  - Copy QR code image to clipboard for email sharing
+  - Automatic QR code generation from invite URL
+  - Dark mode support for QR display
+
+- **QR Code Scanner for Config Setup** (SPEC-QR-001, fixes #24) - Scan QR codes to configure Supabase
+  - Camera-based QR code scanner in ConfigPage
+  - Automatic config extraction from scanned QR codes
+  - HTTPS detection and warning for camera API requirements
+  - Camera permission handling with clear user feedback
+  - Graceful fallback to manual input when camera unavailable
+
+### Technical
+- New dependencies: `react-qr-code@^2.0.18`, `qr-scanner@^1.4.2`
+- Components: `QRCodeDisplay.tsx`, `QRScannerModal.tsx`
+- i18n translations for QR features (English, Korean)
+- Camera API integration with proper resource cleanup
+- Memory leak prevention with mounted flags and refs
+- Config validation and extraction from invite URLs
+
 ## [2.4.0] - 2026-03-04
 
 ### Added
