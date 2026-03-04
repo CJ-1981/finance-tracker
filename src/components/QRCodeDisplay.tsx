@@ -4,10 +4,11 @@
  * @MX:SPEC: SPEC-QR-001, TASK-002
  *
  * Displays a QR code for a given URL with copy-to-clipboard functionality.
+ * Copies QR code as PNG image (not URL text) for pasting into email clients.
  * Supports dark mode and custom sizing.
  */
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import QRCode from 'react-qr-code'
 
 interface QRCodeDisplayProps {
@@ -28,33 +29,82 @@ interface QRCodeDisplayProps {
  */
 export function QRCodeDisplay({ url, t, size = 128, darkMode = false }: QRCodeDisplayProps) {
   const [copied, setCopied] = useState(false)
+  const qrRef = useRef<HTMLDivElement>(null)
 
+  /**
+   * Copies the QR code as a PNG image to the clipboard.
+   * Converts the SVG QR code to a canvas, then to a blob for clipboard.
+   */
   const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(url)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch (error) {
-      console.error('Failed to copy to clipboard:', error)
-      // Fallback for older browsers
-      const textArea = document.createElement('textarea')
-      textArea.value = url
-      textArea.style.position = 'fixed'
-      textArea.style.left = '-999999px'
+    if (!qrRef.current) {
+      console.error('QR code element not found')
+      return
+    }
 
-      try {
-        document.body.appendChild(textArea)
-        textArea.select()
-        const success = document.execCommand('copy')
-        if (success) {
-          setCopied(true)
-          setTimeout(() => setCopied(false), 2000)
-        } else {
-          console.error('execCommand copy failed')
-        }
-      } finally {
-        document.body.removeChild(textArea)
+    try {
+      // Get the SVG element from the QRCode component
+      const svgElement = qrRef.current.querySelector('svg')
+      if (!svgElement) {
+        throw new Error('SVG element not found')
       }
+
+      // Get SVG data
+      const svgData = new XMLSerializer().serializeToString(svgElement)
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' })
+      const url = URL.createObjectURL(svgBlob)
+
+      // Create an image element
+      const img = new Image()
+      img.onload = async () => {
+        // Create canvas
+        const canvas = document.createElement('canvas')
+        canvas.width = size
+        canvas.height = size
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          throw new Error('Could not get canvas context')
+        }
+
+        // Draw image on canvas
+        ctx.drawImage(img, 0, 0, size, size)
+
+        // Convert canvas to blob
+        canvas.toBlob(async (blob) => {
+          if (!blob) {
+            throw new Error('Could not convert canvas to blob')
+          }
+
+          try {
+            // Copy image to clipboard
+            await navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob })
+            ])
+            setCopied(true)
+            setTimeout(() => setCopied(false), 2000)
+          } catch (error) {
+            console.error('Failed to copy image to clipboard:', error)
+            // Fallback: copy URL text if image copy fails
+            try {
+              await navigator.clipboard.writeText(url)
+              setCopied(true)
+              setTimeout(() => setCopied(false), 2000)
+            } catch (fallbackError) {
+              console.error('Failed to copy URL as fallback:', fallbackError)
+            }
+          } finally {
+            URL.revokeObjectURL(url)
+          }
+        }, 'image/png')
+      }
+
+      img.onerror = () => {
+        console.error('Failed to load SVG as image')
+        URL.revokeObjectURL(url)
+      }
+
+      img.src = url
+    } catch (error) {
+      console.error('Failed to copy QR code:', error)
     }
   }
 
@@ -65,7 +115,7 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false }: QRCodeDi
     <div className={`flex flex-col items-center gap-4 p-4 ${darkMode ? 'dark' : ''}`}>
       {/* QR Code */}
       {url && (
-        <div className={`p-4 rounded-xl ${darkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
+        <div ref={qrRef} className={`p-4 rounded-xl ${darkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
           <QRCode
             value={url}
             size={size}
