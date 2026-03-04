@@ -7,7 +7,7 @@ SPEC_ID: SPEC-QR-001
 TITLE: QR Code for Invitation and Supabase Config Setup
 DOMAIN: UI + AUTH
 PRIORITY: Medium
-STATUS: Planned
+STATUS: Completed
 CREATED: 2025-03-04
 ISSUE: #24
 ```
@@ -132,17 +132,20 @@ The system **SHALL NOT** require camera access for users who prefer manual input
 
 **Props:**
 - `url: string` - The invite URL to encode as QR code
-- `size?: number` - QR code size in pixels (default: 256)
-- `onCopy?: () => void` - Callback when QR code is copied
+- `t: (key: string) => string` - Translation function for i18n
+- `size?: number` - QR code size in pixels (default: 128)
+- `darkMode?: boolean` - Whether to apply dark mode styles (default: false)
 
 **Behavior:**
 - Renders QR code using `react-qr-code` library
+- Handles copy-to-clipboard internally with fallback for older browsers
 - Displays "Copy QR Code" button below QR code
 - Shows success feedback when QR code is copied
 - Supports dark mode with appropriate contrast
+- Truncates very long URLs for display (max 60 chars)
 
 **Dependencies:**
-- `react-qr-code@^2.0.15`
+- `react-qr-code@^2.0.18`
 
 ### QR Scanner Modal Component
 
@@ -198,7 +201,7 @@ The system **SHALL NOT** require camera access for users who prefer manual input
 
 ```json
 {
-  "qrCode": {
+  "qr": {
     "title": "QR Code Invitation",
     "generateQR": "Generate QR Code",
     "showQR": "Show QR Code",
@@ -219,6 +222,10 @@ The system **SHALL NOT** require camera access for users who prefer manual input
   }
 }
 ```
+
+**Add to `src/locales/ko.json` (Korean translations):**
+
+All English keys above MUST have corresponding Korean translations. Korean translations follow the same nested structure and use Korean text for all user-facing strings.
 
 ### Security Considerations
 
@@ -278,6 +285,6 @@ The system **SHALL NOT** require camera access for users who prefer manual input
 
 ---
 
-**Document Version:** 1.0
-**Last Updated:** 2025-03-04
-**Status:** Ready for Implementation
+**Document Version:** 1.1
+**Last Updated:** 2026-03-04
+**Status:** Implemented

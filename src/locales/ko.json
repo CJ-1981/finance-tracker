@@ -358,5 +358,24 @@
     "pleaseEnterName": "이 항목의 이름을 입력해주세요.",
     "bills": "지폐",
     "coins": "동전"
+  },
+  "qr": {
+    "show": "QR 코드 표시",
+    "hide": "QR 코드 숨기기",
+    "copy": "QR 코드 복사",
+    "copied": "QR 코드가 클립보드에 복사되었습니다!",
+    "qrCodeFor": "QR 코드:",
+    "scanQR": "QR 코드 스캔",
+    "scannerTitle": "QR 코드 스캔",
+    "scannerDescription": "카메라를 QR 코드에 향해 스캔하세요",
+    "permissionDenied": "카메라 권한이 거부되었습니다. QR 코드를 스캔하려면 카메라 액세스를 허용해주세요.",
+    "permissionRequest": "QR 코드를 스캔하려면 카메라 액세스가 필요합니다. 메시지가 표시되면 권한을 허용해주세요.",
+    "noCamera": "이 장치에서 카메라를 찾을 수 없습니다",
+    "invalidQR": "유효하지 않은 QR 코드입니다. 유효한 초대 QR 코드를 스캔해주세요.",
+    "httpsRequired": "카메라 액세스에는 HTTPS가 필요합니다. 보안 연결을 사용해주세요.",
+    "scanFailed": "QR 코드 스캔에 실패했습니다. 다시 시도해주세요.",
+    "retry": "다시 시도",
+    "configExtracted": "QR 코드에서 구성을 추출했습니다. 확인 후 저장해주세요.",
+    "inviteOnly": "이 QR 코드는 초대 링크만 포함하고 있습니다. 초대를 수락하는 데 사용하세요."
   }
 }

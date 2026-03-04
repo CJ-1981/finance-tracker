@@ -1,6 +1,6 @@
 {
   "name": "finance-tracker",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "description": "Financial Tracking Web Application",
   "type": "module",
   "homepage": "https://cj-1981.github.io/finance-tracker/",
@@ -9,23 +9,31 @@
     "build": "node scripts/generate-version.js && tsc && vite build && cp dist/index.html dist/404.html",
     "verify:deployment": "bash scripts/verify-deployment.sh",
     "preview": "vite preview",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ci": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:mobile": "playwright test --project=mobile-chrome --project=mobile-safari --project=small-mobile"
   },
+  "overrides": {
+    "rollup": ">=4.59.0"
+  },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/papaparse": "^5.5.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.4",
     "autoprefixer": "^10.4.24",
+    "jsdom": "^27.0.1",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.19",
     "typescript": "^5.9.3",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "vitest": "^3.2.4"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.97.0",
@@ -33,10 +41,12 @@
     "i18next": "^25.8.13",
     "i18next-browser-languagedetector": "^8.2.1",
     "papaparse": "^5.5.3",
+    "qr-scanner": "^1.4.2",
     "react": "^19.2.4",
     "react-chartjs-2": "^5.3.1",
     "react-dom": "^19.2.4",
     "react-i18next": "^16.5.4",
+    "react-qr-code": "^2.0.18",
     "react-router-dom": "^7.13.0"
   }
 }

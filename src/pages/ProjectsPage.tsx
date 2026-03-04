@@ -7,6 +7,7 @@ import { getConfig } from '../lib/config'
 import { getPendingInvitation } from '../lib/invitations'
 import type { Project } from '../types'
 import LanguageSelector from '../components/LanguageSelector'
+import { QRCodeDisplay } from '../components/QRCodeDisplay'
 
 export default function ProjectsPage() {
   const { t } = useTranslation()
@@ -53,6 +54,7 @@ export default function ProjectsPage() {
   const [showInviteLink, setShowInviteLink] = useState(false)
   const [inviteRecipientEmail, setInviteRecipientEmail] = useState('')
   const [inviteProjectCount, setInviteProjectCount] = useState(0)
+  const [showQRCode, setShowQRCode] = useState(false) // QR code toggle state
 
   useEffect(() => {
     fetchProjects()
@@ -69,6 +71,13 @@ export default function ProjectsPage() {
     window.addEventListener('storage', handleStorageChange)
     return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
+
+  // Reset QR code state when invite link modal closes
+  useEffect(() => {
+    if (!showInviteLink) {
+      setShowQRCode(false)
+    }
+  }, [showInviteLink])
 
   // Debug logger helper
   const addDebugMessage = (message: string) => {
@@ -731,6 +740,30 @@ export default function ProjectsPage() {
               <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">{t('projects.combinedInviteLink')}</p>
               <p className="text-sm text-primary-600 dark:text-primary-400 break-all font-medium">{inviteLink}</p>
             </div>
+
+            {/* QR Code Toggle Button */}
+            <button
+              onClick={() => setShowQRCode(!showQRCode)}
+              className="w-full btn btn-secondary mb-4 flex items-center justify-center gap-2"
+              aria-label={showQRCode ? t('qr.hide') : t('qr.show')}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+              </svg>
+              {showQRCode ? t('qr.hide') : t('qr.show')}
+            </button>
+
+            {/* QR Code Display */}
+            {showQRCode && (
+              <div className="mb-6">
+                <QRCodeDisplay
+                  url={inviteLink}
+                  t={t}
+                  size={200}
+                  darkMode={document.documentElement.classList.contains('dark')}
+                />
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3 mb-6">
               <button

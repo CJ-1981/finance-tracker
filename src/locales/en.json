@@ -358,5 +358,24 @@
     "pleaseEnterName": "Please enter a name for this entry.",
     "bills": "Bills",
     "coins": "Coins"
+  },
+  "qr": {
+    "show": "Show QR Code",
+    "hide": "Hide QR Code",
+    "copy": "Copy QR Code",
+    "copied": "QR Code copied to clipboard!",
+    "qrCodeFor": "QR Code for",
+    "scanQR": "Scan QR Code",
+    "scannerTitle": "Scan QR Code",
+    "scannerDescription": "Point your camera at the QR code to scan it",
+    "permissionDenied": "Camera permission denied. Please enable camera access to scan QR codes.",
+    "permissionRequest": "Camera access is required to scan QR codes. Please grant permission when prompted.",
+    "noCamera": "No camera detected on this device",
+    "invalidQR": "Invalid QR code. Please scan a valid invitation QR code.",
+    "httpsRequired": "Camera access requires HTTPS. Please use a secure connection.",
+    "scanFailed": "Failed to scan QR code. Please try again.",
+    "retry": "Try Again",
+    "configExtracted": "Configuration extracted from QR code. Please verify and save.",
+    "inviteOnly": "This QR code contains an invitation link only. Please use it to accept the invitation."
   }
 }
