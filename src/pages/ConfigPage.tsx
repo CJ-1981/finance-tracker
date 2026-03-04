@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useSupabase } from '../hooks/useSupabase'
 import { testConnection } from '../lib/supabase'
@@ -26,6 +26,7 @@ export default function ConfigPage() {
   const { user, signIn, signOut } = useAuth()
   const { theme, setTheme } = useTheme()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [config, setConfig] = useState<SupabaseConfig>({
     url: '',
     anonKey: '',
@@ -55,8 +56,9 @@ export default function ConfigPage() {
 
   // Check if Supabase is already configured and if user is authenticated
   useEffect(() => {
+    const forceConfigure = searchParams.get('mode') === 'configure'
     const storedConfig = localStorage.getItem('supabase_config')
-    if (storedConfig) {
+    if (storedConfig && !forceConfigure) {
       try {
         const parsed = JSON.parse(storedConfig)
         if (parsed.url && parsed.anonKey) {
@@ -72,7 +74,7 @@ export default function ConfigPage() {
         // Invalid config, stay in configure mode
       }
     }
-  }, [user])
+  }, [user, searchParams])
 
   // Allow reconfiguration when mode is 'signin' or 'authenticated' and user clicks to edit
   const handleReconfigure = () => {

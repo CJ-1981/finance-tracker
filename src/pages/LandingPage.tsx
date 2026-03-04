@@ -128,7 +128,7 @@ export default function LandingPage() {
               {text('landing.signIn', 'Sign In')}
             </Link>
             <Link
-              to="/config"
+              to="/config?mode=configure"
               className="btn btn-secondary px-8 py-3 text-lg"
             >
               {text('landing.configureDatabase', 'Configure Database')}
