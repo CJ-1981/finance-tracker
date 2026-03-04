@@ -58,17 +58,21 @@ export default function ConfigPage() {
   useEffect(() => {
     const forceConfigure = searchParams.get('mode') === 'configure'
     const storedConfig = localStorage.getItem('supabase_config')
-    if (storedConfig && !forceConfigure) {
+    if (storedConfig) {
       try {
         const parsed = JSON.parse(storedConfig)
         if (parsed.url && parsed.anonKey) {
           setConfig(parsed)
-          // If user is already authenticated, show authenticated mode
-          if (user) {
-            setMode('authenticated')
-          } else {
-            setMode('signin')
+          // Only change mode if not forcing configure mode
+          if (!forceConfigure) {
+            // If user is already authenticated, show authenticated mode
+            if (user) {
+              setMode('authenticated')
+            } else {
+              setMode('signin')
+            }
           }
+          // If forceConfigure is true, stay in configure mode but load the values
         }
       } catch (e) {
         // Invalid config, stay in configure mode
