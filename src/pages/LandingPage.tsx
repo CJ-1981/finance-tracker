@@ -121,7 +121,7 @@ export default function LandingPage() {
             to="/login"
             className="btn btn-primary px-8 py-3 text-lg"
           >
-            {text('landing.signUpSupabase', 'Sign Up with Supabase')}
+            {text('landing.getStarted', 'Get Started')}
           </Link>
           <Link
             to="/config"
