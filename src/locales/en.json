@@ -141,6 +141,7 @@
     "signInToAccount": "Sign in to your account",
     "dontHaveAccount": "Don't have an account?",
     "signUp": "Sign Up",
+    "passwordRequirements": "Minimum 8 characters, must contain at least one letter and one number",
     "alreadyHaveAccount": "Already have an account?",
     "toggleToSignIn": "Already have an account? Sign In",
     "toggleToSignUp": "Don't have an account? Sign Up with Supabase",

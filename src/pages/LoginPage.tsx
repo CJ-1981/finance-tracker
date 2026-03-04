@@ -188,10 +188,15 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={6}
+                minLength={8}
                 autoComplete="current-password"
                 data-testid="password-input"
               />
+              {isSignUp && (
+                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  {t('auth.passwordRequirements')}
+                </p>
+              )}
             </div>
 
             {error && (
