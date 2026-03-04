@@ -22,6 +22,7 @@ export default function ProjectDetailPage() {
   const [project, setProject] = useState<Project | null>(null)
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [categories, setCategories] = useState<Category[]>([])
+  const [userRole, setUserRole] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [debugMessages, setDebugMessages] = useState<string[]>([])
@@ -329,6 +330,28 @@ export default function ProjectDetailPage() {
       }
 
       setProject(data)
+
+      // Fetch user role from project_members
+      try {
+        const { data: memberData } = await Promise.race([
+          supabase
+            .from('project_members')
+            .select('role')
+            .eq('project_id', id)
+            .eq('user_id', user?.id)
+            .single(),
+          new Promise<any>((_, reject) =>
+            setTimeout(() => reject(new Error('Request timeout')), 2000)
+          )
+        ])
+        if (memberData && 'role' in memberData) {
+          setUserRole((memberData as any).role)
+        }
+      } catch (roleError) {
+        console.error('Error fetching user role:', roleError)
+        // Non-critical error, don't fail the whole page
+      }
+
       setError(null)
       setRetryCount(0) // Reset retry count on success
       setLoading(false) // Ensure loading is false on success
@@ -1471,6 +1494,7 @@ export default function ProjectDetailPage() {
           categories={categories}
           onGoToSettings={handleGoToSettings}
           allTransactions={transactions}
+          userRole={userRole as 'owner' | 'member' | 'viewer' | null}
         />
       )}
 

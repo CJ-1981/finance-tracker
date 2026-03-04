@@ -1412,6 +1412,7 @@ export default function TransactionsPage() {
             transaction={editingTransactionId ? transactions.find(t => t.id === editingTransactionId) : null}
             onGoToSettings={handleGoToSettings}
             allTransactions={transactions}
+            userRole={userRole as 'owner' | 'member' | 'viewer' | null}
           >
             {selectedTransactions.size > 1 && editingTransactionId && (
               <div className="flex gap-2 mb-4">

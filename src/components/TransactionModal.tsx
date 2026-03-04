@@ -13,6 +13,7 @@ interface TransactionModalProps {
     transaction?: Transaction | null // For editing
     onGoToSettings: () => void
     allTransactions: Transaction[] // For autocomplete values
+    userRole?: 'owner' | 'member' | 'viewer' | null
     children?: React.ReactNode // Extra UI like bulk edit navigation
 }
 
@@ -25,6 +26,7 @@ export default function TransactionModal({
     transaction,
     onGoToSettings,
     allTransactions,
+    userRole,
     children
 }: TransactionModalProps) {
     const { t } = useTranslation()
@@ -214,16 +216,18 @@ export default function TransactionModal({
                     <h2 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
                         {transaction ? t('transactions.editTransaction') : t('transactions.addTransaction')}
                     </h2>
-                    <button
-                        type="button"
-                        onClick={handleGoToSettings}
-                        className="p-2 text-slate-400 dark:text-slate-500 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-xl transition-all"
-                        title={t('transactionModal.configureCustomFields')}
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-                        </svg>
-                    </button>
+                    {userRole === 'owner' && (
+                        <button
+                            type="button"
+                            onClick={handleGoToSettings}
+                            className="p-2 text-slate-400 dark:text-slate-500 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-xl transition-all"
+                            title={t('transactionModal.configureCustomFields')}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                            </svg>
+                        </button>
+                    )}
                 </div>
                 {children}
 
