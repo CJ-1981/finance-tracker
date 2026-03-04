@@ -306,18 +306,18 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
   const currency = project.settings?.currency || 'EUR'
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 pointer-events-none">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto pointer-events-auto relative">
+    <div className="fixed inset-0 bg-black dark:bg-slate-900/80 bg-opacity-50 dark:bg-opacity-80 flex items-center justify-center p-4 z-50 pointer-events-none">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto pointer-events-auto relative">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 z-10">
+        <div className="sticky top-0 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 px-6 py-4 z-10">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
               <span>🧮</span>
               {t('cashCounter.title')}
             </h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+              className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none"
             >
               ×
             </button>
@@ -331,7 +331,7 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 category === 'named'
                   ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600'
               }`}
             >
               {t('cashCounter.withNames')}
@@ -342,7 +342,7 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 category === 'anonymous'
                   ? 'bg-teal-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600'
               }`}
             >
               {t('cashCounter.anonymous')}
@@ -364,14 +364,14 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
         <div className="px-4 sm:px-6 py-4">
           {/* Bills Section */}
           <div className="mb-4">
-            <h3 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">
+            <h3 className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
               💵 {t('cashCounter.bills', { defaultValue: 'Bills' })}
             </h3>
             <div className="space-y-2">
               {DENOMINATIONS.filter(d => d.type === 'bill').map((denom) => (
                 <div
                   key={denom.value}
-                  className="p-2 sm:p-3 rounded-lg border-2 border-yellow-200 bg-yellow-50"
+                  className="p-2 sm:p-3 rounded-lg border-2 border-yellow-200 dark:border-yellow-800/50 bg-yellow-50 dark:bg-yellow-900/20"
                 >
                   {/* Row 1: Denomination label, X, and quantity */}
                   <div className="flex items-center gap-2 sm:gap-3 mb-2">
@@ -383,14 +383,14 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
                     </div>
 
                     {/* X separator */}
-                    <span className="text-gray-400 font-bold text-sm sm:text-base flex-shrink-0">×</span>
+                    <span className="text-gray-400 dark:text-gray-500 font-bold text-sm sm:text-base flex-shrink-0">×</span>
 
                     {/* Quantity input */}
                     <input
                       type="number"
                       inputMode="numeric"
                       min="0"
-                      className="flex-1 text-center font-semibold text-sm sm:text-base min-w-[60px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="flex-1 text-center font-semibold text-sm sm:text-base min-w-[60px] border border-gray-300 dark:border-slate-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:text-white"
                       value={counts[denom.value] || 0}
                       onChange={(e) => handleDirectInput(denom.value, parseInt(e.target.value) || 0)}
                     />
@@ -420,18 +420,18 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
           </div>
 
           {/* Separator */}
-          <div className="border-t-2 border-dashed border-gray-300 my-3 sm:my-4"></div>
+          <div className="border-t-2 border-dashed border-gray-300 dark:border-slate-600 my-3 sm:my-4"></div>
 
           {/* Coins Section */}
           <div className="mb-4">
-            <h3 className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">
+            <h3 className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
               ⚪ {t('cashCounter.coins', { defaultValue: 'Coins' })}
             </h3>
             <div className="space-y-2">
               {DENOMINATIONS.filter(d => d.type === 'coin').map((denom) => (
                 <div
                   key={denom.value}
-                  className="p-2 sm:p-3 rounded-lg border-2 border-gray-300 bg-gray-50"
+                  className="p-2 sm:p-3 rounded-lg border-2 border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-700"
                 >
                   {/* Row 1: Denomination label, X, and quantity */}
                   <div className="flex items-center gap-2 sm:gap-3 mb-2">
@@ -443,14 +443,14 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
                     </div>
 
                     {/* X separator */}
-                    <span className="text-gray-400 font-bold text-sm sm:text-base flex-shrink-0">×</span>
+                    <span className="text-gray-400 dark:text-gray-500 font-bold text-sm sm:text-base flex-shrink-0">×</span>
 
                     {/* Quantity input */}
                     <input
                       type="number"
                       inputMode="numeric"
                       min="0"
-                      className="flex-1 text-center font-semibold text-sm sm:text-base min-w-[60px] border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="flex-1 text-center font-semibold text-sm sm:text-base min-w-[60px] border border-gray-300 dark:border-slate-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:text-white"
                       value={counts[denom.value] || 0}
                       onChange={(e) => handleDirectInput(denom.value, parseInt(e.target.value) || 0)}
                     />
@@ -480,24 +480,24 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
           </div>
 
           {/* Current Entry Total */}
-          <div className="mt-4 p-4 bg-slate-50 rounded-lg">
+          <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
             <div className="flex justify-between items-center mb-3">
-              <span className="font-medium text-gray-700">
+              <span className="font-medium text-gray-700 dark:text-gray-300">
                 {t('cashCounter.currentEntry')} ({category === 'anonymous' ? t('cashCounter.anonymous') : t('cashCounter.withNames')}):
               </span>
-              <span className="text-2xl font-bold">
+              <span className="text-2xl font-bold dark:text-white">
                 {currency} {totalCashCounted.toFixed(2)}
               </span>
             </div>
             {/* Breakdown */}
             <div className="grid grid-cols-2 gap-3 mb-3 text-sm">
-              <div className="flex items-center justify-between bg-yellow-50 p-2 rounded">
-                <span className="text-gray-600">💵 {t('cashCounter.bills', { defaultValue: 'Bills' })}:</span>
-                <span className="font-bold">{currency} {currentBreakdown.bills.toFixed(2)}</span>
+              <div className="flex items-center justify-between bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded">
+                <span className="text-gray-600 dark:text-gray-400">💵 {t('cashCounter.bills', { defaultValue: 'Bills' })}:</span>
+                <span className="font-bold dark:text-white">{currency} {currentBreakdown.bills.toFixed(2)}</span>
               </div>
-              <div className="flex items-center justify-between bg-gray-100 p-2 rounded">
-                <span className="text-gray-600">⚪ {t('cashCounter.coins', { defaultValue: 'Coins' })}:</span>
-                <span className="font-bold">{currency} {currentBreakdown.coins.toFixed(2)}</span>
+              <div className="flex items-center justify-between bg-gray-100 dark:bg-slate-700 p-2 rounded">
+                <span className="text-gray-600 dark:text-gray-400">⚪ {t('cashCounter.coins', { defaultValue: 'Coins' })}:</span>
+                <span className="font-bold dark:text-white">{currency} {currentBreakdown.coins.toFixed(2)}</span>
               </div>
             </div>
             <button
@@ -511,17 +511,17 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
         </div>
 
         {/* Entries List and Comparison */}
-        <div className="px-6 pb-6 border-t border-gray-200">
+        <div className="px-6 pb-6 border-t border-gray-200 dark:border-slate-700">
           {/* Grand Total */}
           <div className="py-4">
             <div className="flex justify-between items-center mb-4">
-              <span className="text-lg font-bold text-gray-900">{t('cashCounter.totalCounted')}:</span>
-              <span className={`text-3xl font-black ${
+              <span className="text-lg font-bold text-gray-900 dark:text-gray-100">{t('cashCounter.totalCounted')}:</span>
+              <span className={`text-3xl font-black dark:text-white ${
                 matchStatus === 'match'
-                  ? 'text-green-600'
+                  ? 'text-green-600 dark:text-green-400'
                   : matchStatus === 'excess'
-                  ? 'text-blue-600'
-                  : 'text-red-600'
+                  ? 'text-blue-600 dark:text-blue-400'
+                  : 'text-red-600 dark:text-red-400'
               }`}>
                 {currency} {grandTotal.toFixed(2)}
               </span>
@@ -529,20 +529,20 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
 
             {/* Grand Total Breakdown */}
             <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="flex items-center justify-between bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                <span className="text-gray-700 font-medium">💵 {t('cashCounter.bills', { defaultValue: 'Bills' })}:</span>
-                <span className="font-bold text-lg">{currency} {grandBreakdown.bills.toFixed(2)}</span>
+              <div className="flex items-center justify-between bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg border border-yellow-200 dark:border-yellow-800/50">
+                <span className="text-gray-700 dark:text-gray-300 font-medium">💵 {t('cashCounter.bills', { defaultValue: 'Bills' })}:</span>
+                <span className="font-bold text-lg dark:text-white">{currency} {grandBreakdown.bills.toFixed(2)}</span>
               </div>
-              <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg border border-gray-200">
-                <span className="text-gray-700 font-medium">⚪ {t('cashCounter.coins', { defaultValue: 'Coins' })}:</span>
-                <span className="font-bold text-lg">{currency} {grandBreakdown.coins.toFixed(2)}</span>
+              <div className="flex items-center justify-between bg-gray-100 dark:bg-slate-700 p-3 rounded-lg border border-gray-200 dark:border-slate-600">
+                <span className="text-gray-700 dark:text-gray-300 font-medium">⚪ {t('cashCounter.coins', { defaultValue: 'Coins' })}:</span>
+                <span className="font-bold text-lg dark:text-white">{currency} {grandBreakdown.coins.toFixed(2)}</span>
               </div>
             </div>
 
             {/* Transaction Total */}
             <div className="flex justify-between items-center mb-4">
-              <span className="text-lg font-bold text-gray-900">{t('cashCounter.transactionsTotal')}:</span>
-              <span className="text-xl font-semibold text-gray-600">
+              <span className="text-lg font-bold text-gray-900 dark:text-gray-100">{t('cashCounter.transactionsTotal')}:</span>
+              <span className="text-xl font-semibold text-gray-600 dark:text-gray-400">
                 {currency} {totalTransactionsAmount.toFixed(2)}
               </span>
             </div>
@@ -550,10 +550,10 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
             {/* Difference */}
             <div className={`flex justify-between items-center p-3 rounded-lg ${
               matchStatus === 'match'
-                ? 'bg-green-100 text-green-800'
+                ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
                 : matchStatus === 'excess'
-                ? 'bg-blue-100 text-blue-800'
-                : 'bg-red-100 text-red-800'
+                ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400'
+                : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'
             }`}>
               <span className="font-semibold">
                 {matchStatus === 'match'
@@ -563,7 +563,7 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
                   : '↓ ' + t('cashCounter.shortage')
                 }:
               </span>
-              <span className="font-bold text-lg">
+              <span className="font-bold text-lg dark:text-white">
                 {currency} {Math.abs(grandTotal - totalTransactionsAmount).toFixed(2)}
               </span>
             </div>
@@ -571,8 +571,8 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
 
           {/* Entries List */}
           {entries.length > 0 && (
-            <div className="border-t border-gray-200 pt-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('cashCounter.entries')}</h3>
+            <div className="border-t border-gray-200 dark:border-slate-700 pt-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">{t('cashCounter.entries')}</h3>
               <div className="space-y-2 max-h-48 overflow-y-auto">
                 {entries.map((entry) => {
                   const entryTotal = DENOMINATIONS.reduce(
@@ -583,24 +583,24 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
                   return (
                     <div
                       key={entry.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700 rounded-lg"
                     >
                       <div>
-                        <span className="font-semibold text-gray-900">
+                        <span className="font-semibold text-gray-900 dark:text-gray-100">
                           {entry.category === 'named' ? entry.name : t('cashCounter.anonymous')}
                         </span>
-                        <span className="text-sm text-gray-500 ml-2">
+                        <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
                           {new Date(entry.timestamp).toLocaleTimeString()}
                         </span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="font-bold">
+                        <span className="font-bold dark:text-white">
                           {currency} {entryTotal.toFixed(2)}
                         </span>
                         <button
                           type="button"
                           onClick={() => handleDeleteEntry(entry.id)}
-                          className="text-red-500 hover:text-red-700 text-sm"
+                          className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 text-sm"
                         >
                           {t('cashCounter.delete')}
                         </button>
@@ -613,11 +613,11 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
           )}
 
           {/* Clear All Button */}
-          <div className="border-t border-gray-200 pt-4">
+          <div className="border-t border-gray-200 dark:border-slate-700 pt-4">
             <button
               type="button"
               onClick={handleClearAll}
-              className="w-full btn btn-secondary text-red-600 hover:text-red-700"
+              className="w-full btn btn-secondary text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
             >
               {t('cashCounter.clearAll')}
             </button>

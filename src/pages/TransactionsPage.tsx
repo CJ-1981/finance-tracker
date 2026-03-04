@@ -1018,22 +1018,22 @@ export default function TransactionsPage() {
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 mb-4">Loading...</p>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">Loading...</p>
 
           {/* Debug Panel */}
           {showDebugPanel && (
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-gray-900 border-t border-gray-700 z-50">
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-gray-900 dark:bg-slate-900 border-t border-gray-700 dark:border-slate-700 z-50">
               <div className="max-w-md mx-auto">
-                <h3 className="text-white text-sm font-bold mb-2 flex items-center gap-2">
+                <h3 className="text-white dark:text-gray-100 text-sm font-bold mb-2 flex items-center gap-2">
                   <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
                   Debug Log
                 </h3>
                 <div className="space-y-1 max-h-48 overflow-y-auto">
                   {debugMessages.length === 0 ? (
-                    <div className="text-xs font-mono text-gray-500">No debug messages yet</div>
+                    <div className="text-xs font-mono text-gray-500 dark:text-gray-400">No debug messages yet</div>
                   ) : (
                     debugMessages.map((msg, i) => (
-                      <div key={i} className="text-xs font-mono text-green-400">
+                      <div key={i} className="text-xs font-mono text-green-400 dark:text-green-500">
                         {msg}
                       </div>
                     ))
@@ -1050,16 +1050,16 @@ export default function TransactionsPage() {
   // Show error state with retry option
   if (error && !project) {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-950 p-8">
         <div className="max-w-md mx-auto mt-16">
           <div className="card p-8 text-center">
-            <div className="text-red-500 mb-4">
+            <div className="text-red-500 dark:text-red-400 mb-4">
               <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-            <h1 className="text-xl font-bold text-gray-900 mb-2">{t('projectDetail.errorLoadingProject')}</h1>
-            <p className="text-gray-600 mb-6">{error}</p>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('projectDetail.errorLoadingProject')}</h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
             <div className="flex flex-col gap-3">
               <button onClick={() => { setError(null); fetchProject() }} className="btn btn-primary">
                 {t('projectDetail.tryAgain')}
@@ -1071,18 +1071,18 @@ export default function TransactionsPage() {
 
             {/* Debug Panel */}
             {showDebugPanel && (
-              <div className="fixed bottom-0 left-0 right-0 p-4 bg-gray-900 border-t border-gray-700 z-50">
+              <div className="fixed bottom-0 left-0 right-0 p-4 bg-gray-900 dark:bg-slate-900 border-t border-gray-700 dark:border-slate-700 z-50">
                 <div className="max-w-md mx-auto">
-                  <h3 className="text-white text-sm font-bold mb-2 flex items-center gap-2">
+                  <h3 className="text-white dark:text-gray-100 text-sm font-bold mb-2 flex items-center gap-2">
                     <span className="w-2 h-2 bg-red-400 rounded-full"></span>
                     Debug Log (Last 10 messages)
                   </h3>
                   <div className="space-y-1 max-h-48 overflow-y-auto">
                     {debugMessages.length === 0 ? (
-                      <div className="text-xs font-mono text-gray-500">No debug messages yet</div>
+                      <div className="text-xs font-mono text-gray-500 dark:text-gray-400">No debug messages yet</div>
                     ) : (
                       debugMessages.map((msg, i) => (
-                        <div key={i} className="text-xs font-mono text-green-400">
+                        <div key={i} className="text-xs font-mono text-green-400 dark:text-green-500">
                           {msg}
                         </div>
                       ))
@@ -1099,9 +1099,9 @@ export default function TransactionsPage() {
 
   if (!project) {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-950 p-8">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('transactions.projectNotFound')}</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">{t('transactions.projectNotFound')}</h1>
           <Link to="/projects" className="btn btn-secondary">
             {t('transactions.backToProjects')}
           </Link>
@@ -1119,16 +1119,16 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20 md:pb-0">
-      <header className="bg-white border-b border-slate-200 shadow-sm relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 md:pb-0">
+      <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-primary"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
             <div className="min-w-0">
-              <Link to={`/projects/${projectId}`} className="text-sm font-medium text-primary-600 hover:text-primary-700 mb-2 inline-flex items-center gap-1">
+              <Link to={`/projects/${projectId}`} className="text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 mb-2 inline-flex items-center gap-1">
                 {t('transactions.backToDashboard')}
               </Link>
-              <h1 className="text-2xl font-bold text-slate-900 mt-1">{t('transactions.transactions')}</h1>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">{t('transactions.transactions')}</h1>
             </div>
             <div className="flex gap-2 flex-wrap">
               <button onClick={() => setShowSettings(!showSettings)} className="btn btn-secondary text-sm whitespace-nowrap">
@@ -1149,11 +1149,11 @@ export default function TransactionsPage() {
         {showSettings && (
           <div className="grid md:grid-cols-2 gap-6 mb-8 mt-2 overflow-x-hidden">
             <div className="card border-t-4 border-t-primary-500 overflow-hidden">
-              <h2 className="text-xl font-extrabold text-slate-900 mb-6 flex items-center gap-2">
-                <span className="p-1.5 bg-primary-100 text-primary-600 rounded-lg">🏷️</span>
+              <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 mb-6 flex items-center gap-2">
+                <span className="p-1.5 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-lg">🏷️</span>
                 {t('transactions.manageCategories')}
               </h2>
-              <form onSubmit={handleAddCategory} className="flex gap-2 mb-6 bg-slate-50 p-3 rounded-xl border border-slate-100 min-w-0">
+              <form onSubmit={handleAddCategory} className="flex gap-2 mb-6 bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-700 min-w-0">
                 <input
                   type="color"
                   value={newCategoryColor}
@@ -1166,7 +1166,7 @@ export default function TransactionsPage() {
               </form>
               <ul className="space-y-3">
                 {categories.map((c, index) => (
-                  <li key={c.id} className="flex flex-col sm:flex-row sm:justify-between sm:items-start text-sm p-3 bg-slate-50 border border-slate-100 rounded-xl hover:border-primary-100 transition-colors gap-2">
+                  <li key={c.id} className="flex flex-col sm:flex-row sm:justify-between sm:items-start text-sm p-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl hover:border-primary-100 dark:hover:border-primary-800 transition-colors gap-2">
                     {editingCategoryId === c.id ? (
                       <div className="flex-1 flex gap-2 items-center">
                         <input
@@ -1237,11 +1237,11 @@ export default function TransactionsPage() {
               </ul>
             </div>
             <div className="card border-t-4 border-t-teal-500 overflow-hidden" id="manage-custom-fields">
-              <h2 className="text-xl font-extrabold text-slate-900 mb-6 flex items-center gap-2">
-                <span className="p-1.5 bg-teal-100 text-teal-600 rounded-lg">📋</span>
+              <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 mb-6 flex items-center gap-2">
+                <span className="p-1.5 bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 rounded-lg">📋</span>
                 {t('transactions.customFields')}
               </h2>
-              <form onSubmit={handleAddField} className="flex flex-col gap-3 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100 min-w-0">
+              <form onSubmit={handleAddField} className="flex flex-col gap-3 mb-6 bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 min-w-0">
                 <div className="flex flex-col sm:flex-row gap-2">
                   <input type="text" className="input flex-1 min-w-0" placeholder="Field Name (e.g., Note, Tag)" value={newFieldName} onChange={e => setNewFieldName(e.target.value)} required />
                   <select className="input w-full sm:w-32 flex-shrink-0" value={newFieldType} onChange={e => setNewFieldType(e.target.value as any)}>

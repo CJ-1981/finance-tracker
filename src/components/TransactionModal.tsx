@@ -198,12 +198,12 @@ export default function TransactionModal({
 
     return (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 p-8 max-w-md w-full max-h-[90vh] overflow-y-auto relative">
+            <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-700 p-8 max-w-md w-full max-h-[90vh] overflow-y-auto relative">
                 {/* Close button */}
                 <button
                     type="button"
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 transition-colors z-10"
+                    className="absolute top-4 right-4 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors z-10"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -211,13 +211,13 @@ export default function TransactionModal({
                 </button>
 
                 <div className="flex justify-between items-center mb-6 pr-12">
-                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+                    <h2 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
                         {transaction ? t('transactions.editTransaction') : t('transactions.addTransaction')}
                     </h2>
                     <button
                         type="button"
                         onClick={handleGoToSettings}
-                        className="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all"
+                        className="p-2 text-slate-400 dark:text-slate-500 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-xl transition-all"
                         title={t('transactionModal.configureCustomFields')}
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
@@ -230,7 +230,7 @@ export default function TransactionModal({
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Income/Expense Segmented Control */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             {t('transactionModal.transactionType')}
                         </label>
                         <div className="flex gap-2">
@@ -240,7 +240,7 @@ export default function TransactionModal({
                                 className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
                                     formData.transactionType === 'income'
                                         ? 'bg-emerald-500 text-white shadow-md'
-                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                        : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
                                 }`}
                             >
                                 {t('transactionModal.income')}
@@ -251,7 +251,7 @@ export default function TransactionModal({
                                 className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
                                     formData.transactionType === 'expense'
                                         ? 'bg-rose-500 text-white shadow-md'
-                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                        : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
                                 }`}
                             >
                                 {t('transactionModal.expense')}
@@ -260,7 +260,7 @@ export default function TransactionModal({
                     </div>
 
                     <div>
-                        <label htmlFor="modal-amount" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="modal-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             {t('transactions.amount')} *
                         </label>
                         <div className="flex gap-2">
@@ -301,7 +301,7 @@ export default function TransactionModal({
                     </div>
 
                     <div>
-                        <label htmlFor="modal-date" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="modal-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             {t('transactions.date')} *
                         </label>
                         <input
@@ -315,7 +315,7 @@ export default function TransactionModal({
                     </div>
 
                     <div>
-                        <label htmlFor="modal-category" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="modal-category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             {t('transactions.category')}
                         </label>
                         <select
@@ -336,7 +336,7 @@ export default function TransactionModal({
 
                     {project?.settings?.custom_fields?.map((field: any) => (
                         <div key={field.name}>
-                            <label htmlFor={`modal-${field.name}`} className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor={`modal-${field.name}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 {field.name}
                             </label>
                             {field.type === 'text' ? (

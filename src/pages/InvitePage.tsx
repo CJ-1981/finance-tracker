@@ -125,37 +125,37 @@ export default function InvitePage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-950 px-4">
       <div className="max-w-md w-full">
         <div className="card">
           {status === 'loading' && (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">{t('invite.validatingInvitation')}</p>
+              <p className="text-gray-600 dark:text-gray-400">{t('invite.validatingInvitation')}</p>
             </div>
           )}
 
           {status === 'valid' && (
             <div className="text-center py-8">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                 {Array.isArray(inviteData) && inviteData.length > 1 ? t('invite.youreInvitedMultiple') : t('invite.youreInvited')}
               </h2>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
                 {Array.isArray(inviteData) ? (
                   inviteData.length === 1 ? (
                     <>{t('invite.invitedToJoin')} <strong>{inviteData[0].projects?.name}</strong> {t('invite.as')} <strong>{inviteData[0].role}</strong></>
                   ) : (
-                    <div className="text-left bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-2 mt-4 max-h-48 overflow-y-auto">
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t('invite.projectsYoullJoin')}</p>
+                    <div className="text-left bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 space-y-2 mt-4 max-h-48 overflow-y-auto">
+                      <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">{t('invite.projectsYoullJoin')}</p>
                       {inviteData.map((invite: any) => (
                         <div key={invite.id} className="flex justify-between items-center text-sm">
-                          <span className="font-semibold text-slate-700">{invite.projects?.name}</span>
-                          <span className="text-[10px] bg-white px-2 py-0.5 rounded-full border border-slate-200 text-slate-500 font-bold uppercase">{invite.role}</span>
+                          <span className="font-semibold text-slate-700 dark:text-slate-200">{invite.projects?.name}</span>
+                          <span className="text-[10px] bg-white dark:bg-slate-700 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 font-bold uppercase">{invite.role}</span>
                         </div>
                       ))}
                     </div>
@@ -167,7 +167,7 @@ export default function InvitePage() {
 
               {!user ? (
                 <div className="space-y-3">
-                  <p className="text-sm text-gray-500 mb-4">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                     {t('invite.signInToAccept')} {Array.isArray(inviteData) && inviteData.length > 1 ? t('invite.acceptAllInvitations') : t('invite.acceptInvitationButton')}
                   </p>
                   <button
@@ -190,14 +190,14 @@ export default function InvitePage() {
 
           {status === 'wrong-email' && (
             <div className="text-center py-8">
-              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.932-3L13.065 4.94A2 2 0 0011.909 3H6.09a2 2 0 00-1.932-3L2.065 6.94A2 2 0 004 9v9a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2z" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('invite.wrongEmail')}</h2>
-              <p className="text-gray-600 mb-2">{error}</p>
-              <p className="text-sm text-gray-500 mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('invite.wrongEmail')}</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-2">{error}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">
                 {t('invite.invitationForDifferentEmail')}
               </p>
               <div className="space-y-3">
@@ -223,25 +223,25 @@ export default function InvitePage() {
 
           {status === 'invalid' && (
             <div className="text-center py-8">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('invite.invalidInvitation')}</h2>
-              <p className="text-gray-600">{error}</p>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('invite.invalidInvitation')}</h2>
+              <p className="text-gray-600 dark:text-gray-400">{error}</p>
             </div>
           )}
 
           {status === 'accepted' && (
             <div className="text-center py-8">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('invite.alreadyAccepted')}</h2>
-              <p className="text-gray-600 mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('invite.alreadyAccepted')}</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
                 {t('invite.alreadyAcceptedMessage')}
               </p>
               <button

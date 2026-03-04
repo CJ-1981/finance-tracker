@@ -121,28 +121,28 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-12 relative overflow-hidden" data-testid="login-page">
-      <div className="absolute top-0 -left-20 w-80 h-80 bg-primary-100/50 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 -right-20 w-80 h-80 bg-secondary-100/50 rounded-full blur-3xl"></div>
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 px-4 py-12 relative overflow-hidden" data-testid="login-page">
+      <div className="absolute top-0 -left-20 w-80 h-80 bg-primary-100/50 dark:bg-primary-900/20 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 -right-20 w-80 h-80 bg-secondary-100/50 dark:bg-secondary-900/20 rounded-full blur-3xl"></div>
 
       <div className="max-w-md w-full relative z-10">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">{t('auth.financialTrackerFull')}</h1>
-          <p className="text-slate-500 mt-2 font-medium">
+          <h1 className="text-4xl font-black text-slate-900 dark:text-slate-100 tracking-tight">{t('auth.financialTrackerFull')}</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
             {isSignUp ? t('auth.createAccount') : t('auth.welcomeBack')}
           </p>
         </div>
 
         <div className="card shadow-xl border-t-4 border-t-primary-500" data-testid="login-card">
           {!isConfigured && (
-            <div className="rounded-md bg-amber-50 p-4 mb-4 border border-amber-200">
+            <div className="rounded-md bg-amber-50 dark:bg-amber-900/20 p-4 mb-4 border border-amber-200 dark:border-amber-800">
               <div className="flex items-start gap-3">
-                <svg className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-amber-800">{t('auth.databaseNotConfigured')}</p>
-                  <p className="text-xs text-amber-700 mt-2">
+                  <p className="text-sm font-medium text-amber-800 dark:text-amber-200">{t('auth.databaseNotConfigured')}</p>
+                  <p className="text-xs text-amber-700 dark:text-amber-300 mt-2">
                     {t('auth.configureSupabaseFirst')}
                   </p>
                   <button
@@ -160,7 +160,7 @@ export default function LoginPage() {
           {/* Email/Password Form */}
           <form onSubmit={handleSubmit} className="space-y-4" data-testid="login-form">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('auth.email')}
               </label>
               <input
@@ -177,7 +177,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('auth.password')}
               </label>
               <input
@@ -195,13 +195,13 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="rounded-md p-4 text-sm bg-red-50 text-red-800" data-testid="error-message">
+              <div className="rounded-md p-4 text-sm bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-400" data-testid="error-message">
                 {error}
               </div>
             )}
 
             {message && (
-              <div className="rounded-md p-4 text-sm bg-green-50 text-green-800" data-testid="success-message">
+              <div className="rounded-md p-4 text-sm bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-400" data-testid="success-message">
                 {message}
               </div>
             )}
@@ -223,14 +223,14 @@ export default function LoginPage() {
                 setError('')
                 setMessage('')
               }}
-              className="text-blue-600 hover:text-blue-700 font-medium"
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
               data-testid="toggle-auth-mode-button"
             >
               {isSignUp ? t('auth.toggleToSignIn') : t('auth.toggleToSignUp')}
             </button>
           </div>
 
-          <p className="mt-4 text-xs text-gray-500 text-center">
+          <p className="mt-4 text-xs text-gray-500 dark:text-gray-400 text-center">
             {t('auth.securedWithSupabase')}
           </p>
         </div>
