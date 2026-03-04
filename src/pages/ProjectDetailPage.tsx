@@ -22,7 +22,7 @@ export default function ProjectDetailPage() {
   const [project, setProject] = useState<Project | null>(null)
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [debugMessages, setDebugMessages] = useState<string[]>([])
   const [showDebugPanel, setShowDebugPanel] = useState(() => {
@@ -940,40 +940,6 @@ export default function ProjectDetailPage() {
     return totals
   }, [excludedTransactions])
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 mb-4">Loading...</p>
-
-          {/* Debug Panel */}
-          {showDebugPanel && (
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-gray-900 border-t border-gray-700 z-50">
-              <div className="max-w-md mx-auto">
-                <h3 className="text-white text-sm font-bold mb-2 flex items-center gap-2">
-                  <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
-                  Debug Log
-                </h3>
-                <div className="space-y-1 max-h-48 overflow-y-auto">
-                  {debugMessages.length === 0 ? (
-                    <div className="text-xs font-mono text-gray-500">No debug messages yet</div>
-                  ) : (
-                    debugMessages.map((msg, i) => (
-                      <div key={i} className="text-xs font-mono text-green-400">
-                        {msg}
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    )
-  }
-
   // Show error state with retry option
   if (error && !project) {
     return (
@@ -1047,7 +1013,14 @@ export default function ProjectDetailPage() {
               <Link to="/projects" className="text-sm font-medium text-primary-600 hover:text-primary-700 mb-2 inline-flex items-center gap-1">
                 ← {t('projectDetail.backToProjectsList')}
               </Link>
-              {isEditing ? (
+              {!project ? (
+                // Skeleton loader while project is loading
+                <div className="mt-3 space-y-3">
+                  <div className="h-8 bg-gray-200 rounded animate-pulse w-3/4"></div>
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
+                  <div className="h-6 bg-gray-200 rounded animate-pulse w-1/4 mt-2"></div>
+                </div>
+              ) : isEditing ? (
                 <form onSubmit={handleEditProject} className="flex flex-col gap-3 mt-1 w-full max-w-md">
                   <input type="text" className="input" value={editFormData.name} onChange={e => setEditFormData({ ...editFormData, name: e.target.value })} required placeholder={t('projectDetail.projectName')} />
                   <textarea className="input" value={editFormData.description} onChange={e => setEditFormData({ ...editFormData, description: e.target.value })} rows={2} placeholder={t('projectDetail.projectDescription')} />
@@ -1264,7 +1237,29 @@ export default function ProjectDetailPage() {
           </div>
 
           {/* Charts and Recent Transactions */}
-          {filteredTransactions.length > 0 && (
+          {!project || loading ? (
+            // Loading state for charts and transactions
+            <div className="lg:col-span-3 grid gap-6 lg:grid-cols-3">
+              <div className="lg:col-span-2 card border-t-4 border-t-gray-300 p-6">
+                <div className="animate-pulse space-y-4">
+                  <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+                  <div className="flex justify-center p-8">
+                    <div className="w-64 h-64 bg-gray-200 rounded-full"></div>
+                  </div>
+                </div>
+              </div>
+              <div className="lg:col-span-1 card border-t-4 border-t-gray-300 p-6">
+                <div className="animate-pulse space-y-3">
+                  <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+                  <div className="space-y-2">
+                    <div className="h-12 bg-gray-200 rounded"></div>
+                    <div className="h-12 bg-gray-200 rounded"></div>
+                    <div className="h-12 bg-gray-200 rounded"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : filteredTransactions.length > 0 ? (
             <>
               {/* Pie Chart and Recent Transactions in same row */}
               <div className="lg:col-span-2 card border-t-4 border-t-primary-500 overflow-hidden">
@@ -1460,7 +1455,7 @@ export default function ProjectDetailPage() {
                 </div>
               )}
             </>
-          )}
+          ) : null}
         </div>
       </main>
 
