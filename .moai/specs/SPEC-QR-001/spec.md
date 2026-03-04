@@ -7,7 +7,7 @@ SPEC_ID: SPEC-QR-001
 TITLE: QR Code for Invitation and Supabase Config Setup
 DOMAIN: UI + AUTH
 PRIORITY: Medium
-STATUS: Planned
+STATUS: Implemented
 CREATED: 2025-03-04
 ISSUE: #24
 ```
@@ -142,7 +142,7 @@ The system **SHALL NOT** require camera access for users who prefer manual input
 - Supports dark mode with appropriate contrast
 
 **Dependencies:**
-- `react-qr-code@^2.0.15`
+- `react-qr-code@^2.0.18`
 
 ### QR Scanner Modal Component
 
@@ -220,6 +220,10 @@ The system **SHALL NOT** require camera access for users who prefer manual input
 }
 ```
 
+**Add to `src/locales/ko.json` (Korean translations):**
+
+All English keys above MUST have corresponding Korean translations. Korean translations follow the same nested structure and use Korean text for all user-facing strings.
+
 ### Security Considerations
 
 1. **Token Visibility:** QR codes make invitation tokens visible to nearby users. Document this as a known limitation.
@@ -278,6 +282,6 @@ The system **SHALL NOT** require camera access for users who prefer manual input
 
 ---
 
-**Document Version:** 1.0
-**Last Updated:** 2025-03-04
-**Status:** Ready for Implementation
+**Document Version:** 1.1
+**Last Updated:** 2026-03-04
+**Status:** Implemented

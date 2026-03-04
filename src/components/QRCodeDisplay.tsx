@@ -44,13 +44,13 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false }: QRCodeDi
       textArea.style.left = '-999999px'
       document.body.appendChild(textArea)
       textArea.select()
-      try {
-        document.execCommand('copy')
+      const success = document.execCommand('copy')
+      if (success) {
         setCopied(true)
         alert(t('qr.copied'))
         setTimeout(() => setCopied(false), 2000)
-      } catch (fallbackError) {
-        console.error('Fallback copy also failed:', fallbackError)
+      } else {
+        console.error('execCommand copy failed')
       }
       document.body.removeChild(textArea)
     }

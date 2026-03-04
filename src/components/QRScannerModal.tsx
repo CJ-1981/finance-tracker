@@ -55,6 +55,15 @@ export function QRScannerModal({
   const [scanError, setScanError] = useState<string | null>(null)
   const [isHttpsRequired, setIsHttpsRequired] = useState(false)
 
+  // Reset transient scanner state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setPermissionDenied(false)
+      setScanError(null)
+      setIsHttpsRequired(false)
+    }
+  }, [isOpen])
+
   // Check for HTTPS requirement on mount
   useEffect(() => {
     if (isOpen && !isSecureContext()) {
@@ -81,9 +90,9 @@ export function QRScannerModal({
     checkCamera()
   }, [isOpen])
 
-  // Initialize QR scanner
+  // Initialize QR scanner (only when hasCamera is confirmed true)
   useEffect(() => {
-    if (!isOpen || !videoRef.current || hasCamera === false || isHttpsRequired) {
+    if (!isOpen || !videoRef.current || hasCamera !== true || isHttpsRequired) {
       return
     }
 

@@ -72,6 +72,13 @@ export default function ProjectsPage() {
     return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
 
+  // Reset QR code state when invite link modal closes
+  useEffect(() => {
+    if (!showInviteLink) {
+      setShowQRCode(false)
+    }
+  }, [showInviteLink])
+
   // Debug logger helper
   const addDebugMessage = (message: string) => {
     const timestamp = new Date().toLocaleTimeString()

@@ -23,7 +23,12 @@ const mockScannerInstance = {
 }
 
 vi.mock('qr-scanner', () => ({
-  default: vi.fn().mockImplementation(() => mockScannerInstance),
+  default: Object.assign(
+    vi.fn().mockImplementation(() => mockScannerInstance),
+    {
+      hasCamera: vi.fn().mockResolvedValue(true),
+    }
+  ),
   QrScanner: {
     hasCamera: vi.fn().mockResolvedValue(true),
   },

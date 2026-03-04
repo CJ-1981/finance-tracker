@@ -116,7 +116,7 @@
 
 ## 6. Data Flow Architecture
 
-```
+```text
 Generate Invite Link
   ↓
 Embed Config in URL
