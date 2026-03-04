@@ -251,7 +251,9 @@
     "csvExport": "CSV 내보내기",
     "csvExportDesc": "분석을 위한 데이터 내보내기",
     "getStarted": "시작하기",
+    "signUpSupabase": "Supabase로 회원가입",
     "configureDatabase": "데이터베이스 구성",
+    "supabaseAuthNote": "재무 데이터를 안전하게 저장하고 관리하려면 Supabase 계정을 만드세요",
     "dataSecured": "데이터는 Supabase Auth로 보안되며 자체 프로젝트에 저장됩니다"
   },
   "dashboardPage": {

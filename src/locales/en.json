@@ -251,7 +251,9 @@
     "csvExport": "CSV Export",
     "csvExportDesc": "Export your data for analysis",
     "getStarted": "Get Started",
+    "signUpSupabase": "Sign Up with Supabase",
     "configureDatabase": "Configure Database",
+    "supabaseAuthNote": "Create your Supabase account to securely store and manage your financial data",
     "dataSecured": "Your data is secured with Supabase Auth and stored in your own project"
   },
   "dashboardPage": {

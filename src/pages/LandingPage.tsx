@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import LanguageSelector from '../components/LanguageSelector'
 
 export default function LandingPage() {
   const { t } = useTranslation()
@@ -17,6 +18,11 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 px-4 relative overflow-hidden">
+      {/* Language Selector - Top Right */}
+      <div className="absolute top-4 right-4 z-20">
+        <LanguageSelector />
+      </div>
+
       {/* Background blobs for flair */}
       <div className="absolute top-0 -right-20 w-80 h-80 bg-primary-100 dark:bg-primary-900/20 rounded-full blur-3xl opacity-50"></div>
       <div className="absolute bottom-0 -left-20 w-80 h-80 bg-secondary-100 dark:bg-secondary-900/20 rounded-full blur-3xl opacity-50"></div>
@@ -115,7 +121,7 @@ export default function LandingPage() {
             to="/login"
             className="btn btn-primary px-8 py-3 text-lg"
           >
-            {text('landing.getStarted', 'Get Started')}
+            {text('landing.signUpSupabase', 'Sign Up with Supabase')}
           </Link>
           <Link
             to="/config"
@@ -125,7 +131,11 @@ export default function LandingPage() {
           </Link>
         </div>
 
-        <p className="mt-8 text-sm text-gray-500 dark:text-gray-400">
+        <p className="mt-6 text-sm text-gray-500 dark:text-gray-400">
+          {text('landing.supabaseAuthNote', 'Create your Supabase account to securely store and manage your financial data')}
+        </p>
+
+        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
           {text('landing.dataSecured', 'Your data is secured with Supabase Auth and stored in your own project')}
         </p>
       </div>
