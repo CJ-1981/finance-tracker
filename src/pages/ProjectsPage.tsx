@@ -26,13 +26,23 @@ export default function ProjectsPage() {
   const [retryCount, setRetryCount] = useState(0)
   const maxRetries = 3
 
-  // Safety check: Track previous data count to detect suspicious "0" results
+  // Enhanced safety check with localStorage persistence
   const [previousDataCount, setPreviousDataCount] = useState(0)
-  const [lastValidHash, setLastValidHash] = useState<string>('')
+  const [lastValidHash, setLastValidHash] = useState<string>(() => {
+    // Restore from localStorage on mount
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('projects-hash') || ''
+    }
+    return ''
+  })
 
-  // Simple hash function for data validation
+  // Enhanced hash function for better detection
   const createDataHash = (data: any[]): string => {
-    return `${data.length}-${JSON.stringify(data.map((p: any) => p.id)).slice(0, 100)}`
+    if (data.length === 0) return 'empty-array'
+    // Include length, sorted IDs, and sample data
+    const ids = data.map((p: any) => p.id).sort().join(',')
+    const sample = JSON.stringify(data.slice(0, 3))
+    return `projects-${data.length}-${ids}-${sample}`
   }
 
   const [formData, setFormData] = useState({
@@ -191,11 +201,18 @@ export default function ProjectsPage() {
           addDebugMessage('⚠️ Safety retry also failed, accepting 0 projects')
           setPreviousDataCount(0)
           setLastValidHash(newHash)
+          // Persist to localStorage
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('projects-hash', newHash)
+          }
         }
       } else {
-        // Normal path: update the tracking state
+        // Normal path: update the tracking state and persist to localStorage
         setPreviousDataCount(projectsWithRoles.length)
         setLastValidHash(newHash)
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('projects-hash', newHash)
+        }
       }
 
       setProjects(projectsWithRoles)

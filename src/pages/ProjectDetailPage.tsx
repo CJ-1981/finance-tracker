@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { getSupabaseClient, resetSupabaseClient } from '../lib/supabase'
 import { getConfig } from '../lib/config'
 import { getPendingInvitation } from '../lib/invitations'
+import { fetchWithRecovery, resetRecovery } from '../lib/dataRecovery'
 import type { Project, Transaction, Category } from '../types'
 import TransactionModal from '../components/TransactionModal'
 import CashCounterModal from '../components/CashCounterModal'
@@ -34,13 +35,28 @@ export default function ProjectDetailPage() {
   const [retryCount, setRetryCount] = useState(0)
   const maxRetries = 3
 
-  // Safety check: Track previous data to detect suspicious empty results
-  const [previousDataHash, setPreviousDataHash] = useState<string>('')
+  // Enhanced safety check with localStorage persistence
+  const [previousDataHash, setPreviousDataHash] = useState<string>(() => {
+    // Restore from localStorage on mount
+    if (typeof window !== 'undefined' && id) {
+      return localStorage.getItem(`project-hash-${id}`) || ''
+    }
+    return ''
+  })
 
-  // Simple hash function for data validation
+  // Enhanced hash function that includes more data for better detection
   const createDataHash = (data: any): string => {
     if (!data) return 'null'
-    if (Array.isArray(data)) return `${data.length}-${JSON.stringify(data.map(d => d.id)).slice(0, 100)}`
+    if (Array.isArray(data)) {
+      // Include length, all IDs, and first 3 items for better hash
+      const ids = data.map(d => d.id).sort().join(',')
+      const sample = JSON.stringify(data.slice(0, 3))
+      return `array-${data.length}-${ids}-${sample}`
+    }
+    if (data.id) {
+      // For single objects, include key fields
+      return `obj-${data.id}-${data.name || data.title || ''}-${JSON.stringify(data).slice(0, 50)}`
+    }
     return JSON.stringify(data).slice(0, 100)
   }
 
@@ -291,11 +307,15 @@ export default function ProjectDetailPage() {
         return false
       }
 
-      // Safety check: Validate project data integrity
+      // Enhanced safety check: Validate project data integrity
       const newHash = createDataHash(data)
-      const suspiciousResult = !data.id || !data.name || (previousDataHash && newHash === previousDataHash)
+      const isValidProject = data.id && data.name
+      const isUnchanged = previousDataHash && newHash === previousDataHash
 
-      if (suspiciousResult && previousDataHash && retryCount < maxRetries) {
+      // Suspicious if: invalid data OR (same hash twice in a row AND we haven't exhausted retries)
+      const suspiciousResult = !isValidProject || (isUnchanged && previousDataHash !== '' && retryCount < maxRetries)
+
+      if (suspiciousResult && previousDataHash !== '') {
         addDebugMessage(`⚠️ Suspicious: Project data looks invalid or unchanged (${newHash}) (safety retry ${retryCount + 1}/${maxRetries})`)
         addDebugMessage('Triggering safety check retry...')
 
@@ -316,8 +336,11 @@ export default function ProjectDetailPage() {
           // Don't set previousDataHash - allow retry on next fetch if we haven't exhausted retries
         }
       } else {
-        // Normal path: update the tracking state
+        // Normal path: update the tracking state and persist to localStorage
         setPreviousDataHash(newHash)
+        if (typeof window !== 'undefined' && id) {
+          localStorage.setItem(`project-hash-${id}`, newHash)
+        }
       }
 
       setProject(data)
@@ -393,8 +416,35 @@ export default function ProjectDetailPage() {
         throw error
       }
 
-      setTransactions(data || [])
-      addDebugMessage(`✓ Transactions loaded: ${data?.length || 0} items`)
+      const transactions = data || []
+
+      // Enhanced safety check for suspicious 0 results
+      const previousTransactionsHash = localStorage.getItem(`transactions-hash-${id}`)
+      const currentHash = createDataHash(transactions)
+
+      // Suspicious if: 0 transactions + we had data before + hash changed
+      const suspiciousZeroResult = transactions.length === 0 &&
+        previousTransactionsHash &&
+        previousTransactionsHash !== 'empty' &&
+        currentHash !== previousTransactionsHash &&
+        attemptNumber < maxRetries
+
+      if (suspiciousZeroResult) {
+        addDebugMessage(`⚠️ Suspicious: Got 0 transactions when we had data before (safety retry ${attemptNumber + 1}/${maxRetries})`)
+        addDebugMessage('Previous hash:' + previousTransactionsHash.slice(0, 50))
+        addDebugMessage('Current hash:' + currentHash)
+
+        // Reset Supabase client and retry
+        await resetSupabaseClient(getConfig())
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        return fetchTransactionsWithRetry(attemptNumber + 1)
+      }
+
+      // Save to localStorage for next comparison
+      localStorage.setItem(`transactions-hash-${id}`, currentHash)
+
+      setTransactions(transactions)
+      addDebugMessage(`✓ Transactions loaded: ${transactions.length} items`)
       return true
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error'

@@ -33,13 +33,22 @@ export default function TransactionsPage() {
   const [retryCount, setRetryCount] = useState(0)
   const maxRetries = 3
 
-  // Safety check: Track previous data to detect suspicious "0 transactions" results
-  const [previousDataHash, setPreviousDataHash] = useState<string>('')
+  // Enhanced safety check with localStorage persistence
+  const [previousDataHash, setPreviousDataHash] = useState<string>(() => {
+    // Restore from localStorage on mount
+    if (typeof window !== 'undefined' && projectId) {
+      return localStorage.getItem(`transactions-hash-${projectId}`) || ''
+    }
+    return ''
+  })
 
-  // Simple hash function for data validation
+  // Enhanced hash function for better detection
   const createDataHash = (project: any, transactions: any[]): string => {
     if (!project) return 'no-project'
-    return `${project.id}-${transactions.length}-${JSON.stringify(transactions.map(t => t.id)).slice(0, 100)}`
+    // Include project ID, transaction count, sorted IDs, and sample data
+    const ids = transactions.map(t => t.id).sort().join(',')
+    const sample = JSON.stringify(transactions.slice(0, 3))
+    return `${project.id}-${transactions.length}-${ids}-${sample}`
   }
 
   const [showSettings, setShowSettings] = useState(false)
@@ -309,7 +318,12 @@ export default function TransactionsPage() {
           if (!retryError && retryData) {
             console.log('✓ Safety retry succeeded')
             setTransactions(retryData)
-            setPreviousDataHash(createDataHash(project, retryData))
+            const retryHash = createDataHash(project, retryData)
+            setPreviousDataHash(retryHash)
+            // Persist to localStorage after successful retry
+            if (typeof window !== 'undefined' && projectId) {
+              localStorage.setItem(`transactions-hash-${projectId}`, retryHash)
+            }
             setRetryCount(0) // Reset retry count on success
             return
           }
@@ -320,8 +334,11 @@ export default function TransactionsPage() {
         console.log(`⚠️ Safety retry ${retryCount + 1}/${maxRetries} failed`)
         // Don't set previousDataHash - allow retry on next fetch if we haven't exhausted retries
       } else {
-        // Normal path: update the tracking state
+        // Normal path: update the tracking state and persist to localStorage
         setPreviousDataHash(newHash)
+        if (typeof window !== 'undefined' && projectId) {
+          localStorage.setItem(`transactions-hash-${projectId}`, newHash)
+        }
         setRetryCount(0) // Reset retry count on successful fetch
       }
 
