@@ -23,7 +23,7 @@ export default function LandingPage() {
       <div className="absolute bottom-0 -left-20 w-80 h-80 bg-secondary-100 dark:bg-secondary-900/20 rounded-full blur-3xl opacity-50"></div>
 
       <div className="flex-1 flex flex-col justify-center">
-        <div className="max-w-3xl w-full text-center relative z-10">
+        <div className="max-w-3xl w-full mx-auto text-center relative z-10">
           <div className="mb-12">
             <h1 className="text-6xl font-black text-slate-900 dark:text-slate-100 mb-6 tracking-tight">
               Financial <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-indigo-600">Tracker</span>
