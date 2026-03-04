@@ -20,6 +20,8 @@ interface QRCodeDisplayProps {
   size?: number
   /** Whether to apply dark mode styles */
   darkMode?: boolean
+  /** Optional filename for downloaded QR code (defaults to 'qr-code.png') */
+  filename?: string
 }
 
 /**
@@ -27,8 +29,9 @@ interface QRCodeDisplayProps {
  * @param props - Component props
  * @returns QR code display component
  */
-export function QRCodeDisplay({ url, t, size = 128, darkMode = false }: QRCodeDisplayProps) {
+export function QRCodeDisplay({ url, t, size = 128, darkMode = false, filename = 'qr-code.png' }: QRCodeDisplayProps) {
   const [copied, setCopied] = useState(false)
+  const [downloaded, setDownloaded] = useState(false)
   const qrRef = useRef<HTMLDivElement>(null)
 
   /**
@@ -51,7 +54,7 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false }: QRCodeDi
       // Get SVG data
       const svgData = new XMLSerializer().serializeToString(svgElement)
       const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' })
-      const url = URL.createObjectURL(svgBlob)
+      const blobUrl = URL.createObjectURL(svgBlob)
 
       // Create an image element
       const img = new Image()
@@ -83,7 +86,7 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false }: QRCodeDi
             setTimeout(() => setCopied(false), 2000)
           } catch (error) {
             console.error('Failed to copy image to clipboard:', error)
-            // Fallback: copy URL text if image copy fails
+            // Fallback: copy invite URL text if image copy fails
             try {
               await navigator.clipboard.writeText(url)
               setCopied(true)
@@ -92,19 +95,92 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false }: QRCodeDi
               console.error('Failed to copy URL as fallback:', fallbackError)
             }
           } finally {
-            URL.revokeObjectURL(url)
+            URL.revokeObjectURL(blobUrl)
           }
         }, 'image/png')
       }
 
       img.onerror = () => {
         console.error('Failed to load SVG as image')
-        URL.revokeObjectURL(url)
+        URL.revokeObjectURL(blobUrl)
       }
 
-      img.src = url
+      img.src = blobUrl
     } catch (error) {
       console.error('Failed to copy QR code:', error)
+    }
+  }
+
+  /**
+   * Downloads the QR code as a PNG file.
+   * Useful for attaching QR codes to emails that don't support image pasting.
+   */
+  const handleDownload = async () => {
+    if (!qrRef.current) {
+      console.error('QR code element not found')
+      return
+    }
+
+    try {
+      // Get the SVG element from the QRCode component
+      const svgElement = qrRef.current.querySelector('svg')
+      if (!svgElement) {
+        throw new Error('SVG element not found')
+      }
+
+      // Get SVG data
+      const svgData = new XMLSerializer().serializeToString(svgElement)
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' })
+      const blobUrl = URL.createObjectURL(svgBlob)
+
+      // Create an image element
+      const img = new Image()
+      img.onload = () => {
+        // Create canvas
+        const canvas = document.createElement('canvas')
+        canvas.width = size
+        canvas.height = size
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          throw new Error('Could not get canvas context')
+        }
+
+        // Draw image on canvas
+        ctx.drawImage(img, 0, 0, size, size)
+
+        // Convert canvas to blob and download
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            console.error('Could not convert canvas to blob')
+            return
+          }
+
+          // Create download link
+          const link = document.createElement('a')
+          link.href = URL.createObjectURL(blob)
+          link.download = filename
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+
+          // Cleanup
+          URL.revokeObjectURL(link.href)
+          URL.revokeObjectURL(blobUrl)
+
+          // Show downloaded state
+          setDownloaded(true)
+          setTimeout(() => setDownloaded(false), 2000)
+        }, 'image/png')
+      }
+
+      img.onerror = () => {
+        console.error('Failed to load SVG as image')
+        URL.revokeObjectURL(blobUrl)
+      }
+
+      img.src = blobUrl
+    } catch (error) {
+      console.error('Failed to download QR code:', error)
     }
   }
 
@@ -136,18 +212,34 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false }: QRCodeDi
         </div>
       )}
 
-      {/* Copy Button */}
-      <button
-        onClick={handleCopy}
-        disabled={copied || !url}
-        className={`btn btn-secondary w-full max-w-xs ${
-          copied ? 'opacity-75 cursor-not-allowed' : ''
-        }`}
-        aria-label={t('qr.copy')}
-        title={t('qr.copy')}
-      >
-        {copied ? t('qr.copied') : t('qr.copy')}
-      </button>
+      {/* Action Buttons */}
+      <div className="flex gap-2 w-full max-w-xs">
+        {/* Copy Button */}
+        <button
+          onClick={handleCopy}
+          disabled={copied || !url}
+          className={`btn btn-secondary flex-1 ${
+            copied ? 'opacity-75 cursor-not-allowed' : ''
+          }`}
+          aria-label={t('qr.copy')}
+          title={t('qr.copy')}
+        >
+          {copied ? t('qr.copied') : t('qr.copy')}
+        </button>
+
+        {/* Download Button */}
+        <button
+          onClick={handleDownload}
+          disabled={downloaded || !url}
+          className={`btn btn-secondary flex-1 ${
+            downloaded ? 'opacity-75 cursor-not-allowed' : ''
+          }`}
+          aria-label={t('qr.download')}
+          title={t('qr.download')}
+        >
+          {downloaded ? t('qr.downloaded') : t('qr.download')}
+        </button>
+      </div>
     </div>
   )
 }

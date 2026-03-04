@@ -5,6 +5,22 @@ All notable changes to the Finance Tracker application will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.1] - 2026-03-04
+
+### Fixed
+
+- **QR Code Image Copy** - Fixed bug where copying QR code copied URL text instead of image
+  - Fixed variable shadowing issue in handleCopy function
+  - QR code now correctly copies as PNG image to clipboard
+  - Fallback to invite URL if image copy fails
+
+### Added
+
+- **QR Code Download** - New "Download QR Code" button for attaching QR codes to emails
+  - Downloads QR code as PNG file
+  - Useful for email clients that don't support image pasting
+  - Buttons displayed side-by-side: Copy / Download
+
 ## [2.5.0] - 2026-03-04
 
 ### Added

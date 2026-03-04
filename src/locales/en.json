@@ -364,6 +364,8 @@
     "hide": "Hide QR Code",
     "copy": "Copy QR Code",
     "copied": "QR Code copied to clipboard!",
+    "download": "Download QR Code",
+    "downloaded": "Downloaded!",
     "qrCodeFor": "QR Code for",
     "scanQR": "Scan QR Code",
     "scannerTitle": "Scan QR Code",

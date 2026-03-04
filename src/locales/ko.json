@@ -364,6 +364,8 @@
     "hide": "QR 코드 숨기기",
     "copy": "QR 코드 복사",
     "copied": "QR 코드가 클립보드에 복사되었습니다!",
+    "download": "QR 코드 다운로드",
+    "downloaded": "다운로드 완료!",
     "qrCodeFor": "QR 코드:",
     "scanQR": "QR 코드 스캔",
     "scannerTitle": "QR 코드 스캔",
