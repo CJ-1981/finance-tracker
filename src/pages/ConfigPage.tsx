@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useSupabase } from '../hooks/useSupabase'
 import { testConnection } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { useTheme } from '../contexts/ThemeContext'
 import type { SupabaseConfig } from '../types'
 import versionInfo from '../version.json'
 
@@ -23,6 +24,7 @@ export default function ConfigPage() {
   const { t } = useTranslation()
   const { updateConfig } = useSupabase()
   const { user, signIn, signOut } = useAuth()
+  const { theme, setTheme } = useTheme()
   const navigate = useNavigate()
   const [config, setConfig] = useState<SupabaseConfig>({
     url: '',
@@ -142,11 +144,11 @@ export default function ConfigPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 px-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">{t('auth.financialTracker')}</h1>
-          <p className="text-gray-600 mt-2">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('auth.financialTracker')}</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
             {mode === 'configure' ? t('config.setupConfiguration') :
               mode === 'signin' ? t('auth.signInToAccount') :
                 t('config.supabaseConfig')}
@@ -157,7 +159,7 @@ export default function ConfigPage() {
           {mode === 'configure' && (
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {t('config.projectUrl')}
                 </label>
                 <input
@@ -172,7 +174,7 @@ export default function ConfigPage() {
               </div>
 
               <div>
-                <label htmlFor="anonKey" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="anonKey" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {t('config.anonKey')}
                 </label>
                 <input
@@ -206,7 +208,7 @@ export default function ConfigPage() {
                 {testing ? t('config.testingConnection') : t('config.saveConfig')}
               </button>
 
-              <div className="text-sm text-gray-500 max-w-full">
+              <div className="text-sm text-gray-500 dark:text-gray-400 max-w-full">
                 <p className="font-medium mb-2 text-xs sm:text-sm">{t('config.whereToFindCredentials')}</p>
                 <ol className="list-decimal list-inside space-y-1 text-xs sm:text-sm">
                   <li>{t('config.goToProject')}</li>
@@ -215,7 +217,7 @@ export default function ConfigPage() {
                 </ol>
               </div>
 
-              <div className="pt-4 border-t border-gray-200 space-y-4">
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
                 <button
                   type="button"
                   onClick={() => navigate('/')}
@@ -240,7 +242,7 @@ export default function ConfigPage() {
           {mode === 'signin' && (
             <form onSubmit={handleSignIn} className="space-y-6">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {t('auth.email')}
                 </label>
                 <input
@@ -255,7 +257,7 @@ export default function ConfigPage() {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {t('auth.password')}
                 </label>
                 <input
@@ -270,8 +272,8 @@ export default function ConfigPage() {
               </div>
 
               {errors.length > 0 && (
-                <div className="rounded-md bg-red-50 p-4">
-                  <div className="text-sm text-red-800">
+                <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4">
+                  <div className="text-sm text-red-800 dark:text-red-400">
                     <ul className="list-disc list-inside">
                       {errors.map((error, index) => (
                         <li key={index}>{error}</li>
@@ -289,7 +291,7 @@ export default function ConfigPage() {
                 {signingIn ? t('common.loading') : t('auth.signIn')}
               </button>
 
-              <div className="pt-4 border-t border-gray-200 space-y-4">
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
                 <button
                   type="button"
                   onClick={() => navigate('/')}
@@ -313,7 +315,7 @@ export default function ConfigPage() {
                   >
                     {t('config.clearAppConfig')}
                   </button>
-                  <p className="text-xs text-gray-500 text-center px-2">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 text-center px-2">
                     {t('config.clearConfigWarning')}
                   </p>
                 </div>
@@ -323,9 +325,9 @@ export default function ConfigPage() {
 
           {mode === 'authenticated' && (
             <div className="space-y-6">
-              <div className="text-center pb-4 border-b border-gray-200">
-                <p className="text-sm text-gray-600">{t('config.signedInAs')}</p>
-                <p className="font-semibold text-gray-900">{user?.email}</p>
+              <div className="text-center pb-4 border-b border-gray-200 dark:border-gray-700">
+                <p className="text-sm text-gray-600 dark:text-gray-400">{t('config.signedInAs')}</p>
+                <p className="font-semibold text-gray-900 dark:text-gray-100">{user?.email}</p>
               </div>
 
               <div className="space-y-4">
@@ -348,6 +350,16 @@ export default function ConfigPage() {
                   {debugPanelEnabled ? '🐛 Debug Enabled' : '🐛 Enable Debug Panel'}
                 </button>
                 <button
+                  onClick={() => {
+                    if (theme === 'light') setTheme('dark')
+                    else if (theme === 'dark') setTheme('system')
+                    else setTheme('light')
+                  }}
+                  className="w-full btn btn-secondary"
+                >
+                  {theme === 'light' ? '🌙 Dark Mode: Off' : theme === 'dark' ? '🌙 Dark Mode: On' : '🌙 Dark Mode: Auto'}
+                </button>
+                <button
                   onClick={async () => {
                     await signOut()
                     window.location.reload()
@@ -364,19 +376,19 @@ export default function ConfigPage() {
                   >
                     {t('config.clearAppConfig')}
                   </button>
-                  <p className="text-xs text-gray-500 text-center px-2">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 text-center px-2">
                     {t('config.clearConfigWarning')}
                   </p>
                 </div>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 text-sm text-blue-800 dark:text-blue-400">
                 <p className="font-medium mb-2">{t('config.currentConfiguration')}</p>
                 <p className="text-xs">URL: {truncateMiddle(config.url, 30)}</p>
                 <p className="text-xs">Key: {truncateMiddle(config.anonKey, 10)}</p>
               </div>
 
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm text-gray-700">
+              <div className="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-sm text-gray-700 dark:text-gray-300">
                 <p className="font-medium mb-2">{t('config.appInfo', { defaultValue: 'App Information' })}</p>
                 <p className="text-xs">Version: {versionInfo.version}</p>
                 <p className="text-xs">Build Time: {new Date(versionInfo.buildTime).toLocaleString()}</p>

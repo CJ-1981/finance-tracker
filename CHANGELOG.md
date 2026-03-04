@@ -5,6 +5,64 @@ All notable changes to the Finance Tracker application will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2026-03-04
+
+### Added
+- **Dark Theme Support** - System-wide dark mode with manual toggle option
+  - Dark/light mode toggle in ConfigPage settings
+  - Respects system preference (auto-detect) on first visit
+  - Persists user preference across sessions via localStorage
+  - Smooth transitions between themes
+  - Full Tailwind CSS dark mode implementation
+  - All pages and components support dark theme
+  - Charts adapt to dark theme with appropriate colors
+
+### Technical
+- Dark mode implementation using Tailwind CSS `dark:` variants
+- Theme context provider for global theme management
+- localStorage persistence for theme preference
+- System preference detection using `prefers-color-scheme`
+- CSS custom properties for theme-aware colors
+
+## [2.3.6] - 2026-03-04
+
+### Added
+- **Enhanced Data Recovery System** - Comprehensive recovery utility for handling data fetch failures
+  - localStorage persistence for cross-session recovery
+  - Multiple retry strategies with exponential backoff
+  - Cached data fallback for display during failures
+  - Request deduplication to prevent race conditions
+  - Suspicious result detection with automatic retry
+  - Hash-based data integrity verification
+
+- **Progressive Loading Skeletons** - Decoupled UI rendering from Supabase loading
+  - Page renders immediately with skeleton loaders
+  - No full-page loading blockers
+  - Perceived performance improvement
+  - User can interact with UI during data fetch
+
+### Changed
+- **ProjectDetailPage Loading** - Removed full-page loading blocker
+  - Added skeleton loaders for project header
+  - Added loading placeholders for charts and transactions
+  - Page now renders immediately with progressive loading
+
+### Fixed
+- **Flickering "Project Not Found" Message** - Error message no longer shows during initial load
+  - Added loading state check before displaying error
+  - Prevents brief flash of error message on page entry
+
+- **Infinite Retry Loops** - Safety check no longer triggers on valid unchanged data
+  - Removed logic that flagged unchanged hash as suspicious
+  - Only retries for truly invalid data (missing required fields)
+
+### Technical
+- New `src/lib/dataRecovery.ts` with comprehensive recovery utilities
+- Enhanced hash functions with sorted IDs and sample data
+- localStorage persistence for hash data across sessions
+- Skeleton loader components with `animate-pulse` animations
+- Loading state indicators throughout the application
+
 ## [2.3.5] - 2026-03-03
 
 ### Added
