@@ -291,15 +291,18 @@ export default function TransactionsPage() {
       const transactions = data || []
 
       // Safety check: Detect suspicious "0 transactions" results
+      // Only suspicious if: 0 results AND we previously had non-zero results
       const newHash = createDataHash(project, transactions)
-      const suspiciousZeroResult = transactions.length === 0 && previousDataHash && previousDataHash !== 'no-project' && newHash !== previousDataHash
+      const previousHadData = previousDataHash && previousDataHash !== 'no-project' && previousDataHash !== 'empty'
+      const suspiciousZeroResult = transactions.length === 0 && previousHadData
 
-      if (suspiciousZeroResult && retryCount < maxRetries) {
-        console.log(`⚠️ Suspicious: Got 0 transactions when we previously had data (retry ${retryCount + 1}/${maxRetries})`)
+      // Limit safety retries to prevent infinite loops
+      if (suspiciousZeroResult && retryCount === 0) {
+        console.log(`⚠️ Suspicious: Got 0 transactions when we previously had data`)
         console.log('Triggering safety check retry...')
 
         // Increment retry count to prevent infinite loops
-        setRetryCount(retryCount + 1)
+        setRetryCount(1)
 
         // Reset Supabase client and retry once
         await resetSupabaseClient(getConfig())
@@ -331,16 +334,15 @@ export default function TransactionsPage() {
           console.error('Safety retry failed:', retryError)
         }
 
-        console.log(`⚠️ Safety retry ${retryCount + 1}/${maxRetries} failed`)
-        // Don't set previousDataHash - allow retry on next fetch if we haven't exhausted retries
-      } else {
-        // Normal path: update the tracking state and persist to localStorage
-        setPreviousDataHash(newHash)
-        if (typeof window !== 'undefined' && projectId) {
-          localStorage.setItem(`transactions-hash-${projectId}`, newHash)
-        }
-        setRetryCount(0) // Reset retry count on successful fetch
+        console.log('⚠️ Safety retry failed')
       }
+
+      // Always update hash for localStorage persistence (even if safety retry failed)
+      setPreviousDataHash(newHash)
+      if (typeof window !== 'undefined' && projectId) {
+        localStorage.setItem(`transactions-hash-${projectId}`, newHash)
+      }
+      setRetryCount(0) // Reset retry count on successful fetch
 
       setTransactions(transactions)
     } catch (error) {

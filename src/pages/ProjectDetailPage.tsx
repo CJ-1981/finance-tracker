@@ -309,17 +309,14 @@ export default function ProjectDetailPage() {
       // Enhanced safety check: Validate project data integrity
       const newHash = createDataHash(data)
       const isValidProject = data.id && data.name
-      const isUnchanged = previousDataHash && newHash === previousDataHash
 
-      // Suspicious if: invalid data OR (same hash twice in a row AND we haven't exhausted retries)
-      const suspiciousResult = !isValidProject || (isUnchanged && previousDataHash !== '' && retryCount < maxRetries)
+      // Only trigger safety retry for truly invalid data (missing id or name)
+      // Unchanged hash is NOT suspicious - it just means data hasn't changed
+      const suspiciousResult = !isValidProject
 
-      if (suspiciousResult && previousDataHash !== '') {
-        addDebugMessage(`⚠️ Suspicious: Project data looks invalid or unchanged (${newHash}) (safety retry ${retryCount + 1}/${maxRetries})`)
+      if (suspiciousResult && attemptNumber < maxRetries) {
+        addDebugMessage(`⚠️ Suspicious: Project data looks invalid (${newHash.slice(0, 50)}...) (safety retry ${attemptNumber + 1}/${maxRetries})`)
         addDebugMessage('Triggering safety check retry...')
-
-        // Increment retry count to prevent infinite loops
-        setRetryCount(retryCount + 1)
 
         // Reset Supabase client and retry once more
         await resetSupabaseClient(getConfig())
@@ -331,15 +328,14 @@ export default function ProjectDetailPage() {
         if (safetyResult) {
           addDebugMessage('✓ Safety retry succeeded')
         } else {
-          addDebugMessage(`⚠️ Safety retry ${retryCount}/${maxRetries} failed`)
-          // Don't set previousDataHash - allow retry on next fetch if we haven't exhausted retries
+          addDebugMessage(`⚠️ Safety retry ${attemptNumber + 1}/${maxRetries} failed`)
         }
-      } else {
-        // Normal path: update the tracking state and persist to localStorage
-        setPreviousDataHash(newHash)
-        if (typeof window !== 'undefined' && id) {
-          localStorage.setItem(`project-hash-${id}`, newHash)
-        }
+      }
+
+      // Always update hash for localStorage persistence
+      setPreviousDataHash(newHash)
+      if (typeof window !== 'undefined' && id) {
+        localStorage.setItem(`project-hash-${id}`, newHash)
       }
 
       setProject(data)

@@ -179,10 +179,12 @@ export default function ProjectsPage() {
       }).filter((p: any) => p.id !== undefined) || []
 
       // Safety check: Detect suspicious "0" results when we previously had data
+      // Only suspicious if: 0 results AND we previously had non-zero results
       const newHash = createDataHash(projectsWithRoles)
-      const suspiciousZeroResult = projectsWithRoles.length === 0 && previousDataCount > 0 && newHash !== lastValidHash
+      const previousHadData = previousDataCount > 0
+      const suspiciousZeroResult = projectsWithRoles.length === 0 && previousHadData && !isSafetyRetry
 
-      if (suspiciousZeroResult && !isSafetyRetry) {
+      if (suspiciousZeroResult) {
         addDebugMessage(`⚠️ Suspicious: Got 0 projects when we previously had ${previousDataCount}`)
         addDebugMessage('Triggering safety check retry...')
 
