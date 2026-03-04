@@ -9,15 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **QR Code "Copied" Message** - Fixed issue where "QR code copied" message didn't appear after clicking copy button
+  - Refactored handleCopy to use Promise-based approach instead of nested callbacks
+  - State updates now execute reliably at top level of try/catch blocks
+  - Added loading state ("..." while copying) and comprehensive console logging
+
 - **QR Code Image Copy** - Fixed bug where copying QR code copied URL text instead of image
   - Fixed variable shadowing issue in handleCopy function
   - QR code now correctly copies as PNG image to clipboard
   - Fallback to invite URL if image copy fails
 
+- **QR Code Scannability** - Added white padding (quiet zone) around QR codes for proper recognition
+  - Added 20% padding on all sides (ISO/IEC 18004 compliance)
+  - Applied to both copy and download operations
+  - Ensures QR codes are scannable by all QR code readers
+
 ### Added
 
 - **QR Code Download** - New "Download QR Code" button for attaching QR codes to emails
-  - Downloads QR code as PNG file
+  - Downloads QR code as PNG file with white padding
   - Useful for email clients that don't support image pasting
   - Buttons displayed side-by-side: Copy / Download
 
