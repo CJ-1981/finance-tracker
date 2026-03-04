@@ -1131,9 +1131,11 @@ export default function TransactionsPage() {
               <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">{t('transactions.transactions')}</h1>
             </div>
             <div className="flex gap-2 flex-wrap">
-              <button onClick={() => setShowSettings(!showSettings)} className="btn btn-secondary text-sm whitespace-nowrap">
-                {showSettings ? t('transactions.closeSettings') : `⚙️ ${t('common.settings')}`}
-              </button>
+              {userRole === 'owner' && (
+                <button onClick={() => setShowSettings(!showSettings)} className="btn btn-secondary text-sm whitespace-nowrap">
+                  {showSettings ? t('transactions.closeSettings') : `⚙️ ${t('common.settings')}`}
+                </button>
+              )}
               <button onClick={() => {
                 setEditingTransactionId(null)
                 setShowAddForm(true)
@@ -1146,7 +1148,7 @@ export default function TransactionsPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {showSettings && (
+        {showSettings && userRole === 'owner' && (
           <div className="grid md:grid-cols-2 gap-6 mb-8 mt-2 overflow-x-hidden">
             <div className="card border-t-4 border-t-primary-500 overflow-hidden">
               <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 mb-6 flex items-center gap-2">
