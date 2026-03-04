@@ -32,6 +32,7 @@ interface QRCodeDisplayProps {
 export function QRCodeDisplay({ url, t, size = 128, darkMode = false, filename = 'qr-code.png' }: QRCodeDisplayProps) {
   const [copied, setCopied] = useState(false)
   const [downloaded, setDownloaded] = useState(false)
+  const [copying, setCopying] = useState(false)
   const qrRef = useRef<HTMLDivElement>(null)
 
   /**
@@ -44,70 +45,88 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false, filename =
       return
     }
 
+    setCopying(true)
+    console.log('[QR Copy] Starting copy operation...')
+
     try {
       // Get the SVG element from the QRCode component
       const svgElement = qrRef.current.querySelector('svg')
       if (!svgElement) {
         throw new Error('SVG element not found')
       }
+      console.log('[QR Copy] SVG element found')
 
       // Get SVG data
       const svgData = new XMLSerializer().serializeToString(svgElement)
       const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' })
       const blobUrl = URL.createObjectURL(svgBlob)
+      console.log('[QR Copy] SVG serialized, blob URL created')
 
-      // Create an image element
-      const img = new Image()
-      img.onload = async () => {
-        // Create canvas
-        const canvas = document.createElement('canvas')
-        canvas.width = size
-        canvas.height = size
-        const ctx = canvas.getContext('2d')
-        if (!ctx) {
-          throw new Error('Could not get canvas context')
+      // Use a Promise-based approach for better control flow
+      const blob = await new Promise<Blob | null>((resolve, reject) => {
+        const img = new Image()
+
+        img.onload = () => {
+          console.log('[QR Copy] Image loaded, creating canvas...')
+          const canvas = document.createElement('canvas')
+          canvas.width = size
+          canvas.height = size
+          const ctx = canvas.getContext('2d')
+
+          if (!ctx) {
+            reject(new Error('Could not get canvas context'))
+            return
+          }
+
+          ctx.drawImage(img, 0, 0, size, size)
+          console.log('[QR Copy] Canvas drawn, converting to blob...')
+
+          canvas.toBlob((blob) => {
+            if (blob) {
+              console.log('[QR Copy] Blob created successfully')
+              resolve(blob)
+            } else {
+              reject(new Error('Could not convert canvas to blob'))
+            }
+          }, 'image/png')
         }
 
-        // Draw image on canvas
-        ctx.drawImage(img, 0, 0, size, size)
+        img.onerror = () => {
+          console.error('[QR Copy] Failed to load SVG as image')
+          URL.revokeObjectURL(blobUrl)
+          reject(new Error('Failed to load SVG as image'))
+        }
 
-        // Convert canvas to blob
-        canvas.toBlob(async (blob) => {
-          if (!blob) {
-            throw new Error('Could not convert canvas to blob')
-          }
+        img.src = blobUrl
+      })
 
-          try {
-            // Copy image to clipboard
-            await navigator.clipboard.write([
-              new ClipboardItem({ 'image/png': blob })
-            ])
-            setCopied(true)
-            setTimeout(() => setCopied(false), 2000)
-          } catch (error) {
-            console.error('Failed to copy image to clipboard:', error)
-            // Fallback: copy invite URL text if image copy fails
-            try {
-              await navigator.clipboard.writeText(url)
-              setCopied(true)
-              setTimeout(() => setCopied(false), 2000)
-            } catch (fallbackError) {
-              console.error('Failed to copy URL as fallback:', fallbackError)
-            }
-          } finally {
-            URL.revokeObjectURL(blobUrl)
-          }
-        }, 'image/png')
+      if (!blob) {
+        throw new Error('Failed to create blob from canvas')
       }
 
-      img.onerror = () => {
-        console.error('Failed to load SVG as image')
-        URL.revokeObjectURL(blobUrl)
+      // Try to copy image to clipboard
+      console.log('[QR Copy] Attempting to copy image to clipboard...')
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': blob })
+        ])
+        console.log('[QR Copy] Image copied successfully!')
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      } catch (clipboardError) {
+        console.warn('[QR Copy] Image copy failed, trying fallback:', clipboardError)
+        // Fallback: copy invite URL text if image copy fails
+        await navigator.clipboard.writeText(url)
+        console.log('[QR Copy] Fallback URL copied successfully!')
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
       }
 
-      img.src = blobUrl
+      URL.revokeObjectURL(blobUrl)
     } catch (error) {
-      console.error('Failed to copy QR code:', error)
+      console.error('[QR Copy] Failed to copy QR code:', error)
+    } finally {
+      setCopying(false)
     }
   }
 
@@ -217,14 +236,14 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false, filename =
         {/* Copy Button */}
         <button
           onClick={handleCopy}
-          disabled={copied || !url}
+          disabled={copied || copying || !url}
           className={`btn btn-secondary flex-1 ${
-            copied ? 'opacity-75 cursor-not-allowed' : ''
+            (copied || copying) ? 'opacity-75 cursor-not-allowed' : ''
           }`}
           aria-label={t('qr.copy')}
           title={t('qr.copy')}
         >
-          {copied ? t('qr.copied') : t('qr.copy')}
+          {copying ? '...' : copied ? t('qr.copied') : t('qr.copy')}
         </button>
 
         {/* Download Button */}
