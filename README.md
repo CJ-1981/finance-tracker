@@ -239,7 +239,7 @@ finance-tracker/
 
 ## Recent Updates
 
-### v2.4.0 - Dark Theme Support
+### v2.4.0 - Dark Theme Support & Landing Page Improvements
 
 **New Features:**
 - ✅ System-wide dark mode with manual toggle option
@@ -250,6 +250,15 @@ finance-tracker/
   - Full Tailwind CSS dark mode implementation
   - All pages and components support dark theme
   - Charts adapt to dark theme with appropriate colors
+- ✅ Landing page language selector (fixes #23)
+  - Users can switch between English and Korean before logging in
+  - Positioned in top-right corner for easy access
+
+**Improvements:**
+- ✅ Supabase sign-up clarity (fixes #23)
+  - "Get Started" button changed to "Sign Up with Supabase"
+  - Added note explaining Supabase account creation
+  - Improved user understanding of authentication flow
 
 **Bug Fixes:**
 - ✅ Dark Theme UI Glitches (fixes #22) - Comprehensive dark theme fixes across all pages

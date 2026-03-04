@@ -17,6 +17,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - All pages and components support dark theme
   - Charts adapt to dark theme with appropriate colors
 
+- **Landing Page Language Selector** (fixes #23)
+  - Language selector now available on landing page
+  - Users can switch between English and Korean before logging in
+  - Positioned in top-right corner for easy access
+
+### Changed
+- **Supabase Sign-Up Clarity** (fixes #23)
+  - "Get Started" button changed to "Sign Up with Supabase"
+  - Added note explaining Supabase account creation
+  - Improved user understanding of authentication flow
+
 ### Fixed
 - **Dark Theme UI Glitches** (fixes #22) - Comprehensive dark theme fixes across all pages
   - "Show Deleted" button now has proper dark mode styling
