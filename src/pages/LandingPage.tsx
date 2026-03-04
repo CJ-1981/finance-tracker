@@ -18,11 +18,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen flex flex-col justify-center bg-slate-50 dark:bg-slate-950 px-4 relative overflow-hidden">
-      {/* Language Selector - Top Right */}
-      <div className="absolute top-4 right-4 z-30">
-        <LanguageSelector />
-      </div>
-
       {/* Background blobs for flair */}
       <div className="absolute top-0 -right-20 w-80 h-80 bg-primary-100 dark:bg-primary-900/20 rounded-full blur-3xl opacity-50"></div>
       <div className="absolute bottom-0 -left-20 w-80 h-80 bg-secondary-100 dark:bg-secondary-900/20 rounded-full blur-3xl opacity-50"></div>
@@ -148,6 +143,11 @@ export default function LandingPage() {
             {text('landing.dataSecured', 'Your data is secured with Supabase Auth and stored in your own project')}
           </p>
         </div>
+      </div>
+
+      {/* Language Selector at bottom - opens upward */}
+      <div className="py-6 text-center z-20">
+        <LanguageSelector dropup={true} />
       </div>
     </div>
   )

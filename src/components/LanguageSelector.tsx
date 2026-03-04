@@ -6,7 +6,11 @@ const languages = [
   { code: 'ko', name: '한국어', flag: '🇰🇷' }
 ]
 
-export default function LanguageSelector() {
+interface LanguageSelectorProps {
+  dropup?: boolean
+}
+
+export default function LanguageSelector({ dropup = false }: LanguageSelectorProps) {
   const { i18n } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
 
@@ -62,8 +66,9 @@ export default function LanguageSelector() {
             aria-hidden="true"
           />
           {/* Mobile: left-0 so dropdown opens rightward (safe on small screens).
-              sm+: right-0 so it aligns to button's right edge in the header. */}
-          <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 min-w-max bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 z-[200] overflow-hidden">
+              sm+: right-0 so it aligns to button's right edge in the header.
+              dropup: opens upward instead of downward */}
+          <div className={`absolute left-0 sm:left-auto sm:right-0 ${dropup ? 'bottom-full mb-2' : 'mt-2'} min-w-max bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 z-[200] overflow-hidden`}>
             {languages.map((language) => (
               <button
                 key={language.code}
