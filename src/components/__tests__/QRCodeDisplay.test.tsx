@@ -107,6 +107,14 @@ describe('QRCodeDisplay', () => {
       // Mock clipboard failure
       mockClipboard.writeText.mockRejectedValueOnce(new Error('Clipboard error'))
 
+      // Mock document.execCommand (not available in jsdom)
+      const originalExecCommand = (document as any).execCommand
+      Object.defineProperty(document, 'execCommand', {
+        value: vi.fn().mockReturnValue(false),
+        writable: true,
+        configurable: true,
+      })
+
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
       render(<QRCodeDisplay url={mockUrl} t={t} />)
@@ -119,6 +127,12 @@ describe('QRCodeDisplay', () => {
       })
 
       consoleSpy.mockRestore()
+      // Clean up
+      Object.defineProperty(document, 'execCommand', {
+        value: originalExecCommand,
+        writable: true,
+        configurable: true,
+      })
     })
   })
 
