@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useSupabase } from '../hooks/useSupabase'
 import { testConnection } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useTheme } from '../contexts/ThemeContext'
+import { decodeConfigFromInvite } from '../lib/inviteConfig'
 import type { SupabaseConfig } from '../types'
 import versionInfo from '../version.json'
+import QRScannerModal from '../components/QRScannerModal'
 
 /**
  * Truncate a string in the middle for security (show prefix...suffix)
@@ -39,6 +41,7 @@ export default function ConfigPage() {
     password: '',
   })
   const [signingIn, setSigningIn] = useState(false)
+  const [showQRScanner, setShowQRScanner] = useState(false)
   const [debugPanelEnabled, setDebugPanelEnabled] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('debugPanelEnabled') === 'true'
@@ -163,6 +166,42 @@ export default function ConfigPage() {
     setMode('configure')
   }
 
+  const handleQRScan = useCallback((scannedUrl: string) => {
+    try {
+      // Parse URL to extract config parameter
+      const urlObj = new URL(scannedUrl)
+      const configParam = urlObj.searchParams.get('config')
+
+      if (configParam) {
+        // Decode config from URL parameter
+        const decodedConfig = decodeConfigFromInvite(configParam)
+        if (decodedConfig) {
+          setConfig(decodedConfig)
+          // Show success message
+          alert(t('qr.configExtracted'))
+        } else {
+          alert(t('qr.invalidQR'))
+        }
+      } else {
+        // Check if this is just an invite link without config
+        const token = urlObj.searchParams.get('token') || urlObj.searchParams.get('tokens')
+        if (token) {
+          alert(t('qr.inviteOnly'))
+          // Could redirect to invite page here if needed
+        } else {
+          alert(t('qr.invalidQR'))
+        }
+      }
+    } catch (error) {
+      console.error('Failed to process QR code:', error)
+      alert(t('qr.invalidQR'))
+    }
+  }, [t, setConfig])
+
+  const handleCloseQRScanner = useCallback(() => {
+    setShowQRScanner(false)
+  }, [])
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 px-4 py-8">
       <div className="max-w-md w-full mx-auto">
@@ -226,6 +265,14 @@ export default function ConfigPage() {
                 className="w-full btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {testing ? t('config.testingConnection') : t('config.saveConfig')}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowQRScanner(true)}
+                className="w-full btn btn-secondary"
+              >
+                {t('qr.scanQR')}
               </button>
 
               <div className="text-sm text-gray-500 dark:text-gray-400 max-w-full">
@@ -417,6 +464,15 @@ export default function ConfigPage() {
           )}
         </div>
       </div>
+
+      {/* QR Scanner Modal */}
+      <QRScannerModal
+        isOpen={showQRScanner}
+        onClose={handleCloseQRScanner}
+        onScan={handleQRScan}
+        t={t}
+        darkMode={theme === 'dark'}
+      />
     </div>
   )
 }
