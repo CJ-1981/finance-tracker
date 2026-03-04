@@ -24,9 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Supabase Sign-Up Clarity** (fixes #23)
-  - "Get Started" button changed to "Sign Up with Supabase"
-  - Added note explaining Supabase account creation
-  - Improved user understanding of authentication flow
+  - Login page toggle text updated to mention Supabase
+  - "Don't have an account? Sign Up" → "Don't have an account? Sign Up with Supabase"
+  - "계정이 없으신가요? 회원가입" → "계정이 없으신가요? Supabase로 회원가입"
+  - Improved user understanding of authentication provider
 
 ### Fixed
 - **Dark Theme UI Glitches** (fixes #22) - Comprehensive dark theme fixes across all pages

@@ -256,9 +256,10 @@ finance-tracker/
 
 **Improvements:**
 - ✅ Supabase sign-up clarity (fixes #23)
-  - "Get Started" button changed to "Sign Up with Supabase"
-  - Added note explaining Supabase account creation
-  - Improved user understanding of authentication flow
+  - Login page toggle text updated to mention Supabase
+  - "Don't have an account? Sign Up" → "Don't have an account? Sign Up with Supabase"
+  - "계정이 없으신가요? 회원가입" → "계정이 없으신가요? Supabase로 회원가입"
+  - Improved user understanding of authentication provider
 
 **Bug Fixes:**
 - ✅ Dark Theme UI Glitches (fixes #22) - Comprehensive dark theme fixes across all pages
