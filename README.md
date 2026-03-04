@@ -239,6 +239,38 @@ finance-tracker/
 
 ## Recent Updates
 
+### v2.4.0 - Dark Theme Support
+
+**New Features:**
+- ✅ System-wide dark mode with manual toggle option
+  - Dark/light mode toggle in ConfigPage settings
+  - Respects system preference (auto-detect) on first visit
+  - Persists user preference across sessions via localStorage
+  - Smooth transitions between themes
+  - Full Tailwind CSS dark mode implementation
+  - All pages and components support dark theme
+  - Charts adapt to dark theme with appropriate colors
+
+**Bug Fixes:**
+- ✅ Dark Theme UI Glitches (fixes #22) - Comprehensive dark theme fixes across all pages
+  - "Show Deleted" button now has proper dark mode styling
+  - Table headers with appropriate background colors in dark mode
+  - Currency highlighting adjustments for dark theme readability
+  - Row dividers visible in both light and dark themes
+  - Category names properly styled in dark mode
+  - Rename/delete buttons with dark mode hover states
+  - Navigation arrows visible in dark theme
+  - Custom fields panel with proper dark mode backgrounds
+  - "Clear App Config" button dark mode variants
+  - Logout button with appropriate dark mode styling
+
+**Technical:**
+- Dark mode implementation using Tailwind CSS `dark:` variants
+- Theme context provider for global theme management
+- localStorage persistence for theme preference
+- System preference detection using `prefers-color-scheme`
+- CSS custom properties for theme-aware colors
+
 ### v2.3.5 - Multi-Currency Support & UX Improvements
 
 **New Features:**
