@@ -990,7 +990,9 @@ export default function ProjectDetailPage() {
     )
   }
 
-  if (!project) {
+  // Only show "project not found" if we've finished loading and project is still null
+  // Don't show during initial render to avoid flickering
+  if (!project && !loading && error === null) {
     return (
       <div className="min-h-screen bg-gray-50 p-8">
         <div className="max-w-7xl mx-auto">
@@ -1206,7 +1208,7 @@ export default function ProjectDetailPage() {
             <div className="card border-t-4 border-t-primary-500 overflow-hidden min-w-0">
               <div className="text-xs font-bold text-primary-600 uppercase tracking-wider mb-1">{t('projectDetail.totalAmount')}</div>
               <div className="text-3xl font-black text-slate-900 break-words overflow-hidden">
-                {project.settings?.currency || 'USD'} {totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {loading ? '...' : (project?.settings?.currency || 'USD')} {totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
               {Object.keys(otherCurrencyTotals).length > 0 && (
                 <div className="mt-3 pt-3 border-t border-slate-200">
