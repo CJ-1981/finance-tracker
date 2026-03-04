@@ -34,15 +34,6 @@ export default function ProjectDetailPage() {
   const [retryCount, setRetryCount] = useState(0)
   const maxRetries = 3
 
-  // Enhanced safety check with localStorage persistence
-  const [previousDataHash, setPreviousDataHash] = useState<string>(() => {
-    // Restore from localStorage on mount
-    if (typeof window !== 'undefined' && id) {
-      return localStorage.getItem(`project-hash-${id}`) || ''
-    }
-    return ''
-  })
-
   // Enhanced hash function that includes more data for better detection
   const createDataHash = (data: any): string => {
     if (!data) return 'null'
@@ -333,7 +324,6 @@ export default function ProjectDetailPage() {
       }
 
       // Always update hash for localStorage persistence
-      setPreviousDataHash(newHash)
       if (typeof window !== 'undefined' && id) {
         localStorage.setItem(`project-hash-${id}`, newHash)
       }

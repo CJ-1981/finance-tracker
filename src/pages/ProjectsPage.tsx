@@ -28,13 +28,6 @@ export default function ProjectsPage() {
 
   // Enhanced safety check with localStorage persistence
   const [previousDataCount, setPreviousDataCount] = useState(0)
-  const [lastValidHash, setLastValidHash] = useState<string>(() => {
-    // Restore from localStorage on mount
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('projects-hash') || ''
-    }
-    return ''
-  })
 
   // Enhanced hash function for better detection
   const createDataHash = (data: any[]): string => {
@@ -202,7 +195,6 @@ export default function ProjectsPage() {
           // Safety retry also failed, accept the 0 result but update state
           addDebugMessage('⚠️ Safety retry also failed, accepting 0 projects')
           setPreviousDataCount(0)
-          setLastValidHash(newHash)
           // Persist to localStorage
           if (typeof window !== 'undefined') {
             localStorage.setItem('projects-hash', newHash)
@@ -211,7 +203,6 @@ export default function ProjectsPage() {
       } else {
         // Normal path: update the tracking state and persist to localStorage
         setPreviousDataCount(projectsWithRoles.length)
-        setLastValidHash(newHash)
         if (typeof window !== 'undefined') {
           localStorage.setItem('projects-hash', newHash)
         }
