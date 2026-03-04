@@ -37,6 +37,15 @@ A collaborative financial tracking web application built with React, TypeScript,
 - **CSV export** - Export transactions matching table structure
 - **Multi-user collaboration** - Invite members with role-based access (owner, member, viewer)
 - **Email invitations** - Send invitations with token-based acceptance flow (owner only)
+- **QR Code Invitations** - Generate QR codes for easy invitation sharing
+  - Display QR code in invite success modal
+  - Copy QR code image to clipboard for email sharing
+  - Dark mode support for QR display
+- **QR Code Config Scanner** - Scan QR codes to configure Supabase settings
+  - Camera-based QR code scanner with live preview
+  - Automatic config extraction from scanned codes
+  - HTTPS detection and camera permission handling
+  - Graceful fallback to manual input
 - **Full internationalization** - English and Korean language support
   - Browser language detection
   - Localized UI elements and chart labels
@@ -53,9 +62,10 @@ A collaborative financial tracking web application built with React, TypeScript,
 - **Charts**: Chart.js with react-chartjs-2
 - **Routing**: React Router v7
 - **Internationalization**: i18next with react-i18next
+- **QR Codes**: react-qr-code, qr-scanner
 - **CSV Export**: PapaParse
 - **Date Handling**: Native browser date pickers
-- **Testing**: Playwright (E2E)
+- **Testing**: Vitest (unit), Playwright (E2E)
 - **Deployment**: GitHub Pages
 
 ## Getting Started
@@ -102,7 +112,8 @@ npm run dev
 
 6. **Configure the app:**
    - Click "Get Started" on the landing page
-   - Enter your Supabase Project URL and anon key
+   - **Option 1**: Scan QR code containing Supabase config (requires HTTPS or localhost)
+   - **Option 2**: Manually enter your Supabase Project URL and anon key
    - Click "Save Configuration"
 
 7. **Sign in with your Supabase credentials:**
@@ -115,8 +126,11 @@ npm run dev
 # Run development server
 npm run dev
 
-# Run unit tests
+# Run unit tests (Vitest)
 npm test
+
+# Run unit tests with coverage
+npm test -- --coverage
 
 # Run E2E tests (Playwright)
 npm run test:e2e
@@ -196,48 +210,81 @@ See `database/schema.sql` for the complete schema including RLS policies.
 ## Usage
 
 1. **Sign Up/Sign In**: Create account with email and password
-2. **Create Project**: Create a new project to track finances
-3. **Configure Settings**:
+2. **Configure Supabase**: Scan QR code or manually enter Supabase project credentials
+3. **Create Project**: Create a new project to track finances
+4. **Configure Settings**:
    - Set default currency (USD, EUR, KRW, etc.)
    - Add custom fields (e.g., "이름" for names)
    - Import known values for custom fields
-4. **Add Categories**: Create categories with colors, reorder as needed
-5. **Add Transactions**:
+5. **Add Categories**: Create categories with colors, reorder as needed
+6. **Add Transactions**:
    - Select transaction type (Income or Expense) using the segmented control
    - Enter positive amount (no minus sign needed)
    - Choose currency
    - Select category
    - Fill in custom fields with autocomplete
-6. **Filter by Date**: Use period selector to view specific time ranges
-7. **View Analytics**: See spending breakdown by category in charts
-8. **Export Data**: Export transactions as CSV for accounting software
-9. **Invite Members**: Send email invitations to collaborators (owner only)
+7. **Filter by Date**: Use period selector to view specific time ranges
+8. **View Analytics**: See spending breakdown by category in charts
+9. **Export Data**: Export transactions as CSV for accounting software
+10. **Invite Members**:
+    - Send email invitations to collaborators (owner only)
+    - Generate QR code for easy invitation sharing
+    - Copy QR code image to paste into emails
 
 ## Project Structure
 
 ```
 finance-tracker/
 ├── src/
-│   ├── components/     # Reusable components
-│   ├── pages/         # Page components
-│   ├── hooks/         # Custom React hooks
-│   ├── lib/           # Supabase client and utilities
-│   │   ├── invitations.ts    # Invitation management utilities
-│   ├── types/         # TypeScript type definitions
-│   ├── utils/         # Utility functions
-│   │   └── csvExport.ts     # CSV export functionality
-│   ├── App.tsx        # Main app with routing
-│   ├── main.tsx       # Entry point
-│   └── index.css      # Global styles
-├── database/          # SQL schema and setup scripts
+│   ├── components/         # Reusable components
+│   │   ├── QRCodeDisplay.tsx      # QR code generation component
+│   │   └── QRScannerModal.tsx     # Camera-based QR scanner
+│   ├── components/__tests__/ # Component unit tests (Vitest)
+│   ├── pages/             # Page components
+│   ├── hooks/             # Custom React hooks
+│   ├── lib/               # Supabase client and utilities
+│   │   ├── invitations.ts # Invitation management utilities
+│   │   └── inviteConfig.ts # Invite config encoding/decoding
+│   ├── types/             # TypeScript type definitions
+│   ├── utils/             # Utility functions
+│   │   └── csvExport.ts    # CSV export functionality
+│   ├── test/              # Test setup and utilities
+│   ├── App.tsx            # Main app with routing
+│   ├── main.tsx           # Entry point
+│   └── index.css          # Global styles
+├── database/              # SQL schema and setup scripts
 │   ├── schema.sql                            # Master schema (for new databases)
 │   ├── migration_soft_delete_transactions.sql # Soft delete system
 │   └── SETUP-GUIDE.md                        # Database setup instructions
-├── public/            # Static assets
-└── index.html         # HTML template
+├── public/                # Static assets
+└── index.html             # HTML template
 ```
 
 ## Recent Updates
+
+### v2.5.0 - QR Code for Invitations & Config Setup (Issue #24)
+
+**New Features:**
+- ✅ QR Code for Invitations (SPEC-QR-001)
+  - QR code display in invite success modal
+  - Copy QR code image to clipboard for email sharing
+  - Automatic QR code generation from invite URL
+  - Dark mode support for QR display
+- ✅ QR Code Scanner for Config Setup (SPEC-QR-001)
+  - Camera-based QR code scanner in ConfigPage
+  - Automatic config extraction from scanned QR codes
+  - HTTPS detection and warning for camera API requirements
+  - Camera permission handling with clear user feedback
+  - Graceful fallback to manual input when camera unavailable
+
+**Technical:**
+- New dependencies: `react-qr-code@^2.0.18`, `qr-scanner@^1.4.2`
+- Components: `QRCodeDisplay.tsx`, `QRScannerModal.tsx`
+- i18n translations for QR features (English, Korean)
+- Camera API integration with proper resource cleanup
+- Memory leak prevention with mounted flags and refs
+- Config validation and extraction from invite URLs
+- Unit tests: 22 tests (13 for QRCodeDisplay, 9 for QRScannerModal)
 
 ### v2.4.0 - Dark Theme Support & Landing Page Improvements
 
