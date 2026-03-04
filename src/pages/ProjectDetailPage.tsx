@@ -943,16 +943,16 @@ export default function ProjectDetailPage() {
   // Show error state with retry option
   if (error && !project) {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-950 p-8">
         <div className="max-w-md mx-auto mt-16">
           <div className="card p-8 text-center">
-            <div className="text-red-500 mb-4">
+            <div className="text-red-500 dark:text-red-400 mb-4">
               <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-            <h1 className="text-xl font-bold text-gray-900 mb-2">{t('projectDetail.errorLoadingProject')}</h1>
-            <p className="text-gray-600 mb-6">{error}</p>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('projectDetail.errorLoadingProject')}</h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
             <div className="flex flex-col gap-3">
               <button onClick={() => { setError(null); fetchProject() }} className="btn btn-primary">
                 {t('projectDetail.tryAgain')}
@@ -994,9 +994,9 @@ export default function ProjectDetailPage() {
   // Don't show during initial render to avoid flickering
   if (!project && !loading && error === null) {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-950 p-8">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('projectDetail.projectNotFound')}</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">{t('projectDetail.projectNotFound')}</h1>
           <Link to="/projects" className="btn btn-secondary">
             {t('projectDetail.backToProjectsList')}
           </Link>
@@ -1006,28 +1006,28 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20 md:pb-0 overflow-x-hidden">
-      <header className="bg-white border-b border-slate-200 shadow-sm relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 md:pb-0 overflow-x-hidden">
+      <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-primary"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
             <div className="flex-1 min-w-0">
-              <Link to="/projects" className="text-sm font-medium text-primary-600 hover:text-primary-700 mb-2 inline-flex items-center gap-1">
+              <Link to="/projects" className="text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 mb-2 inline-flex items-center gap-1">
                 ← {t('projectDetail.backToProjectsList')}
               </Link>
               {!project ? (
                 // Skeleton loader while project is loading
                 <div className="mt-3 space-y-3">
-                  <div className="h-8 bg-gray-200 rounded animate-pulse w-3/4"></div>
-                  <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
-                  <div className="h-6 bg-gray-200 rounded animate-pulse w-1/4 mt-2"></div>
+                  <div className="h-8 bg-gray-200 dark:bg-slate-700 rounded animate-pulse w-3/4"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-slate-700 rounded animate-pulse w-1/2"></div>
+                  <div className="h-6 bg-gray-200 dark:bg-slate-700 rounded animate-pulse w-1/4 mt-2"></div>
                 </div>
               ) : isEditing ? (
                 <form onSubmit={handleEditProject} className="flex flex-col gap-3 mt-1 w-full max-w-md">
                   <input type="text" className="input" value={editFormData.name} onChange={e => setEditFormData({ ...editFormData, name: e.target.value })} required placeholder={t('projectDetail.projectName')} />
                   <textarea className="input" value={editFormData.description} onChange={e => setEditFormData({ ...editFormData, description: e.target.value })} rows={2} placeholder={t('projectDetail.projectDescription')} />
                   <div className="flex gap-2 items-center">
-                    <label className="text-sm font-medium text-slate-700 whitespace-nowrap">{t('projectDetail.currencyLabel')}</label>
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">{t('projectDetail.currencyLabel')}</label>
                     <input type="text" className="input w-24" value={editFormData.currency} onChange={e => setEditFormData({ ...editFormData, currency: e.target.value })} placeholder="USD, EUR, etc." maxLength={5} />
                   </div>
                   <div className="flex gap-2 mt-1">
@@ -1038,17 +1038,17 @@ export default function ProjectDetailPage() {
               ) : (
                 <div className="group flex flex-col gap-1 items-start mt-1 min-w-0">
                   <div className="flex items-center gap-3 flex-wrap min-w-0">
-                    <h1 className="text-2xl font-bold text-gray-900 truncate flex-shrink">{project.name}</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 truncate flex-shrink">{project.name}</h1>
                     <button onClick={() => {
                       setIsEditing(true)
                       setEditFormData({ name: project.name, description: project.description || '', currency: project.settings?.currency || 'USD' })
-                    }} className="text-blue-500 hover:text-blue-700 text-sm opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">{t('projectDetail.edit')}</button>
+                    }} className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">{t('projectDetail.edit')}</button>
                   </div>
-                  {project.description && <p className="text-sm text-gray-600 max-w-2xl break-words">{project.description}</p>}
+                  {project.description && <p className="text-sm text-gray-600 dark:text-gray-400 max-w-2xl break-words">{project.description}</p>}
 
                   {/* Date Period Selector */}
                   <div className="mt-3 flex flex-wrap items-center gap-2 min-w-0">
-                    <label className="text-sm font-medium text-gray-700">{t('projectDetail.period')}</label>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('projectDetail.period')}</label>
                     <select
                       value={datePeriod}
                       onChange={(e) => setDatePeriod(e.target.value as any)}
@@ -1063,7 +1063,7 @@ export default function ProjectDetailPage() {
                       <option value="thisYear">{t('projectDetail.thisYear')}</option>
                       <option value="all">{t('projectDetail.allTime')}</option>
                     </select>
-                    <span className="text-xs text-gray-500 flex-shrink-0">
+                    <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
                       ({filteredTransactions.length} {t('projectDetail.transactions')})
                     </span>
                   </div>
@@ -1072,7 +1072,7 @@ export default function ProjectDetailPage() {
             </div>
             <div className="flex gap-2 flex-wrap">
               {project?.owner_id === user?.id && (
-                <button onClick={() => setShowInviteModal(true)} className="btn btn-secondary border border-blue-600 text-blue-600 hover:bg-blue-50 text-sm whitespace-nowrap flex" title="Invite">
+                <button onClick={() => setShowInviteModal(true)} className="btn btn-secondary border border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-sm whitespace-nowrap flex" title="Invite">
                   <span>✉️</span>
                   <span className="hidden sm:inline ml-1">{t('projectDetail.invite')}</span>
                 </button>
@@ -1106,15 +1106,15 @@ export default function ProjectDetailPage() {
 
       {showInviteModal && project?.owner_id === user?.id && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h2 className="text-xl font-bold mb-4">{t('projectDetail.inviteToProject')}</h2>
+          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">{t('projectDetail.inviteToProject')}</h2>
             <form onSubmit={handleInvite} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t('auth.email')}</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('auth.email')}</label>
                 <input type="email" required className="input" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="colleague@example.com" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t('projects.role')}</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('projects.role')}</label>
                 <select className="input" value={inviteRole} onChange={e => setInviteRole(e.target.value as any)}>
                   <option value="member">{t('projects.roleMember')}</option>
                   <option value="viewer">{t('projects.roleViewer')}</option>
@@ -1131,9 +1131,9 @@ export default function ProjectDetailPage() {
 
       {showInviteLink && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 max-w-lg w-full">
-            <h2 className="text-xl font-bold mb-4">{t('projectDetail.invitationCreated')}</h2>
-            <p className="text-sm text-gray-600 mb-4">
+          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-lg w-full">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">{t('projectDetail.invitationCreated')}</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               {t('projectDetail.chooseSendMethod')}
             </p>
 
@@ -1146,9 +1146,9 @@ export default function ProjectDetailPage() {
             </a>
 
             {/* Invite Link */}
-            <div className="bg-gray-50 p-3 rounded-md mb-3">
-              <p className="text-xs text-gray-500 mb-1">{t('projectDetail.inviteLink')}</p>
-              <p className="text-sm text-blue-600 break-words">{inviteLink}</p>
+            <div className="bg-gray-50 dark:bg-slate-900 p-3 rounded-md mb-3">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('projectDetail.inviteLink')}</p>
+              <p className="text-sm text-blue-600 dark:text-blue-400 break-words">{inviteLink}</p>
             </div>
 
             {/* Actions */}
@@ -1196,28 +1196,28 @@ export default function ProjectDetailPage() {
                 <span className="mr-1">☀️</span> {t('projectDetail.dateTime')}
               </div>
               <div className="flex flex-col">
-                <div className="text-base font-semibold text-slate-900">
+                <div className="text-base font-semibold text-slate-900 dark:text-slate-100">
                   {currentDateTime.toLocaleDateString(i18n.language || undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
                 </div>
-                <div className="text-xl font-medium text-slate-900">
+                <div className="text-xl font-medium text-slate-900 dark:text-slate-100">
                   {currentDateTime.toLocaleTimeString(i18n.language || undefined, { hour: 'numeric', minute: '2-digit', second: '2-digit' })}
                 </div>
               </div>
             </div>
             {/* Total Amount Widget */}
             <div className="card border-t-4 border-t-primary-500 overflow-hidden min-w-0">
-              <div className="text-xs font-bold text-primary-600 uppercase tracking-wider mb-1">{t('projectDetail.totalAmount')}</div>
-              <div className="text-3xl font-black text-slate-900 break-words overflow-hidden">
+              <div className="text-xs font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wider mb-1">{t('projectDetail.totalAmount')}</div>
+              <div className="text-3xl font-black text-slate-900 dark:text-slate-100 break-words overflow-hidden">
                 {loading ? '...' : (project?.settings?.currency || 'USD')} {totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
               {Object.keys(otherCurrencyTotals).length > 0 && (
-                <div className="mt-3 pt-3 border-t border-slate-200">
-                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Other currencies</div>
+                <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+                  <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Other currencies</div>
                   <div className="space-y-1">
                     {Object.entries(otherCurrencyTotals).sort(([a], [b]) => a.localeCompare(b)).map(([currency, amount]) => (
                       <div key={currency} className="flex justify-between items-center text-sm">
-                        <span className="font-medium text-slate-600">{currency}</span>
-                        <span className="font-bold text-slate-700">{amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        <span className="font-medium text-slate-600 dark:text-slate-400">{currency}</span>
+                        <span className="font-bold text-slate-700 dark:text-slate-300">{amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                       </div>
                     ))}
                   </div>
@@ -1228,10 +1228,10 @@ export default function ProjectDetailPage() {
             <Link to={`/transactions/${id}`} className="card border-t-4 border-t-teal-500 overflow-hidden min-w-0 cursor-pointer hover:shadow-md transition-shadow">
               <div className="flex justify-between items-center">
                 <div>
-                  <div className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-1">{t('transactions.transactions')}</div>
-                  <div className="text-3xl font-black text-slate-900">{filteredTransactions.length}</div>
+                  <div className="text-xs font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wider mb-1">{t('transactions.transactions')}</div>
+                  <div className="text-3xl font-black text-slate-900 dark:text-slate-100">{filteredTransactions.length}</div>
                 </div>
-                <span className="text-lg font-semibold text-teal-600 hover:text-teal-700">
+                <span className="text-lg font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-700">
                   →
                 </span>
               </div>
@@ -1242,21 +1242,21 @@ export default function ProjectDetailPage() {
           {!project || loading ? (
             // Loading state for charts and transactions
             <div className="lg:col-span-3 grid gap-6 lg:grid-cols-3">
-              <div className="lg:col-span-2 card border-t-4 border-t-gray-300 p-6">
+              <div className="lg:col-span-2 card border-t-4 border-t-gray-300 dark:border-slate-600 p-6">
                 <div className="animate-pulse space-y-4">
-                  <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+                  <div className="h-6 bg-gray-200 dark:bg-slate-700 rounded w-1/3"></div>
                   <div className="flex justify-center p-8">
-                    <div className="w-64 h-64 bg-gray-200 rounded-full"></div>
+                    <div className="w-64 h-64 bg-gray-200 dark:bg-slate-700 rounded-full"></div>
                   </div>
                 </div>
               </div>
-              <div className="lg:col-span-1 card border-t-4 border-t-gray-300 p-6">
+              <div className="lg:col-span-1 card border-t-4 border-t-gray-300 dark:border-slate-600 p-6">
                 <div className="animate-pulse space-y-3">
-                  <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-6 bg-gray-200 dark:bg-slate-700 rounded w-1/2"></div>
                   <div className="space-y-2">
-                    <div className="h-12 bg-gray-200 rounded"></div>
-                    <div className="h-12 bg-gray-200 rounded"></div>
-                    <div className="h-12 bg-gray-200 rounded"></div>
+                    <div className="h-12 bg-gray-200 dark:bg-slate-700 rounded"></div>
+                    <div className="h-12 bg-gray-200 dark:bg-slate-700 rounded"></div>
+                    <div className="h-12 bg-gray-200 dark:bg-slate-700 rounded"></div>
                   </div>
                 </div>
               </div>
@@ -1266,7 +1266,7 @@ export default function ProjectDetailPage() {
               {/* Pie Chart and Recent Transactions in same row */}
               <div className="lg:col-span-2 card border-t-4 border-t-primary-500 overflow-hidden">
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-6 min-w-0">
-                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 min-w-0">
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2 min-w-0">
                     <span className="w-2 h-6 bg-primary-500 rounded-full flex-shrink-0"></span>
                     <span className="truncate">{getChartTitle(categoryChartMetric, categoryChartGroupBy)}</span>
                   </h2>
@@ -1318,24 +1318,24 @@ export default function ProjectDetailPage() {
               {/* Recent Transactions */}
               <div id="recent-transactions" className="lg:col-span-1 card border-t-4 border-t-teal-500 flex flex-col overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
                 <Link to={`/transactions/${id}`} className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-6">
-                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                     <span className="w-2 h-6 bg-teal-500 rounded-full flex-shrink-0"></span>
                     {t('projectDetail.recent')}
                   </h2>
-                  <span className="text-sm font-semibold text-primary-600 hover:text-primary-700 whitespace-nowrap">
+                  <span className="text-sm font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 whitespace-nowrap">
                     {t('projectDetail.viewAll')} →
                   </span>
                 </Link>
                 <div className="space-y-3 flex-1 overflow-auto">
                   {filteredTransactions.slice(0, 6).map((transaction) => (
-                    <Link key={transaction.id} to={`/transactions/${id}`} className="flex justify-between items-center gap-2 p-3 hover:bg-slate-50 rounded-xl transition-all border border-transparent hover:border-slate-100 group">
+                    <Link key={transaction.id} to={`/transactions/${id}`} className="flex justify-between items-center gap-2 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all border border-transparent hover:border-slate-100 dark:hover:border-slate-700 group">
                       <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm bg-white border border-slate-100 flex-shrink-0" style={{ color: getCategoryColor(transaction.category_id) }}>
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 flex-shrink-0" style={{ color: getCategoryColor(transaction.category_id) }}>
                           {getCategoryName(transaction.category_id).charAt(0)}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="text-sm font-bold text-slate-800 truncate">{getCategoryName(transaction.category_id)}</div>
-                          <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider truncate">{transaction.date}</div>
+                          <div className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">{getCategoryName(transaction.category_id)}</div>
+                          <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wider truncate">{transaction.date}</div>
                         </div>
                       </div>
                       <div className="text-right min-w-0">
@@ -1348,7 +1348,7 @@ export default function ProjectDetailPage() {
                     </Link>
                   ))}
                   {filteredTransactions.length === 0 && (
-                    <div className="text-center py-8 text-sm text-gray-500">
+                    <div className="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
                       {t('projectDetail.noTransactionsForPeriod')}
                     </div>
                   )}
@@ -1388,8 +1388,8 @@ export default function ProjectDetailPage() {
                           await saveConsolidatedChartPreferences('cumulative')
                         }}
                         className={`px-1.5 sm:px-3 py-1 text-xs sm:text-sm rounded transition-colors ${chartMode === 'cumulative'
-                          ? 'bg-blue-100 text-blue-700 font-medium'
-                          : 'text-gray-600 hover:bg-gray-100'
+                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
+                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
                           }`}
                       >
                         <span className="hidden sm:inline">{t('projectDetail.cumulative')}</span>
@@ -1401,8 +1401,8 @@ export default function ProjectDetailPage() {
                           await saveConsolidatedChartPreferences('absolute')
                         }}
                         className={`px-1.5 sm:px-3 py-1 text-xs sm:text-sm rounded transition-colors ${chartMode === 'absolute'
-                          ? 'bg-blue-100 text-blue-700 font-medium'
-                          : 'text-gray-600 hover:bg-gray-100'
+                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
+                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
                           }`}
                       >
                         <span className="hidden sm:inline">{t('projectDetail.absolute')}</span>
