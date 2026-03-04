@@ -144,8 +144,8 @@ export default function ConfigPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 px-4">
-      <div className="max-w-md w-full">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 px-4 py-8">
+      <div className="max-w-md w-full mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('auth.financialTracker')}</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
