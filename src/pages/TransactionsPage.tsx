@@ -405,6 +405,15 @@ export default function TransactionsPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  const canEditSelected = () => {
+    // Check if user created all selected transactions
+    const selectedIds = Array.from(selectedTransactions)
+    return selectedIds.every(id => {
+      const transaction = transactions.find(t => t.id === id)
+      return transaction?.created_by === user?.id
+    })
+  }
+
   const handleDelete = async (transactionId: string) => {
     if (!confirm(t('transactions.confirmDelete'))) {
       return
@@ -1537,12 +1546,14 @@ export default function TransactionsPage() {
                     {selectedTransactions.size > 0 && (
                       <>
                         <span className="text-sm text-gray-600 py-1">{selectedTransactions.size} selected</span>
-                        <button
-                          onClick={handleMultiEdit}
-                          className="btn btn-primary text-sm whitespace-nowrap"
-                        >
-                          Edit Selected
-                        </button>
+                        {(userRole === 'owner' || canEditSelected()) && (
+                          <button
+                            onClick={handleMultiEdit}
+                            className="btn btn-primary text-sm whitespace-nowrap"
+                          >
+                            Edit Selected
+                          </button>
+                        )}
                         <button
                           onClick={handleBulkDelete}
                           className="btn bg-red-600 hover:bg-red-700 text-white text-sm whitespace-nowrap"
@@ -1739,12 +1750,14 @@ export default function TransactionsPage() {
                       </td>
                       {!isMultiSelectMode && (
                         <td className="py-3 px-4 text-right">
-                          <button
-                            onClick={() => handleEdit(transaction)}
-                            className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mr-3"
-                          >
-                            Edit
-                          </button>
+                          {(userRole === 'owner' || transaction.created_by === user?.id) && (
+                            <button
+                              onClick={() => handleEdit(transaction)}
+                              className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mr-3"
+                            >
+                              Edit
+                            </button>
+                          )}
                           <button
                             onClick={() => handleDelete(transaction.id)}
                             disabled={isDeletingTransaction === transaction.id}
