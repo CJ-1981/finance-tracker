@@ -406,14 +406,14 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20 md:pb-0" data-testid="projects-page">
-      <header className="bg-white border-b border-slate-200 shadow-sm relative">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 md:pb-0" data-testid="projects-page">
+      <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm relative">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-primary"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{t('projects.title')}</h1>
-              <p className="text-slate-500 text-sm mt-1">{t('projects.subtitle')}</p>
+              <h1 className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">{t('projects.title')}</h1>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">{t('projects.subtitle')}</p>
             </div>
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
               <LanguageSelector />
@@ -510,13 +510,13 @@ export default function ProjectsPage() {
           </div>
         ) : projectsError ? (
           <div className="card text-center py-12">
-            <div className="text-red-500 mb-4">
+            <div className="text-red-500 dark:text-red-400 mb-4">
               <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">Unable to Load Projects</h2>
-              <p className="text-gray-600 mb-2">Failed to fetch your projects. Please check your connection and try again.</p>
-              <p className="text-xs text-gray-500 font-mono bg-gray-100 p-2 rounded mb-4">{projectsError}</p>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Unable to Load Projects</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-2">Failed to fetch your projects. Please check your connection and try again.</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-mono bg-gray-100 dark:bg-slate-800 p-2 rounded mb-4">{projectsError}</p>
             </div>
             <button onClick={() => { setProjectsError(null); fetchProjects() }} className="btn btn-primary">
               Try Again
@@ -552,7 +552,7 @@ export default function ProjectsPage() {
             <h2 className="text-lg font-semibold mb-4">{t('projects.createNewProject')}</h2>
             <form onSubmit={handleCreateProject} className="space-y-4">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('projects.projectName')}
                 </label>
                 <input
@@ -565,7 +565,7 @@ export default function ProjectsPage() {
                 />
               </div>
               <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('projects.description')}
                 </label>
                 <textarea
@@ -594,8 +594,8 @@ export default function ProjectsPage() {
 
         {projects.length === 0 ? (
           <div className="text-center py-12" data-testid="empty-state">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('projects.noProjectsYet')}</h2>
-            <p className="text-gray-600 mb-6">{t('projects.createFirstProject')}</p>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{t('projects.noProjectsYet')}</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">{t('projects.createFirstProject')}</p>
             <button onClick={() => setShowCreateForm(true)} className="btn btn-primary">
               {t('projects.createProject')}
             </button>
@@ -622,7 +622,7 @@ export default function ProjectsPage() {
                   <div className="absolute top-4 right-4 z-10">
                     <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${selectedProjectIds.includes(project.id)
                       ? 'bg-primary-500 border-primary-500 text-white'
-                      : 'bg-white border-slate-300'
+                      : 'bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600'
                       }`}>
                       {selectedProjectIds.includes(project.id) && (
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -633,21 +633,21 @@ export default function ProjectsPage() {
                   </div>
                 )}
                 <div className="flex justify-between items-start">
-                  <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-primary-600 transition-colors">{project.name}</h3>
-                  <span className="bg-primary-50 text-primary-700 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border border-primary-100">
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{project.name}</h3>
+                  <span className="bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border border-primary-100 dark:border-primary-800">
                     {t(`projects.${['owner', 'member', 'viewer'].includes(project.userRole || '') ? project.userRole : 'unknownRole'}`)}
                   </span>
                 </div>
                 {project.description && (
-                  <p className="text-sm text-slate-600 mb-4 line-clamp-2">{project.description}</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-2">{project.description}</p>
                 )}
-                <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50">
-                  <span className="text-xs font-medium text-slate-500 flex items-center gap-1">
+                <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50 dark:border-slate-700">
+                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-teal-500"></span>
                     {project.settings?.currency || 'USD'}
                   </span>
                   {!isSelectionMode && (
-                    <span className="text-primary-600 text-xs font-semibold group-hover:translate-x-1 transition-transform">
+                    <span className="text-primary-600 dark:text-primary-400 text-xs font-semibold group-hover:translate-x-1 transition-transform">
                       {t('projects.viewDetails')}
                     </span>
                   )}
@@ -663,27 +663,27 @@ export default function ProjectsPage() {
       {/* Multi-Project Invite Modal */}
       {showInviteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">{t('projects.inviteToProjects')}</h2>
-            <p className="text-slate-500 text-sm mb-6">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">{t('projects.inviteToProjects')}</h2>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
               {t('projects.invitingProjects', { count: selectedProjectIds.length })}
             </p>
             <form onSubmit={handleMultiInvite} className="space-y-5">
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">{t('projects.emailAddress')}</label>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">{t('projects.emailAddress')}</label>
                 <input
                   type="email"
                   required
-                  className="input bg-slate-50 focus:bg-white"
+                  className="input bg-slate-50 dark:bg-slate-700 focus:bg-white dark:focus:bg-slate-600"
                   value={inviteEmail}
                   onChange={e => setInviteEmail(e.target.value)}
                   placeholder="colleague@example.com"
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">{t('projects.role')}</label>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">{t('projects.role')}</label>
                 <select
-                  className="input bg-slate-50 focus:bg-white"
+                  className="input bg-slate-50 dark:bg-slate-700 focus:bg-white dark:focus:bg-slate-600"
                   value={inviteRole}
                   onChange={e => setInviteRole(e.target.value as any)}
                 >
@@ -709,14 +709,14 @@ export default function ProjectsPage() {
       {/* Invite Success Modal */}
       {showInviteLink && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
-              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-6">
+              <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">{t('projects.invitationsCreated')}</h2>
-            <p className="text-slate-600 mb-6">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">{t('projects.invitationsCreated')}</h2>
+            <p className="text-slate-600 dark:text-slate-400 mb-6">
               {t('projects.invitationLinkGenerated', { count: inviteProjectCount })}
             </p>
 
@@ -727,9 +727,9 @@ export default function ProjectsPage() {
               {t('projects.openEmailClient')}
             </a>
 
-            <div className="bg-slate-50 p-4 rounded-xl mb-6 border border-slate-100">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{t('projects.combinedInviteLink')}</p>
-              <p className="text-sm text-primary-600 break-all font-medium">{inviteLink}</p>
+            <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl mb-6 border border-slate-100 dark:border-slate-700">
+              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">{t('projects.combinedInviteLink')}</p>
+              <p className="text-sm text-primary-600 dark:text-primary-400 break-all font-medium">{inviteLink}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-3 mb-6">
@@ -758,7 +758,7 @@ export default function ProjectsPage() {
 
             <button
               onClick={() => setShowInviteLink(false)}
-              className="w-full text-slate-400 font-bold text-sm hover:text-slate-600 transition-colors"
+              className="w-full text-slate-400 dark:text-slate-500 font-bold text-sm hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
             >
               {t('common.close')}
             </button>
