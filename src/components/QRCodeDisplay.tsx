@@ -38,6 +38,7 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false, filename =
   /**
    * Copies the QR code as a PNG image to the clipboard.
    * Converts the SVG QR code to a canvas, then to a blob for clipboard.
+   * Adds white padding (quiet zone) around QR code for better scannability.
    */
   const handleCopy = async () => {
     if (!qrRef.current) {
@@ -68,9 +69,14 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false, filename =
 
         img.onload = () => {
           console.log('[QR Copy] Image loaded, creating canvas...')
+
+          // Add 20% padding on each side for quiet zone (required for QR code recognition)
+          const padding = Math.round(size * 0.2)
+          const canvasSize = size + (padding * 2)
+
           const canvas = document.createElement('canvas')
-          canvas.width = size
-          canvas.height = size
+          canvas.width = canvasSize
+          canvas.height = canvasSize
           const ctx = canvas.getContext('2d')
 
           if (!ctx) {
@@ -78,8 +84,13 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false, filename =
             return
           }
 
-          ctx.drawImage(img, 0, 0, size, size)
-          console.log('[QR Copy] Canvas drawn, converting to blob...')
+          // Fill with white background
+          ctx.fillStyle = '#FFFFFF'
+          ctx.fillRect(0, 0, canvasSize, canvasSize)
+
+          // Draw QR code centered with padding
+          ctx.drawImage(img, padding, padding, size, size)
+          console.log('[QR Copy] Canvas drawn with padding, converting to blob...')
 
           canvas.toBlob((blob) => {
             if (blob) {
@@ -133,6 +144,7 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false, filename =
   /**
    * Downloads the QR code as a PNG file.
    * Useful for attaching QR codes to emails that don't support image pasting.
+   * Adds white padding (quiet zone) around QR code for better scannability.
    */
   const handleDownload = async () => {
     if (!qrRef.current) {
@@ -155,17 +167,25 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false, filename =
       // Create an image element
       const img = new Image()
       img.onload = () => {
-        // Create canvas
+        // Add 20% padding on each side for quiet zone (required for QR code recognition)
+        const padding = Math.round(size * 0.2)
+        const canvasSize = size + (padding * 2)
+
+        // Create canvas with padding
         const canvas = document.createElement('canvas')
-        canvas.width = size
-        canvas.height = size
+        canvas.width = canvasSize
+        canvas.height = canvasSize
         const ctx = canvas.getContext('2d')
         if (!ctx) {
           throw new Error('Could not get canvas context')
         }
 
-        // Draw image on canvas
-        ctx.drawImage(img, 0, 0, size, size)
+        // Fill with white background
+        ctx.fillStyle = '#FFFFFF'
+        ctx.fillRect(0, 0, canvasSize, canvasSize)
+
+        // Draw QR code centered with padding
+        ctx.drawImage(img, padding, padding, size, size)
 
         // Convert canvas to blob and download
         canvas.toBlob((blob) => {
