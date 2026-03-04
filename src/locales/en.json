@@ -253,6 +253,7 @@
     "csvExport": "CSV Export",
     "csvExportDesc": "Export your data for analysis",
     "getStarted": "Get Started",
+    "createSupabaseAccount": "Create Supabase Account",
     "signIn": "Sign In",
     "signUpSupabase": "Sign Up with Supabase",
     "configureDatabase": "Configure Database",

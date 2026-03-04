@@ -123,7 +123,7 @@ export default function LandingPage() {
             rel="noopener noreferrer"
             className="btn btn-primary px-8 py-3 text-lg"
           >
-            {text('landing.getStarted', 'Get Started')}
+            {text('landing.createSupabaseAccount', 'Create Supabase Account')}
           </a>
           <Link
             to="/login"
