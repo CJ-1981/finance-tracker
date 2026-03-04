@@ -118,7 +118,7 @@ describe('QRCodeDisplay', () => {
       fireEvent.click(copyButton)
 
       await waitFor(() => {
-        expect(mockAlert).toHaveBeenCalledWith('qr.copied')
+        expect(copyButton).toHaveTextContent('qr.copied')
       })
     })
 

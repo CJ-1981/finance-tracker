@@ -33,7 +33,6 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false }: QRCodeDi
     try {
       await navigator.clipboard.writeText(url)
       setCopied(true)
-      alert(t('qr.copied'))
       setTimeout(() => setCopied(false), 2000)
     } catch (error) {
       console.error('Failed to copy to clipboard:', error)
@@ -49,7 +48,6 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false }: QRCodeDi
         const success = document.execCommand('copy')
         if (success) {
           setCopied(true)
-          alert(t('qr.copied'))
           setTimeout(() => setCopied(false), 2000)
         } else {
           console.error('execCommand copy failed')

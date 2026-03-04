@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useSupabase } from '../hooks/useSupabase'
@@ -166,7 +166,7 @@ export default function ConfigPage() {
     setMode('configure')
   }
 
-  const handleQRScan = (scannedUrl: string) => {
+  const handleQRScan = useCallback((scannedUrl: string) => {
     try {
       // Parse URL to extract config parameter
       const urlObj = new URL(scannedUrl)
@@ -196,7 +196,11 @@ export default function ConfigPage() {
       console.error('Failed to process QR code:', error)
       alert(t('qr.invalidQR'))
     }
-  }
+  }, [t, setConfig])
+
+  const handleCloseQRScanner = useCallback(() => {
+    setShowQRScanner(false)
+  }, [])
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 px-4 py-8">
@@ -464,7 +468,7 @@ export default function ConfigPage() {
       {/* QR Scanner Modal */}
       <QRScannerModal
         isOpen={showQRScanner}
-        onClose={() => setShowQRScanner(false)}
+        onClose={handleCloseQRScanner}
         onScan={handleQRScan}
         t={t}
         darkMode={theme === 'dark'}
