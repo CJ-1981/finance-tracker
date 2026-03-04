@@ -3,10 +3,12 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getSupabaseClient } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { useSupabase } from '../hooks/useSupabase'
 
 export default function InvitePage() {
   const { t } = useTranslation()
   const { user } = useAuth()
+  const { isConfigured } = useSupabase()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [status, setStatus] = useState<'loading' | 'valid' | 'invalid' | 'accepted' | 'wrong-email'>('loading')
@@ -14,8 +16,30 @@ export default function InvitePage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    // Check if Supabase is configured
+    if (!isConfigured) {
+      // Redirect to config page, preserving invitation parameters
+      const tokenParam = searchParams.get('token')
+      const tokensParam = searchParams.get('tokens')
+      const params = new URLSearchParams()
+      if (tokenParam) params.set('token', tokenParam)
+      if (tokensParam) params.set('tokens', tokensParam)
+      params.set('mode', 'configure') // Force configure mode
+      navigate(`/config?${params.toString()}`, { replace: true })
+      return
+    }
+
+    // If Supabase is configured but user is not logged in, redirect to login
+    if (!user) {
+      const tokenParam = searchParams.get('token')
+      const tokensParam = searchParams.get('tokens')
+      const tokenString = tokensParam || tokenParam
+      navigate('/login', { state: { inviteToken: tokenString }, replace: true })
+      return
+    }
+
     validateInvite()
-  }, [])
+  }, [isConfigured, user, navigate, searchParams])
 
   const validateInvite = async () => {
     const tokenParam = searchParams.get('token')

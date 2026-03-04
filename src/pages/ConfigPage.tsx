@@ -97,6 +97,20 @@ export default function ConfigPage() {
 
       if (isValid) {
         await updateConfig(config)
+
+        // Check if this was triggered from an invitation link
+        const tokenParam = searchParams.get('token')
+        const tokensParam = searchParams.get('tokens')
+
+        if (tokenParam || tokensParam) {
+          // Redirect back to invite page with the token
+          const params = new URLSearchParams()
+          if (tokenParam) params.set('token', tokenParam)
+          if (tokensParam) params.set('tokens', tokensParam)
+          navigate(`/invite?${params.toString()}`)
+          return
+        }
+
         if (user) {
           setMode('authenticated')
         } else {
