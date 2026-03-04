@@ -1187,8 +1187,8 @@ export default function TransactionsPage() {
                             if (e.key === 'Escape') setEditingCategoryId(null)
                           }}
                         />
-                        <button onClick={() => handleUpdateCategory(c.id, { name: editingCategoryName, color: editingCategoryColor })} className="text-primary-600 hover:text-primary-800 font-bold px-2 py-1 rounded-lg hover:bg-primary-50 transition-colors">Save</button>
-                        <button onClick={() => setEditingCategoryId(null)} className="text-slate-500 hover:text-slate-700 font-medium px-2 py-1 rounded-lg hover:bg-slate-100 transition-colors">Cancel</button>
+                        <button onClick={() => handleUpdateCategory(c.id, { name: editingCategoryName, color: editingCategoryColor })} className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 font-bold px-2 py-1 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors">Save</button>
+                        <button onClick={() => setEditingCategoryId(null)} className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 font-medium px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">Cancel</button>
                       </div>
                     ) : (
                       <>
@@ -1210,25 +1210,25 @@ export default function TransactionsPage() {
                               console.log('Category color blur triggered:', val);
                               handleUpdateCategory(c.id, { color: val });
                             }}
-                            className="w-6 h-6 rounded-full cursor-pointer bg-transparent border-2 border-white shadow-sm hover:scale-110 transition-transform p-0"
+                            className="w-6 h-6 rounded-full cursor-pointer bg-transparent border-2 border-white dark:border-slate-600 shadow-sm hover:scale-110 transition-transform p-0"
                             title="Quick change color"
                           />
-                          <span className="font-semibold text-slate-700">{c.name}</span>
+                          <span className="font-semibold text-slate-700 dark:text-slate-300">{c.name}</span>
                           {isUpdatingCategory === c.id && (
                             <span className="absolute -left-1 -top-1 w-2 h-2 bg-primary-500 rounded-full animate-ping"></span>
                           )}
                         </div>
                         <div className="flex items-center gap-2 text-xs min-w-0 flex-wrap">
-                          <div className="flex bg-white rounded-lg border border-slate-100 p-0.5">
-                            <button disabled={index === 0} onClick={() => handleMoveCategory(index, 'up')} className="p-1 text-slate-400 hover:text-primary-600 disabled:opacity-20 transition-colors" title="Move Up">↑</button>
-                            <button disabled={index === categories.length - 1} onClick={() => handleMoveCategory(index, 'down')} className="p-1 text-slate-400 hover:text-primary-600 disabled:opacity-20 transition-colors" title="Move Down">↓</button>
+                          <div className="flex bg-white dark:bg-slate-700 rounded-lg border border-slate-100 dark:border-slate-600 p-0.5">
+                            <button disabled={index === 0} onClick={() => handleMoveCategory(index, 'up')} className="p-1 text-slate-400 dark:text-slate-500 hover:text-primary-600 dark:hover:text-primary-400 disabled:opacity-20 transition-colors" title="Move Up">↑</button>
+                            <button disabled={index === categories.length - 1} onClick={() => handleMoveCategory(index, 'down')} className="p-1 text-slate-400 dark:text-slate-500 hover:text-primary-600 dark:hover:text-primary-400 disabled:opacity-20 transition-colors" title="Move Down">↓</button>
                           </div>
                           <button onClick={() => {
                             setEditingCategoryId(c.id)
                             setEditingCategoryName(c.name)
                             setEditingCategoryColor(c.color)
-                          }} className="btn border border-slate-200 bg-white text-slate-600 hover:text-primary-600 hover:border-primary-200 py-1 px-3 text-[10px] uppercase font-bold rounded-lg transition-all">Rename</button>
-                          <button onClick={() => handleDeleteCategory(c.id)} className="btn border border-red-100 bg-white text-red-500 hover:bg-red-50 py-1 px-3 text-[10px] uppercase font-bold rounded-lg transition-all">Delete</button>
+                          }} className="btn border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:border-primary-200 dark:hover:border-primary-800 py-1 px-3 text-[10px] uppercase font-bold rounded-lg transition-all">Rename</button>
+                          <button onClick={() => handleDeleteCategory(c.id)} className="btn border border-red-100 dark:border-red-900/30 bg-white dark:bg-slate-700 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 py-1 px-3 text-[10px] uppercase font-bold rounded-lg transition-all">Delete</button>
                         </div>
                       </>
                     )}
@@ -1252,8 +1252,8 @@ export default function TransactionsPage() {
                   </select>
                 </div>
                 {newFieldType === 'select' && (
-                  <div className="flex flex-col gap-2 p-3 bg-white border border-slate-200 rounded-xl">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Dropdown Options (one per line)</label>
+                  <div className="flex flex-col gap-2 p-3 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl">
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Dropdown Options (one per line)</label>
                     <textarea
                       className="input min-h-20 font-mono text-sm border-transparent focus:border-transparent focus:ring-0 p-0"
                       placeholder="Enter each option on a new line..."
@@ -1266,7 +1266,7 @@ export default function TransactionsPage() {
               </form>
               <div className="space-y-3">
                 {project?.settings?.custom_fields?.map((f, index) => (
-                  <div key={f.name} className="flex flex-col sm:flex-row sm:justify-between sm:items-start text-sm p-3 bg-gray-50 rounded min-w-0 gap-2">
+                  <div key={f.name} className="flex flex-col sm:flex-row sm:justify-between sm:items-start text-sm p-3 bg-gray-50 dark:bg-slate-800 rounded min-w-0 gap-2">
                     {editingFieldOriginalName === f.name ? (
                       <div className="flex-1 flex gap-2 flex-col">
                         <input
@@ -1285,29 +1285,29 @@ export default function TransactionsPage() {
                           />
                         )}
                         <div className="flex gap-2">
-                          <button onClick={() => handleRenameField(f.name, editingFieldName)} className="text-blue-600 hover:text-blue-800 font-semibold text-xs">Save</button>
+                          <button onClick={() => handleRenameField(f.name, editingFieldName)} className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-semibold text-xs">Save</button>
                           <button onClick={() => {
                             setEditingFieldOriginalName(null)
                             setEditingFieldOptions([])
-                          }} className="text-gray-500 hover:text-gray-700 text-xs">Cancel</button>
+                          }} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-xs">Cancel</button>
                         </div>
                       </div>
                     ) : (
                       <>
                         <div className="flex-1 min-w-0">
                           <div className="truncate">
-                            <span className="font-semibold">{f.name}</span> <span className="text-gray-500 text-xs">({f.type})</span>
+                            <span className="font-semibold text-slate-900 dark:text-slate-100">{f.name}</span> <span className="text-gray-500 dark:text-gray-400 text-xs">({f.type})</span>
                             {f.type === 'select' && f.options && (
-                              <span className="text-gray-400 text-xs ml-2">[{f.options.length} options]</span>
+                              <span className="text-gray-400 dark:text-gray-500 text-xs ml-2">[{f.options.length} options]</span>
                             )}
                             {f.type === 'text' && project?.settings?.custom_field_values?.[f.name] && (
-                              <span className="text-green-600 text-xs ml-2">[{project.settings.custom_field_values[f.name].length} imported values]</span>
+                              <span className="text-green-600 dark:text-green-400 text-xs ml-2">[{project.settings.custom_field_values[f.name].length} imported values]</span>
                             )}
                           </div>
                           {f.type === 'text' && project?.settings?.custom_field_values?.[f.name] && (
-                            <div className="mt-1 text-xs text-gray-600 max-w-full break-words">
+                            <div className="mt-1 text-xs text-gray-600 dark:text-gray-400 max-w-full break-words">
                               <span className="font-medium">Values: </span>
-                              <span className="text-gray-500">
+                              <span className="text-gray-500 dark:text-gray-400">
                                 {project.settings.custom_field_values[f.name].slice(0, 5).join(', ')}
                                 {project.settings.custom_field_values[f.name].length > 5 && ` ...and ${project.settings.custom_field_values[f.name].length - 5} more`}
                               </span>
@@ -1315,8 +1315,8 @@ export default function TransactionsPage() {
                           )}
                         </div>
                         <div className="flex items-center justify-start gap-2 text-xs min-w-0 flex-wrap sm:justify-end">
-                          <button disabled={index === 0} onClick={() => handleMoveField(index, 'up')} className="text-gray-500 hover:text-blue-600 disabled:opacity-30">↑</button>
-                          <button disabled={index === (project.settings?.custom_fields?.length || 0) - 1} onClick={() => handleMoveField(index, 'down')} className="text-gray-500 hover:text-blue-600 disabled:opacity-30">↓</button>
+                          <button disabled={index === 0} onClick={() => handleMoveField(index, 'up')} className="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-30">↑</button>
+                          <button disabled={index === (project.settings?.custom_fields?.length || 0) - 1} onClick={() => handleMoveField(index, 'down')} className="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-30">↓</button>
                           {f.type === 'text' && (
                             <button onClick={() => {
                               setImportFieldName(f.name)
@@ -1328,28 +1328,28 @@ export default function TransactionsPage() {
                                 .filter(Boolean)
                               const allValues = Array.from(new Set([...storedValues, ...transactionValues]))
                               setImportValues(allValues.join('\n'))
-                            }} className="text-green-600 hover:text-green-700">Import</button>
+                            }} className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300">Import</button>
                           )}
                           {f.type === 'select' && (
                             <button onClick={() => {
                               setEditingFieldOriginalName(f.name)
                               setEditingFieldName(f.name)
                               setEditingFieldOptions(f.options || [])
-                            }} className="text-purple-600 hover:text-purple-700">Edit Options</button>
+                            }} className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300">Edit Options</button>
                           )}
                           <button onClick={() => {
                             setEditingFieldOriginalName(f.name)
                             setEditingFieldName(f.name)
                             setEditingFieldOptions(f.options || [])
-                          }} className="text-blue-500 hover:text-blue-700">Rename</button>
-                          <button onClick={() => handleDeleteField(f.name)} className="text-red-500 hover:text-red-700 ml-2">Delete</button>
+                          }} className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">Rename</button>
+                          <button onClick={() => handleDeleteField(f.name)} className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 ml-2">Delete</button>
                         </div>
                       </>
                     )}
                   </div>
                 ))}
                 {(!project?.settings?.custom_fields || project.settings.custom_fields.length === 0) && (
-                  <p className="text-sm text-gray-500">No custom fields defined yet.</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">No custom fields defined yet.</p>
                 )}
               </div>
             </div>
@@ -1573,8 +1573,8 @@ export default function TransactionsPage() {
                         }}
                         className={`btn text-sm whitespace-nowrap ${
                           showDeleted
-                            ? 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-300'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                            ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/40 border border-red-300 dark:border-red-800'
+                            : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 border border-gray-300 dark:border-slate-600'
                         }`}
                       >
                         {showDeleted ? 'Hide Deleted' : 'Show Deleted'}
@@ -1587,36 +1587,36 @@ export default function TransactionsPage() {
 
             {/* Deleted Transactions Section - Owner Only */}
             {showDeleted && userRole === 'owner' && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <h3 className="text-lg font-semibold text-red-900 mb-4 flex items-center gap-2">
+              <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <h3 className="text-lg font-semibold text-red-900 dark:text-red-100 mb-4 flex items-center gap-2">
                   <span>🗑️</span>
                   Deleted Transactions ({deletedTransactions.length})
                 </h3>
                 {deletedTransactions.length === 0 ? (
-                  <p className="text-gray-600 text-sm">No deleted transactions found.</p>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">No deleted transactions found.</p>
                 ) : (
                   <div className="space-y-2">
                     {deletedTransactions.map((transaction) => (
                       <div
                         key={transaction.id}
-                        className="flex items-center justify-between p-3 bg-white border border-red-100 rounded"
+                        className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 border border-red-100 dark:border-red-900/30 rounded"
                       >
                         <div className="flex-1">
                           <div className="flex items-center gap-3">
                             <div className="text-sm">
-                              <div className="font-semibold text-gray-900">
+                              <div className="font-semibold text-gray-900 dark:text-gray-100">
                                 {getCategoryName(transaction.category_id)}
                               </div>
-                              <div className="text-gray-600">
+                              <div className="text-gray-600 dark:text-gray-400">
                                 {new Date(transaction.date).toLocaleDateString()} • {transaction.amount.toFixed(2)}
                               </div>
                               {transaction.description && (
-                                <div className="text-xs text-gray-500 truncate max-w-xs">
+                                <div className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs">
                                   {transaction.description}
                                 </div>
                               )}
                               {transaction.deleted_at && (
-                                <div className="text-xs text-red-600 mt-1">
+                                <div className="text-xs text-red-600 dark:text-red-400 mt-1">
                                   Deleted {new Date(transaction.deleted_at).toLocaleString()}
                                   {(transaction as any).profiles && (
                                     <span> by {(transaction as any).profiles.name}</span>
@@ -1650,7 +1650,7 @@ export default function TransactionsPage() {
             <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-200">
+                  <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800/50">
                     {isMultiSelectMode && (
                       <th className="text-center py-3 px-4 w-12">
                         <input
@@ -1662,29 +1662,29 @@ export default function TransactionsPage() {
                       </th>
                     )}
                     <th
-                      className="text-left py-3 px-4 text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                      className="text-left py-3 px-4 text-sm font-semibold text-gray-900 dark:text-gray-100 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700"
                       onClick={() => handleSort('date')}
                     >
                       Date {sortColumn === 'date' && (sortDirection === 'asc' ? '↑' : '↓')}
                     </th>
                     <th
-                      className="text-left py-3 px-4 text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                      className="text-left py-3 px-4 text-sm font-semibold text-gray-900 dark:text-gray-100 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700"
                       onClick={() => handleSort('category')}
                     >
                       Category {sortColumn === 'category' && (sortDirection === 'asc' ? '↑' : '↓')}
                     </th>
                     {project?.settings?.custom_fields?.map((field: any) => (
-                      <th key={field.name} className="text-left py-3 px-4 text-sm font-semibold text-gray-900">{field.name}</th>
+                      <th key={field.name} className="text-left py-3 px-4 text-sm font-semibold text-gray-900 dark:text-gray-100">{field.name}</th>
                     ))}
-                    <th className="text-right py-3 px-4 text-sm font-semibold text-gray-900">Currency</th>
+                    <th className="text-right py-3 px-4 text-sm font-semibold text-gray-900 dark:text-gray-100">Currency</th>
                     <th
-                      className="text-right py-3 px-4 text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                      className="text-right py-3 px-4 text-sm font-semibold text-gray-900 dark:text-gray-100 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700"
                       onClick={() => handleSort('amount')}
                     >
                       Amount {sortColumn === 'amount' && (sortDirection === 'asc' ? '↑' : '↓')}
                     </th>
                     {!isMultiSelectMode && (
-                      <th className="text-right py-3 px-4 text-sm font-semibold text-gray-900">Actions</th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-gray-900 dark:text-gray-100">Actions</th>
                     )}
                   </tr>
                 </thead>
@@ -1692,9 +1692,9 @@ export default function TransactionsPage() {
                   {getFilteredAndSortedTransactions().map((transaction) => {
                     const currencyRowClass = getTransactionRowClassName(transaction.currency_code, project?.settings?.currency || null);
                     const isSelected = isMultiSelectMode && selectedTransactions.has(transaction.id);
-                    const baseClasses = "border-b border-gray-100";
-                    const hoverClasses = isSelected || currencyRowClass ? "" : "hover:bg-gray-50";
-                    const selectedClasses = isSelected ? "bg-blue-50" : "";
+                    const baseClasses = "border-b border-gray-100 dark:border-gray-800";
+                    const hoverClasses = isSelected || currencyRowClass ? "" : "hover:bg-gray-50 dark:hover:bg-slate-800/50";
+                    const selectedClasses = isSelected ? "bg-blue-50 dark:bg-blue-900/20" : "";
 
                     return (
                       <tr
@@ -1711,18 +1711,18 @@ export default function TransactionsPage() {
                           />
                         </td>
                       )}
-                      <td className="py-3 px-4 text-sm text-gray-900">{transaction.date}</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                      <td className="py-3 px-4 text-sm text-gray-900 dark:text-gray-100">{transaction.date}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
                         {getCategoryName(transaction.category_id)}
                       </td>
                       {project?.settings?.custom_fields?.map((field: any) => (
-                        <td key={field.name} className="py-3 px-4 text-sm text-gray-900">
+                        <td key={field.name} className="py-3 px-4 text-sm text-gray-900 dark:text-gray-100">
                           {transaction.custom_data?.[field.name] || '-'}
                         </td>
                       ))}
                       <td className="py-3 px-4 text-sm text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <span className="text-gray-600">{transaction.currency_code || 'N/A'}</span>
+                          <span className="text-gray-600 dark:text-gray-400">{transaction.currency_code || 'N/A'}</span>
                           <TransactionStatusIndicator
                             currencyCode={transaction.currency_code}
                             projectCurrency={project?.settings?.currency || null}
@@ -1730,7 +1730,7 @@ export default function TransactionsPage() {
                         </div>
                       </td>
                       <td className={`py-3 px-4 text-sm text-right font-semibold ${
-                        transaction.amount < 0 ? 'text-rose-600' : 'text-emerald-600'
+                        transaction.amount < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
                       }`}>
                         {transaction.amount < 0 ? '-' : ''}{Math.abs(transaction.amount).toFixed(2)}
                       </td>
@@ -1738,7 +1738,7 @@ export default function TransactionsPage() {
                         <td className="py-3 px-4 text-right">
                           <button
                             onClick={() => handleEdit(transaction)}
-                            className="text-sm text-blue-600 hover:text-blue-800 mr-3"
+                            className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mr-3"
                           >
                             Edit
                           </button>

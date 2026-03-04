@@ -44,9 +44,9 @@ export default function TransactionStatusIndicator({
   const isMismatched = status === "mismatched";
 
   // Determine styling based on status
-  const bgColor = isMismatched ? "bg-yellow-50" : "bg-red-50";
-  const borderColor = isMismatched ? "border-yellow-200" : "border-red-200";
-  const iconColor = isMismatched ? "text-yellow-600" : "text-red-600";
+  const bgColor = isMismatched ? "bg-yellow-50 dark:bg-yellow-900/20" : "bg-red-50 dark:bg-red-900/20";
+  const borderColor = isMismatched ? "border-yellow-200 dark:border-yellow-800" : "border-red-200 dark:border-red-800";
+  const iconColor = isMismatched ? "text-yellow-600 dark:text-yellow-400" : "text-red-600 dark:text-red-400";
 
   // Generate tooltip text based on status
   const getTooltipText = (): string => {
@@ -93,9 +93,9 @@ export function getTransactionRowClassName(
   }
 
   if (status === "mismatched") {
-    return "bg-yellow-50 border-yellow-200 border-l-4";
+    return "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 border-l-4";
   }
 
   // Missing currency
-  return "bg-red-50 border-red-200 border-l-4";
+  return "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 border-l-4";
 }

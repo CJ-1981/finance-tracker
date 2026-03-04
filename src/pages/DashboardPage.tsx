@@ -94,8 +94,8 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
       </div>
     )
   }
@@ -103,21 +103,21 @@ export default function DashboardPage() {
   // Show database setup message if tables don't exist
   if (dbError) {
     return (
-      <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
-        <header className="bg-white shadow-sm">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-950 pb-20 md:pb-0">
+        <header className="bg-white dark:bg-slate-800 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <h1 className="text-2xl font-bold text-gray-900">{t('dashboardPage.databaseSetupRequired')}</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('dashboardPage.databaseSetupRequired')}</h1>
           </div>
         </header>
         <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="card">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('dashboardPage.databaseTablesNotFound')}</h2>
-            <p className="text-gray-600 mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('dashboardPage.databaseTablesNotFound')}</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
               {t('dashboardPage.databaseNotCreated')}
             </p>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <h3 className="font-medium text-blue-900 mb-2">{t('dashboardPage.toFixThis')}</h3>
-              <ol className="list-decimal list-inside space-y-2 text-blue-800">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+              <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-2">{t('dashboardPage.toFixThis')}</h3>
+              <ol className="list-decimal list-inside space-y-2 text-blue-800 dark:text-blue-300">
                 <li>{t('dashboardPage.step1')}</li>
                 <li>{t('dashboardPage.step2')}</li>
                 <li>{t('dashboardPage.step3')}</li>
@@ -139,13 +139,13 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
-      <header className="bg-white shadow-sm">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 pb-20 md:pb-0">
+      <header className="bg-white dark:bg-slate-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-            <h1 className="text-2xl font-bold text-gray-900">{t('dashboardPage.title')}</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('dashboardPage.title')}</h1>
             <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
-              <span className="text-xs sm:text-sm text-gray-600 truncate max-w-[150px] sm:max-w-none">{user?.email}</span>
+              <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate max-w-[150px] sm:max-w-none">{user?.email}</span>
               <button onClick={() => { navigate('/config') }} className="btn btn-secondary text-sm whitespace-nowrap" title={t('common.settingsTooltip')}>
                 ⚙️ {t('common.settings')}
               </button>
@@ -160,8 +160,8 @@ export default function DashboardPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {projects.length === 0 ? (
           <div className="text-center py-12">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('dashboardPage.noProjectsYet')}</h2>
-            <p className="text-gray-600 mb-6">{t('dashboardPage.createFirstProject')}</p>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{t('dashboardPage.noProjectsYet')}</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">{t('dashboardPage.createFirstProject')}</p>
             <Link to="/projects" className="btn btn-primary">
               {t('dashboardPage.createProject')}
             </Link>
@@ -174,11 +174,11 @@ export default function DashboardPage() {
                 to={`/projects/${project.id}`}
                 className="card hover:shadow-lg transition-shadow"
               >
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{project.name}</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">{project.name}</h3>
                 {project.description && (
-                  <p className="text-sm text-gray-600 mb-4">{project.description}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{project.description}</p>
                 )}
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-gray-500 dark:text-gray-400">
                   {t('dashboardPage.currency')}: {project.settings?.currency || 'USD'}
                 </div>
               </Link>
@@ -188,15 +188,15 @@ export default function DashboardPage() {
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-gray-700">
         <div className="flex justify-around py-2">
-          <Link to="/dashboard" className="flex flex-col items-center p-2 text-blue-600">
+          <Link to="/dashboard" className="flex flex-col items-center p-2 text-blue-600 dark:text-blue-400">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
             <span className="text-xs mt-1">{t('dashboardPage.home')}</span>
           </Link>
-          <Link to="/projects" className="flex flex-col items-center p-2 text-gray-600">
+          <Link to="/projects" className="flex flex-col items-center p-2 text-gray-600 dark:text-gray-400">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
             </svg>

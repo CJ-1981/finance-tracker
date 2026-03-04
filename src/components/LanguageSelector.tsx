@@ -39,7 +39,7 @@ export default function LanguageSelector() {
     <div className="relative">
       {/* Button: flag only on mobile, flag + name on sm+ */}
       <button
-        className="flex items-center gap-1.5 px-2 py-2 sm:px-3 rounded-lg hover:bg-slate-100 transition-colors"
+        className="flex items-center gap-1.5 px-2 py-2 sm:px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
         title={i18n.t('language.selectLanguage')}
         onClick={toggleDropdown}
         onKeyDown={handleKeyDown}
@@ -47,7 +47,7 @@ export default function LanguageSelector() {
         aria-haspopup="true"
       >
         <span className="text-xl leading-none">{currentLanguage.flag}</span>
-        <span className="text-sm font-medium text-slate-700 hidden sm:inline">
+        <span className="text-sm font-medium text-slate-700 dark:text-slate-300 hidden sm:inline">
           {currentLanguage.name}
         </span>
       </button>
@@ -63,18 +63,18 @@ export default function LanguageSelector() {
           />
           {/* Mobile: left-0 so dropdown opens rightward (safe on small screens).
               sm+: right-0 so it aligns to button's right edge in the header. */}
-          <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 min-w-max bg-white rounded-lg shadow-lg border border-slate-200 z-[200] overflow-hidden">
+          <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 min-w-max bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 z-[200] overflow-hidden">
             {languages.map((language) => (
               <button
                 key={language.code}
                 onClick={() => changeLanguage(language.code)}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-slate-50 transition-colors ${currentLangCode === language.code ? 'bg-primary-50 text-primary-700' : 'text-slate-700'
+                className={`w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${currentLangCode === language.code ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300' : 'text-slate-700 dark:text-slate-300'
                   }`}
               >
                 <span className="text-xl leading-none">{language.flag}</span>
                 <span className="font-medium whitespace-nowrap">{language.name}</span>
                 {currentLangCode === language.code && (
-                  <span className="ml-4 text-primary-600">✓</span>
+                  <span className="ml-4 text-primary-600 dark:text-primary-400">✓</span>
                 )}
               </button>
             ))}

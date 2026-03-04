@@ -106,7 +106,7 @@ export default function Tooltip({
       {isVisible && (
         <div
           className={`absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2
-                     px-3 py-2 bg-gray-900 text-white text-sm rounded-lg
+                     px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white text-sm rounded-lg
                      shadow-lg whitespace-nowrap z-50 ${className}`}
           role="tooltip"
           aria-live="polite"
@@ -114,7 +114,7 @@ export default function Tooltip({
           {content}
           <div
             className="absolute top-full left-1/2 transform -translate-x-1/2
-                       -mt-1 border-4 border-transparent border-t-gray-900"
+                       -mt-1 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700"
           />
         </div>
       )}

@@ -462,7 +462,7 @@ export default function ProjectsPage() {
               <button onClick={() => { navigate('/config') }} className="btn btn-secondary text-sm whitespace-nowrap hidden sm:inline-flex" title={t('projects.reconfigure')}>
                 ⚙️ {t('common.settings')}
               </button>
-              <button onClick={handleLogout} className="btn border border-red-200 text-red-600 hover:bg-red-50 text-sm whitespace-nowrap px-4 py-2 rounded-xl font-semibold transition-all">
+              <button onClick={handleLogout} className="btn border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm whitespace-nowrap px-4 py-2 rounded-xl font-semibold transition-all">
                 <span className="hidden sm:inline">{t('common.logout')}</span>
                 <span className="sm:hidden">{t('common.logout')}</span>
               </button>

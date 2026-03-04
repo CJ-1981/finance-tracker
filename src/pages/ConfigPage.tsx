@@ -189,8 +189,8 @@ export default function ConfigPage() {
               </div>
 
               {errors.length > 0 && (
-                <div className="rounded-md bg-red-50 p-4">
-                  <div className="text-sm text-red-800">
+                <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4">
+                  <div className="text-sm text-red-800 dark:text-red-400">
                     <ul className="list-disc list-inside">
                       {errors.map((error, index) => (
                         <li key={index}>{error}</li>
@@ -311,7 +311,7 @@ export default function ConfigPage() {
                   <button
                     type="button"
                     onClick={handleResetConfig}
-                    className="w-full btn btn-secondary text-sm text-red-600 hover:text-red-700"
+                    className="w-full btn btn-secondary text-sm !text-red-600 dark:!text-red-400 hover:!text-red-700 dark:hover:!text-red-300"
                   >
                     {t('config.clearAppConfig')}
                   </button>
@@ -372,7 +372,7 @@ export default function ConfigPage() {
                 <div className="space-y-2">
                   <button
                     onClick={handleResetConfig}
-                    className="w-full btn btn-secondary text-red-600 hover:text-red-700"
+                    className="w-full btn btn-secondary !text-red-600 dark:!text-red-400 hover:!text-red-700 dark:hover:!text-red-300"
                   >
                     {t('config.clearAppConfig')}
                   </button>
