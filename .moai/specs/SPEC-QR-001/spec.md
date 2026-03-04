@@ -132,14 +132,17 @@ The system **SHALL NOT** require camera access for users who prefer manual input
 
 **Props:**
 - `url: string` - The invite URL to encode as QR code
-- `size?: number` - QR code size in pixels (default: 256)
-- `onCopy?: () => void` - Callback when QR code is copied
+- `t: (key: string) => string` - Translation function for i18n
+- `size?: number` - QR code size in pixels (default: 128)
+- `darkMode?: boolean` - Whether to apply dark mode styles (default: false)
 
 **Behavior:**
 - Renders QR code using `react-qr-code` library
+- Handles copy-to-clipboard internally with fallback for older browsers
 - Displays "Copy QR Code" button below QR code
 - Shows success feedback when QR code is copied
 - Supports dark mode with appropriate contrast
+- Truncates very long URLs for display (max 60 chars)
 
 **Dependencies:**
 - `react-qr-code@^2.0.18`

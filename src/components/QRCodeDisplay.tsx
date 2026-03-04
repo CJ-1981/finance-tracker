@@ -66,14 +66,16 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false }: QRCodeDi
   return (
     <div className={`flex flex-col items-center gap-4 p-4 ${darkMode ? 'dark' : ''}`}>
       {/* QR Code */}
-      <div className={`p-4 rounded-xl ${darkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
-        <QRCode
-          value={url || '#'}
-          size={size}
-          aria-label={`${t('qr.qrCodeFor')}: ${displayUrl}`}
-          role="img"
-        />
-      </div>
+      {url && (
+        <div className={`p-4 rounded-xl ${darkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
+          <QRCode
+            value={url}
+            size={size}
+            aria-label={`${t('qr.qrCodeFor')}: ${displayUrl}`}
+            role="img"
+          />
+        </div>
+      )}
 
       {/* URL Display */}
       {url && (

@@ -69,7 +69,7 @@
   "inviteToProjects": "Invite to Projects",
   "invitationLinkGenerated": "QR code generated for {{count}} projects."
 },
-"qrCode": {
+"qr": {
   "title": "QR Code Invitation",
   "scanInstructions": "Scan this QR code to accept invitation",
   "generateQR": "Generate QR Code",

@@ -31,6 +31,10 @@ interface QRScannerModalProps {
  */
 function isSecureContext(): boolean {
   if (typeof window === 'undefined') return false
+  // Use native API when available, with fallback for older browsers
+  if ('isSecureContext' in window && (window as Window & { isSecureContext?: boolean }).isSecureContext !== undefined) {
+    return (window as Window & { isSecureContext: boolean }).isSecureContext
+  }
   return window.location.protocol === 'https:' ||
     window.location.hostname === 'localhost' ||
     window.location.hostname === '127.0.0.1'
@@ -62,6 +66,7 @@ export function QRScannerModal({
       setPermissionDenied(false)
       setScanError(null)
       setIsHttpsRequired(false)
+      setHasCamera(null)
       hasScannedRef.current = false
     }
   }, [isOpen])
@@ -79,17 +84,27 @@ export function QRScannerModal({
   useEffect(() => {
     if (!isOpen) return
 
+    let mounted = true
+
     const checkCamera = async () => {
       try {
         const hasCam = await QrScanner.hasCamera()
-        setHasCamera(hasCam)
+        if (mounted) {
+          setHasCamera(hasCam)
+        }
       } catch (error) {
         console.error('Error checking camera availability:', error)
-        setHasCamera(false)
+        if (mounted) {
+          setHasCamera(false)
+        }
       }
     }
 
     checkCamera()
+
+    return () => {
+      mounted = false
+    }
   }, [isOpen])
 
   // Initialize QR scanner (only when hasCamera is confirmed true)
