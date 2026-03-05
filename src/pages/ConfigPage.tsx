@@ -429,7 +429,9 @@ export default function ConfigPage() {
                 <button
                   onClick={async () => {
                     await signOut()
-                    navigate('/', { replace: true })
+                    // Use window.location.replace to bypass React Router and go directly to landing page
+                    // This prevents the redirect to /login that would happen with navigate('/')
+                    window.location.replace('/')
                   }}
                   className="w-full btn btn-secondary"
                 >

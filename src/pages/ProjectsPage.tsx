@@ -400,13 +400,14 @@ export default function ProjectsPage() {
       sessionStorage.removeItem('redirectAfterLogin')
       await signOut()
       console.log('Logged out successfully, redirecting...')
-      // Use React Router navigate to prevent popup on mobile PWA
-      navigate('/', { replace: true })
+      // Use window.location.replace to bypass React Router and go directly to landing page
+      // This prevents the redirect to /login that would happen with navigate('/')
+      window.location.replace('/')
     } catch (error) {
       console.error('Logout error:', error)
       // Force redirect to landing page even if signOut fails
       sessionStorage.removeItem('redirectAfterLogin')
-      navigate('/', { replace: true })
+      window.location.replace('/')
     }
   }
 
