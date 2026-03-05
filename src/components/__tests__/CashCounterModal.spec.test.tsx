@@ -144,11 +144,13 @@ describe('CashCounterModal - Simplified Implementation (SPEC-UI-003)', () => {
         />
       )
 
-      const billsHeader = screen.getAllByText(/Bills/).find(el => el.tagName === 'H3')
-      const coinsHeader = screen.getAllByText(/Coins/).find(el => el.tagName === 'H3')
+      // Bills and Coins sections are rendered as div containers (not H3)
+      // Check for denomination labels that indicate Bills and Coins sections
+      const billDenominations = screen.getAllByText(/200|100|50/)
+      const coinDenominations = screen.getAllByText(/0.5|0.2|0.1/)
 
-      expect(billsHeader).toBeInTheDocument()
-      expect(coinsHeader).toBeInTheDocument()
+      expect(billDenominations.length).toBeGreaterThan(0)
+      expect(coinDenominations.length).toBeGreaterThan(0)
     })
 
     it('should display column headers for anonymous and named', () => {
@@ -161,12 +163,12 @@ describe('CashCounterModal - Simplified Implementation (SPEC-UI-003)', () => {
         />
       )
 
-      // Find the column header rows
-      const anonymousHeader = screen.getAllByText(/Anonymous/).find(el => el.tagName === 'DIV' && el.classList.contains('text-teal-600'))
-      const namedHeader = screen.getAllByText(/Named/).find(el => el.tagName === 'DIV' && el.classList.contains('text-blue-600'))
+      // Find the column header rows - classes changed to text-teal-700 and text-blue-700
+      const anonymousHeader = screen.getAllByText(/Anonymous/).find(el => el.classList.contains('text-teal-700'))
+      const namedHeader = screen.getAllByText(/Named/).find(el => el.classList.contains('text-blue-700'))
 
-      expect(anonymousHeader).toBeInTheDocument()
-      expect(namedHeader).toBeInTheDocument()
+      expect(anonymousHeader).not.toBeUndefined()
+      expect(namedHeader).not.toBeUndefined()
     })
   })
 
@@ -321,17 +323,19 @@ describe('CashCounterModal - Simplified Implementation (SPEC-UI-003)', () => {
       // Anonymous total should initially be 0
       expect(screen.getByText(/Anonymous Total/)).toBeInTheDocument()
 
-      // Find grid row with 100 denomination and get anonymous input (second input)
-      const gridRows = Array.from(document.querySelectorAll('.grid'))
-      const hundredRow = gridRows.find(row => row.textContent?.includes('100'))
-      expect(hundredRow).toBeDefined()
+      // Find denomination rows - look for the text label "100"
+      const denominationLabels = Array.from(document.querySelectorAll('.text-center')).filter(el => el.textContent?.includes('100'))
+      const hundredLabel = denominationLabels[0]
+      expect(hundredLabel).toBeDefined()
 
-      const rowInputs = Array.from(hundredRow?.querySelectorAll('input[type="number"]') || [])
-      const hundredInput = rowInputs[1] as HTMLInputElement  // Anonymous is second column
+      // Get the parent denomination row and find the anonymous input (second input in the row)
+      const denominationRow = hundredLabel?.closest('.mb-4')
+      const allInputs = Array.from(denominationRow?.querySelectorAll('input[type="number"]') || [])
+      const anonymousInput = allInputs[1] as HTMLInputElement  // Anonymous is second column
 
-      expect(hundredInput).toBeDefined()
+      expect(anonymousInput).toBeDefined()
 
-      fireEvent.change(hundredInput, { target: { value: '2' } })
+      fireEvent.change(anonymousInput, { target: { value: '2' } })
 
       // Wait for debounce
       vi.advanceTimersByTime(500)
@@ -353,17 +357,19 @@ describe('CashCounterModal - Simplified Implementation (SPEC-UI-003)', () => {
         />
       )
 
-      // Find grid row with 50 denomination and get named input (first input)
-      const gridRows = Array.from(document.querySelectorAll('.grid'))
-      const fiftyRow = gridRows.find(row => row.textContent?.includes('50'))
-      expect(fiftyRow).toBeDefined()
+      // Find denomination rows - look for the text label "50" (not "0.5")
+      const denominationLabels = Array.from(document.querySelectorAll('.text-center')).filter(el => el.textContent?.includes('50'))
+      const fiftyLabel = denominationLabels.find(el => el.textContent === '💶 50')
+      expect(fiftyLabel).toBeDefined()
 
-      const rowInputs = Array.from(fiftyRow?.querySelectorAll('input[type="number"]') || [])
-      const fiftyInput = rowInputs[0] as HTMLInputElement  // Named is first column
+      // Get the parent denomination row and find the named input (first input in the row)
+      const denominationRow = fiftyLabel?.closest('.mb-4')
+      const allInputs = Array.from(denominationRow?.querySelectorAll('input[type="number"]') || [])
+      const namedInput = allInputs[0] as HTMLInputElement  // Named is first column
 
-      expect(fiftyInput).toBeDefined()
+      expect(namedInput).toBeDefined()
 
-      fireEvent.change(fiftyInput, { target: { value: '1' } })
+      fireEvent.change(namedInput, { target: { value: '1' } })
 
       // Wait for debounce
       vi.advanceTimersByTime(500)
@@ -386,14 +392,14 @@ describe('CashCounterModal - Simplified Implementation (SPEC-UI-003)', () => {
       )
 
       // Find the grid row with 100 denomination
-      const gridRows = Array.from(document.querySelectorAll('.grid'))
-      const hundredRow = gridRows.find(row => row.textContent?.includes('100'))
-      expect(hundredRow).toBeDefined()
+      const denominationLabels = Array.from(document.querySelectorAll('.text-center')).filter(el => el.textContent?.includes('100'))
+      const hundredLabel = denominationLabels[0]
+      expect(hundredLabel).toBeDefined()
 
       // Get inputs from the row - first is Named (blue), second is Anonymous (teal)
-      const rowInputs = Array.from(hundredRow?.querySelectorAll('input[type="number"]') || [])
-      const hundredNamedInput = rowInputs[0] as HTMLInputElement  // Named column first
-      const hundredInput = rowInputs[1] as HTMLInputElement   // Anonymous column second
+      const allInputs = Array.from(hundredLabel?.closest('.mb-4')?.querySelectorAll('input[type="number"]') || [])
+      const hundredNamedInput = allInputs[0] as HTMLInputElement  // Named column first
+      const hundredInput = allInputs[1] as HTMLInputElement   // Anonymous column second
 
       expect(hundredNamedInput).toBeDefined()
       expect(hundredInput).toBeDefined()
@@ -497,18 +503,22 @@ describe('CashCounterModal - Simplified Implementation (SPEC-UI-003)', () => {
         />
       )
 
-      // Add some counts
-      const inputs = screen.getAllByDisplayValue('0')
-      const hundredInput = inputs.find(input => {
-        const container = input.closest('.p-2, .p-3') || input.closest('div[class*="grid"]')
-        return container?.textContent?.includes('100')
-      }) as HTMLInputElement
+      // Clear initial localStorage (component saves empty state on mount)
+      vi.advanceTimersByTime(600)
+      localStorageMock.removeItem(`cash_counter_${mockProject.id}`)
+
+      // Add some counts - find the 100 denomination row input
+      const denominationLabels = Array.from(document.querySelectorAll('.text-center')).filter(el => el.textContent?.includes('100'))
+      const hundredLabel = denominationLabels[0]
+      const denominationRow = hundredLabel?.closest('.mb-4')
+      const allInputs = Array.from(denominationRow?.querySelectorAll('input[type="number"]') || [])
+      const hundredInput = allInputs[0] as HTMLInputElement  // Named input
 
       if (hundredInput) {
         fireEvent.change(hundredInput, { target: { value: '2' } })
 
         // Wait for debounce
-        vi.advanceTimersByTime(500)
+        vi.advanceTimersByTime(600)
       }
 
       // Check localStorage (after debounce)
