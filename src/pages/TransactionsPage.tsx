@@ -171,30 +171,20 @@ export default function TransactionsPage() {
     try {
       const supabase = getSupabaseClient()
 
-      // Check session validity before making queries (with timeout)
-      addDebugMessage(`Session check${retryLabel} (2s timeout)...`)
-      const { data: { session }, error: sessionError } = await Promise.race([
-        supabase.auth.getSession(),
-        new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 2000)
-        )
-      ])
-      addDebugMessage(`Session check: ${session ? 'OK' : 'FAILED'} ${sessionError ? `(${sessionError.message})` : ''}`)
+      // NOTE: No getSession() call here — useAuth already validates the session
+      // via onAuthStateChange before fetch functions are invoked. Calling
+      // getSession() with a short timeout keeps the old abandoned promise alive
+      // while resetSupabaseClient() creates a new GoTrueClient, triggering
+      // "Multiple GoTrueClient instances" warnings.
 
-      if (sessionError || !session) {
-        console.error('Session invalid or expired:', sessionError)
-        // Throw error to trigger retry logic instead of returning false
-        throw new Error(sessionError?.message || 'Session not available')
-      }
-
-      // Fetch project with timeout
-      addDebugMessage(`Fetching project${retryLabel} (2s timeout)...`)
+      // Fetch project with generous timeout
+      addDebugMessage(`Fetching project${retryLabel} (8s timeout)...`)
       const startTime = Date.now()
 
       const { data, error } = await Promise.race([
         supabase.from('projects').select('*').eq('id', projectId).single(),
         new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 2000)
+          setTimeout(() => reject(new Error('Request timeout')), 8000)
         )
       ])
 
@@ -221,7 +211,7 @@ export default function TransactionsPage() {
           const { data: memberData } = await Promise.race([
             supabase.from('project_members').select('role').eq('project_id', projectId).eq('user_id', user.id).single(),
             new Promise<any>((_, reject) =>
-              setTimeout(() => reject(new Error('Request timeout')), 2000)
+              setTimeout(() => reject(new Error('Request timeout')), 8000)
             )
           ])
 
@@ -244,8 +234,8 @@ export default function TransactionsPage() {
       const isTimeout = errorMsg === 'Request timeout'
       // Retry on both timeout errors and session/network errors
       const isRetryable = isTimeout || errorMsg.includes('Session') || errorMsg.includes('session') ||
-                          errorMsg.includes('Network') || errorMsg.includes('network') ||
-                          errorMsg.includes('fetch')
+        errorMsg.includes('Network') || errorMsg.includes('network') ||
+        errorMsg.includes('fetch')
 
       addDebugMessage(`ERROR${retryLabel}: ${errorMsg}`)
 
@@ -256,10 +246,8 @@ export default function TransactionsPage() {
         addDebugMessage(`Retrying in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
         setRetryCount(nextAttempt)
 
-        // Reset Supabase client before retry to fix stale connections
-        addDebugMessage('Resetting Supabase client...')
-        await resetSupabaseClient(getConfig())
-
+        // Do NOT reset the Supabase client — it creates a second GoTrueClient
+        // while the old abandoned promise still holds a reference to the first.
         await new Promise(resolve => setTimeout(resolve, backoffDelay))
         return fetchProjectWithRetry(nextAttempt)
       }
@@ -310,8 +298,7 @@ export default function TransactionsPage() {
         // Increment retry count to prevent infinite loops
         setRetryCount(1)
 
-        // Reset Supabase client and retry once
-        await resetSupabaseClient(getConfig())
+        // Retry after a brief delay — no client reset needed
         await new Promise(resolve => setTimeout(resolve, 1000))
 
         // Retry once more
@@ -1591,11 +1578,10 @@ export default function TransactionsPage() {
                             fetchDeletedTransactions()
                           }
                         }}
-                        className={`btn text-sm whitespace-nowrap ${
-                          showDeleted
+                        className={`btn text-sm whitespace-nowrap ${showDeleted
                             ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/40 border border-red-300 dark:border-red-800'
                             : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 border border-gray-300 dark:border-slate-600'
-                        }`}
+                          }`}
                       >
                         {showDeleted ? 'Hide Deleted' : 'Show Deleted'}
                       </button>
@@ -1721,74 +1707,73 @@ export default function TransactionsPage() {
                         key={transaction.id}
                         className={`${baseClasses} ${hoverClasses} ${selectedClasses} ${currencyRowClass}`}
                       >
-                      {isMultiSelectMode && (
-                        <td className="text-center py-3 px-4">
-                          <input
-                            type="checkbox"
-                            checked={selectedTransactions.has(transaction.id)}
-                            onChange={() => handleToggleSelect(transaction.id)}
-                            className="w-4 h-4 text-blue-600 rounded"
-                          />
+                        {isMultiSelectMode && (
+                          <td className="text-center py-3 px-4">
+                            <input
+                              type="checkbox"
+                              checked={selectedTransactions.has(transaction.id)}
+                              onChange={() => handleToggleSelect(transaction.id)}
+                              className="w-4 h-4 text-blue-600 rounded"
+                            />
+                          </td>
+                        )}
+                        <td className="py-3 px-4 text-sm text-gray-900 dark:text-gray-100">{transaction.date}</td>
+                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
+                          {getCategoryName(transaction.category_id)}
                         </td>
-                      )}
-                      <td className="py-3 px-4 text-sm text-gray-900 dark:text-gray-100">{transaction.date}</td>
-                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
-                        {getCategoryName(transaction.category_id)}
-                      </td>
-                      {project?.settings?.custom_fields?.map((field: any) => (
-                        <td key={field.name} className="py-3 px-4 text-sm text-gray-900 dark:text-gray-100">
-                          {transaction.custom_data?.[field.name] || '-'}
+                        {project?.settings?.custom_fields?.map((field: any) => (
+                          <td key={field.name} className="py-3 px-4 text-sm text-gray-900 dark:text-gray-100">
+                            {transaction.custom_data?.[field.name] || '-'}
+                          </td>
+                        ))}
+                        <td className="py-3 px-4 text-sm text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <span className="text-gray-600 dark:text-gray-400">{transaction.currency_code || 'N/A'}</span>
+                            <TransactionStatusIndicator
+                              currencyCode={transaction.currency_code}
+                              projectCurrency={project?.settings?.currency || null}
+                            />
+                          </div>
                         </td>
-                      ))}
-                      <td className="py-3 px-4 text-sm text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <span className="text-gray-600 dark:text-gray-400">{transaction.currency_code || 'N/A'}</span>
-                          <TransactionStatusIndicator
-                            currencyCode={transaction.currency_code}
-                            projectCurrency={project?.settings?.currency || null}
-                          />
-                        </div>
-                      </td>
-                      <td className={`py-3 px-4 text-sm text-right font-semibold ${
-                        transaction.amount < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
-                      }`}>
-                        {transaction.amount < 0 ? '-' : ''}{Math.abs(transaction.amount).toFixed(2)}
-                      </td>
-                      {!isMultiSelectMode && (
-                        <td className="py-3 px-4 text-right">
-                          {(userRole === 'owner' || transaction.created_by === user?.id) && (
-                            <>
-                              <button
-                                onClick={() => handleEdit(transaction)}
-                                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mr-3"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => handleDelete(transaction.id)}
-                                disabled={isDeletingTransaction === transaction.id}
-                                className={`text-sm ${isDeletingTransaction === transaction.id
-                                  ? 'text-gray-400 cursor-not-allowed'
-                                  : 'text-red-600 hover:text-red-800'
-                                }`}
-                              >
-                                {isDeletingTransaction === transaction.id ? (
-                                  <span className="flex items-center gap-1">
-                                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    Deleting...
-                                  </span>
-                                ) : (
-                                  'Delete'
-                                )}
-                              </button>
-                            </>
-                          )}
+                        <td className={`py-3 px-4 text-sm text-right font-semibold ${transaction.amount < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
+                          }`}>
+                          {transaction.amount < 0 ? '-' : ''}{Math.abs(transaction.amount).toFixed(2)}
                         </td>
-                      )}
-                    </tr>
+                        {!isMultiSelectMode && (
+                          <td className="py-3 px-4 text-right">
+                            {(userRole === 'owner' || transaction.created_by === user?.id) && (
+                              <>
+                                <button
+                                  onClick={() => handleEdit(transaction)}
+                                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mr-3"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(transaction.id)}
+                                  disabled={isDeletingTransaction === transaction.id}
+                                  className={`text-sm ${isDeletingTransaction === transaction.id
+                                    ? 'text-gray-400 cursor-not-allowed'
+                                    : 'text-red-600 hover:text-red-800'
+                                    }`}
+                                >
+                                  {isDeletingTransaction === transaction.id ? (
+                                    <span className="flex items-center gap-1">
+                                      <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                      </svg>
+                                      Deleting...
+                                    </span>
+                                  ) : (
+                                    'Delete'
+                                  )}
+                                </button>
+                              </>
+                            )}
+                          </td>
+                        )}
+                      </tr>
                     );
                   })}
                 </tbody>

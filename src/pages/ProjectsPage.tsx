@@ -127,37 +127,21 @@ export default function ProjectsPage() {
 
     try {
       const supabase = getSupabaseClient()
-      addDebugMessage(`Session check${retryLabel} (2s timeout)...`)
 
-      // Check session validity before making queries (with timeout)
-      const { data: { session }, error: sessionError } = await Promise.race([
-        supabase.auth.getSession(),
-        new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 2000)
-        )
-      ])
+      // NOTE: No getSession() call here — useAuth already validates the session
+      // via onAuthStateChange before fetchProjects() is invoked. Calling
+      // getSession() again with a short timeout causes the old promise to keep the
+      // GoTrueClient alive while resetSupabaseClient() creates a new one, which
+      // triggers the "Multiple GoTrueClient instances" warning.
 
-      if (sessionError || !session) {
-        console.error('Session invalid or expired:', sessionError)
-        addDebugMessage(`Session failed: ${sessionError?.message || 'No session'}`)
-        // Only clear projects on initial attempt
-        if (attemptNumber === 0) {
-          setProjects([])
-        }
-        // Throw error to trigger retry logic instead of returning false
-        throw new Error(sessionError?.message || 'Session not available')
-      }
-
-      addDebugMessage(`Session OK${retryLabel}`)
-
-      // Fetch projects with timeout
-      addDebugMessage(`Fetching projects${retryLabel} (2s timeout)...`)
+      // Fetch projects with generous timeout
+      addDebugMessage(`Fetching projects${retryLabel} (8s timeout)...`)
       const startTime = Date.now()
 
       const { data, error } = await Promise.race([
         supabase.from('project_members').select('role, project_id, projects(*)').eq('user_id', user.id),
         new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 2000)
+          setTimeout(() => reject(new Error('Request timeout')), 8000)
         )
       ])
 
@@ -227,8 +211,8 @@ export default function ProjectsPage() {
       const isTimeout = errorMsg === 'Request timeout'
       // Retry on both timeout errors and session/network errors
       const isRetryable = isTimeout || errorMsg.includes('Session') || errorMsg.includes('session') ||
-                          errorMsg.includes('Network') || errorMsg.includes('network') ||
-                          errorMsg.includes('fetch')
+        errorMsg.includes('Network') || errorMsg.includes('network') ||
+        errorMsg.includes('fetch')
 
       addDebugMessage(`ERROR${retryLabel}: ${errorMsg}`)
 
@@ -239,10 +223,10 @@ export default function ProjectsPage() {
         addDebugMessage(`Retrying in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
         setRetryCount(nextAttempt)
 
-        // Reset Supabase client before retry to fix stale connections
-        addDebugMessage('Resetting Supabase client...')
-        await resetSupabaseClient(getConfig())
-
+        // Do NOT reset the Supabase client here — destroying and recreating it
+        // while an old promise is still in flight causes "Multiple GoTrueClient
+        // instances" warnings. The singleton client is healthy; we just need
+        // a backoff delay before retrying the query.
         await new Promise(resolve => setTimeout(resolve, backoffDelay))
         return fetchProjectsWithRetry(nextAttempt)
       }
@@ -539,113 +523,113 @@ export default function ProjectsPage() {
           <>
             {showCreateForm && (
               <div className="card mb-6" data-testid="create-project-form">
-            <h2 className="text-lg font-semibold mb-4">{t('projects.createNewProject')}</h2>
-            <form onSubmit={handleCreateProject} className="space-y-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('projects.projectName')}
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  className="input"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
+                <h2 className="text-lg font-semibold mb-4">{t('projects.createNewProject')}</h2>
+                <form onSubmit={handleCreateProject} className="space-y-4">
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      {t('projects.projectName')}
+                    </label>
+                    <input
+                      id="name"
+                      type="text"
+                      className="input"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      {t('projects.description')}
+                    </label>
+                    <textarea
+                      id="description"
+                      className="input"
+                      rows={3}
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="submit" className="btn btn-primary">
+                      {t('common.create')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowCreateForm(false)}
+                      className="btn btn-secondary"
+                    >
+                      {t('common.cancel')}
+                    </button>
+                  </div>
+                </form>
               </div>
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('projects.description')}
-                </label>
-                <textarea
-                  id="description"
-                  className="input"
-                  rows={3}
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
-              <div className="flex gap-2">
-                <button type="submit" className="btn btn-primary">
-                  {t('common.create')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowCreateForm(false)}
-                  className="btn btn-secondary"
-                >
-                  {t('common.cancel')}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
+            )}
 
-        {projects.length === 0 ? (
-          <div className="text-center py-12" data-testid="empty-state">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{t('projects.noProjectsYet')}</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">{t('projects.createFirstProject')}</p>
-            <button onClick={() => setShowCreateForm(true)} className="btn btn-primary">
-              {t('projects.createProject')}
-            </button>
-          </div>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3" data-testid="projects-grid">
-            {projects.map((project) => (
-              <Link
-                key={project.id}
-                to={isSelectionMode ? '#' : `/projects/${project.id}`}
-                data-testid={`project-card-${project.id}`}
-                onClick={(e) => {
-                  if (isSelectionMode) {
-                    e.preventDefault()
-                    if (project.userRole === 'owner') {
-                      toggleProjectSelection(project.id)
-                    }
-                  }
-                }}
-                className={`card card-accent hover:-translate-y-1 block relative ${isSelectionMode && project.userRole !== 'owner' ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:border-primary-300'
-                  } ${selectedProjectIds.includes(project.id) ? 'ring-2 ring-primary-500 border-primary-500 bg-primary-50/30' : ''}`}
-              >
-                {isSelectionMode && project.userRole === 'owner' && (
-                  <div className="absolute top-4 right-4 z-10">
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${selectedProjectIds.includes(project.id)
-                      ? 'bg-primary-500 border-primary-500 text-white'
-                      : 'bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600'
-                      }`}>
-                      {selectedProjectIds.includes(project.id) && (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
+            {projects.length === 0 ? (
+              <div className="text-center py-12" data-testid="empty-state">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{t('projects.noProjectsYet')}</h2>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">{t('projects.createFirstProject')}</p>
+                <button onClick={() => setShowCreateForm(true)} className="btn btn-primary">
+                  {t('projects.createProject')}
+                </button>
+              </div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3" data-testid="projects-grid">
+                {projects.map((project) => (
+                  <Link
+                    key={project.id}
+                    to={isSelectionMode ? '#' : `/projects/${project.id}`}
+                    data-testid={`project-card-${project.id}`}
+                    onClick={(e) => {
+                      if (isSelectionMode) {
+                        e.preventDefault()
+                        if (project.userRole === 'owner') {
+                          toggleProjectSelection(project.id)
+                        }
+                      }
+                    }}
+                    className={`card card-accent hover:-translate-y-1 block relative ${isSelectionMode && project.userRole !== 'owner' ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:border-primary-300'
+                      } ${selectedProjectIds.includes(project.id) ? 'ring-2 ring-primary-500 border-primary-500 bg-primary-50/30' : ''}`}
+                  >
+                    {isSelectionMode && project.userRole === 'owner' && (
+                      <div className="absolute top-4 right-4 z-10">
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${selectedProjectIds.includes(project.id)
+                          ? 'bg-primary-500 border-primary-500 text-white'
+                          : 'bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600'
+                          }`}>
+                          {selectedProjectIds.includes(project.id) && (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-start">
+                      <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{project.name}</h3>
+                      <span className="bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border border-primary-100 dark:border-primary-800">
+                        {t(`projects.${['owner', 'member', 'viewer'].includes(project.userRole || '') ? project.userRole : 'unknownRole'}`)}
+                      </span>
+                    </div>
+                    {project.description && (
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-2">{project.description}</p>
+                    )}
+                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50 dark:border-slate-700">
+                      <span className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-teal-500"></span>
+                        {project.settings?.currency || 'USD'}
+                      </span>
+                      {!isSelectionMode && (
+                        <span className="text-primary-600 dark:text-primary-400 text-xs font-semibold group-hover:translate-x-1 transition-transform">
+                          {t('projects.viewDetails')}
+                        </span>
                       )}
                     </div>
-                  </div>
-                )}
-                <div className="flex justify-between items-start">
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{project.name}</h3>
-                  <span className="bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border border-primary-100 dark:border-primary-800">
-                    {t(`projects.${['owner', 'member', 'viewer'].includes(project.userRole || '') ? project.userRole : 'unknownRole'}`)}
-                  </span>
-                </div>
-                {project.description && (
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-2">{project.description}</p>
-                )}
-                <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50 dark:border-slate-700">
-                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-teal-500"></span>
-                    {project.settings?.currency || 'USD'}
-                  </span>
-                  {!isSelectionMode && (
-                    <span className="text-primary-600 dark:text-primary-400 text-xs font-semibold group-hover:translate-x-1 transition-transform">
-                      {t('projects.viewDetails')}
-                    </span>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
+                  </Link>
+                ))}
+              </div>
+            )}
           </>
         )}
       </main>

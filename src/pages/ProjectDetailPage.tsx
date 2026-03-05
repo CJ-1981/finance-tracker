@@ -249,30 +249,20 @@ export default function ProjectDetailPage() {
     try {
       const supabase = getSupabaseClient()
 
-      // Check session validity before making queries (with timeout)
-      addDebugMessage(`Session check${retryLabel} (2s timeout)...`)
-      const { data: { session }, error: sessionError } = await Promise.race([
-        supabase.auth.getSession(),
-        new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 2000)
-        )
-      ])
-      addDebugMessage(`Session check: ${session ? 'OK' : 'FAILED'} ${sessionError ? `(${sessionError.message})` : ''}`)
+      // NOTE: No getSession() call here — useAuth already validates the session
+      // via onAuthStateChange before fetch functions are invoked. Calling
+      // getSession() with a short timeout keeps the old abandoned promise alive
+      // while resetSupabaseClient() creates a new GoTrueClient, triggering
+      // "Multiple GoTrueClient instances" warnings.
 
-      if (sessionError || !session) {
-        console.error('Session invalid or expired:', sessionError)
-        // Throw error to trigger retry logic instead of returning false
-        throw new Error(sessionError?.message || 'Session not available')
-      }
-
-      // Fetch project with timeout
-      addDebugMessage(`Fetching project${retryLabel} (2s timeout)...`)
+      // Fetch project with generous timeout
+      addDebugMessage(`Fetching project${retryLabel} (8s timeout)...`)
       const startTime = Date.now()
 
       const { data, error } = await Promise.race([
         supabase.from('projects').select('*').eq('id', id).single(),
         new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 2000)
+          setTimeout(() => reject(new Error('Request timeout')), 8000)
         )
       ])
 
@@ -303,8 +293,7 @@ export default function ProjectDetailPage() {
         addDebugMessage(`⚠️ Suspicious: Project data looks invalid (${newHash.slice(0, 50)}...) (safety retry ${attemptNumber + 1}/${maxRetries})`)
         addDebugMessage('Triggering safety check retry...')
 
-        // Reset Supabase client and retry once more
-        await resetSupabaseClient(getConfig())
+        // Retry after a brief delay — no client reset needed
         await new Promise(resolve => setTimeout(resolve, 1000))
 
         // Retry with incremented attempt number
@@ -334,7 +323,7 @@ export default function ProjectDetailPage() {
             .eq('user_id', user?.id)
             .single(),
           new Promise<any>((_, reject) =>
-            setTimeout(() => reject(new Error('Request timeout')), 2000)
+            setTimeout(() => reject(new Error('Request timeout')), 8000)
           )
         ])
         if (memberData && 'role' in memberData) {
@@ -355,8 +344,8 @@ export default function ProjectDetailPage() {
       const isTimeout = errorMsg === 'Request timeout'
       // Retry on both timeout errors and session/network errors
       const isRetryable = isTimeout || errorMsg.includes('Session') || errorMsg.includes('session') ||
-                          errorMsg.includes('Network') || errorMsg.includes('network') ||
-                          errorMsg.includes('fetch')
+        errorMsg.includes('Network') || errorMsg.includes('network') ||
+        errorMsg.includes('fetch')
 
       addDebugMessage(`ERROR${retryLabel}: ${errorMsg}`)
 
@@ -367,10 +356,8 @@ export default function ProjectDetailPage() {
         addDebugMessage(`Retrying in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
         setRetryCount(nextAttempt)
 
-        // Reset Supabase client before retry to fix stale connections
-        addDebugMessage('Resetting Supabase client...')
-        await resetSupabaseClient(getConfig())
-
+        // Do NOT reset the Supabase client — it creates a second GoTrueClient
+        // while the old abandoned promise still holds a reference to the first.
         await new Promise(resolve => setTimeout(resolve, backoffDelay))
         return fetchProjectWithRetry(nextAttempt)
       }
@@ -405,7 +392,7 @@ export default function ProjectDetailPage() {
       const { data, error } = await Promise.race([
         supabase.from('transactions').select('*').eq('project_id', id).is('deleted_at', null).order('date', { ascending: false }).order('created_at', { ascending: false }),
         new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 2000)
+          setTimeout(() => reject(new Error('Request timeout')), 8000)
         )
       ])
 
@@ -435,8 +422,7 @@ export default function ProjectDetailPage() {
         addDebugMessage('Previous hash:' + previousTransactionsHash.slice(0, 50))
         addDebugMessage('Current hash:' + currentHash)
 
-        // Reset Supabase client and retry
-        await resetSupabaseClient(getConfig())
+        // Retry after a brief delay — no client reset needed
         await new Promise(resolve => setTimeout(resolve, 1000))
         return fetchTransactionsWithRetry(attemptNumber + 1)
       }
@@ -451,7 +437,7 @@ export default function ProjectDetailPage() {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error'
       const isTimeout = errorMsg === 'Request timeout'
       const isRetryable = isTimeout || errorMsg.includes('Network') || errorMsg.includes('network') ||
-                          errorMsg.includes('fetch') || errorMsg.includes('timeout')
+        errorMsg.includes('fetch') || errorMsg.includes('timeout')
 
       addDebugMessage(`ERROR fetching transactions${retryLabel}: ${errorMsg}`)
 
@@ -461,10 +447,7 @@ export default function ProjectDetailPage() {
         const nextAttempt = attemptNumber + 1
         addDebugMessage(`Retrying transactions in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
 
-        // Reset Supabase client before retry to fix stale connections
-        addDebugMessage('Resetting Supabase client...')
-        await resetSupabaseClient(getConfig())
-
+        // Do NOT reset the Supabase client — same reason as above.
         await new Promise(resolve => setTimeout(resolve, backoffDelay))
         return fetchTransactionsWithRetry(nextAttempt)
       }
@@ -493,7 +476,7 @@ export default function ProjectDetailPage() {
       const { data, error } = await Promise.race([
         supabase.from('categories').select('*').eq('project_id', id).order('order', { ascending: true }),
         new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 2000)
+          setTimeout(() => reject(new Error('Request timeout')), 8000)
         )
       ])
 
@@ -512,7 +495,7 @@ export default function ProjectDetailPage() {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error'
       const isTimeout = errorMsg === 'Request timeout'
       const isRetryable = isTimeout || errorMsg.includes('Network') || errorMsg.includes('network') ||
-                          errorMsg.includes('fetch') || errorMsg.includes('timeout')
+        errorMsg.includes('fetch') || errorMsg.includes('timeout')
 
       addDebugMessage(`ERROR fetching categories${retryLabel}: ${errorMsg}`)
 
@@ -522,10 +505,7 @@ export default function ProjectDetailPage() {
         const nextAttempt = attemptNumber + 1
         addDebugMessage(`Retrying categories in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
 
-        // Reset Supabase client before retry to fix stale connections
-        addDebugMessage('Resetting Supabase client...')
-        await resetSupabaseClient(getConfig())
-
+        // Do NOT reset the Supabase client — same reason as above.
         await new Promise(resolve => setTimeout(resolve, backoffDelay))
         return fetchCategoriesWithRetry(nextAttempt)
       }
@@ -1141,9 +1121,8 @@ export default function ProjectDetailPage() {
                         </div>
                       </div>
                       <div className="text-right min-w-0">
-                        <div className={`font-extrabold text-sm break-all ${
-                          transaction.amount < 0 ? 'text-rose-600' : 'text-emerald-600'
-                        }`}>
+                        <div className={`font-extrabold text-sm break-all ${transaction.amount < 0 ? 'text-rose-600' : 'text-emerald-600'
+                          }`}>
                           {transaction.amount < 0 ? '-' : ''}{transaction.currency_code || project.settings?.currency || 'USD'} {Math.abs(transaction.amount).toFixed(2)}
                         </div>
                       </div>
