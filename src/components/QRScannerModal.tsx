@@ -4,13 +4,14 @@
  * @MX:SPEC: SPEC-QR-001, TASK-005 to TASK-007
  * @MX:WARN: Camera resource management - must properly cleanup on unmount to prevent memory leaks
  *
- * Modal component for scanning QR codes using device camera.
+ * Modal component for scanning QR codes using device camera or file upload.
  * Handles camera permissions, HTTPS detection, and QR code decoding.
  */
 
 import { useEffect, useRef, useState } from 'react'
 import QrScanner from 'qr-scanner'
 import type { default as QrScannerType } from 'qr-scanner'
+import jsQR from 'jsqr'
 
 interface QRScannerModalProps {
   /** Whether the modal is open */
@@ -55,10 +56,13 @@ export function QRScannerModal({
   const videoRef = useRef<HTMLVideoElement>(null)
   const scannerRef = useRef<QrScannerType | null>(null)
   const hasScannedRef = useRef(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [hasCamera, setHasCamera] = useState<boolean | null>(null)
   const [permissionDenied, setPermissionDenied] = useState(false)
   const [scanError, setScanError] = useState<string | null>(null)
   const [isHttpsRequired, setIsHttpsRequired] = useState(false)
+  const [filePreview, setFilePreview] = useState<string | null>(null)
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   // Reset transient scanner state when modal opens
   useEffect(() => {
@@ -68,6 +72,8 @@ export function QRScannerModal({
       setIsHttpsRequired(false)
       setHasCamera(null)
       hasScannedRef.current = false
+      setFilePreview(null)
+      setUploadError(null)
     }
   }, [isOpen])
 
@@ -161,6 +167,76 @@ export function QRScannerModal({
       }
     }
   }, [isOpen, hasCamera, isHttpsRequired, onScan, onClose, t])
+
+  // Handle file upload and QR code decoding
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Reset error state
+    setUploadError(null)
+    setScanError(null)
+
+    // Check if file is an image
+    if (!file.type.startsWith('image/')) {
+      setUploadError(t('qr.invalidImage'))
+      return
+    }
+
+    // Create image preview
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const imageDataUrl = e.target?.result as string
+      setFilePreview(imageDataUrl)
+
+      // Create an image element to decode QR code
+      const img = new Image()
+      img.onload = () => {
+        // Create a canvas to extract image data
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          setUploadError(t('qr.invalidImage'))
+          return
+        }
+
+        canvas.width = img.width
+        canvas.height = img.height
+        ctx.drawImage(img, 0, 0)
+
+        // Get image data for jsQR
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+
+        // Attempt to decode QR code
+        const code = jsQR(
+          imageData.data,
+          imageData.width,
+          imageData.height,
+          {
+            inversionAttempts: 'dontInvert'
+          }
+        )
+
+        if (code) {
+          // QR code found - trigger scan callback
+          hasScannedRef.current = true
+          onScan(code.data)
+          onClose()
+        } else {
+          // No QR code found in image
+          setUploadError(t('qr.noQrFound'))
+        }
+      }
+      img.onerror = () => {
+        setUploadError(t('qr.invalidImage'))
+      }
+      img.src = imageDataUrl
+    }
+    reader.onerror = () => {
+      setUploadError(t('qr.invalidImage'))
+    }
+    reader.readAsDataURL(file)
+  }
 
   // Don't render if not open
   if (!isOpen) return null
@@ -260,6 +336,60 @@ export function QRScannerModal({
               muted
               playsInline
             />
+          </div>
+        )}
+
+        {/* Upload Error */}
+        {uploadError && (
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4">
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <p className="font-medium text-red-800 dark:text-red-300">
+                  {uploadError}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* File Preview */}
+        {filePreview && (
+          <div className="relative bg-black rounded-lg overflow-hidden mb-4">
+            <img
+              src={filePreview}
+              alt="QR code preview"
+              className="w-full"
+            />
+          </div>
+        )}
+
+        {/* File Upload Button */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileUpload}
+          className="hidden"
+        />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="w-full btn btn-primary mb-3"
+          disabled={hasScannedRef.current}
+        >
+          {t('qr.uploadImage')}
+        </button>
+
+        {/* Divider */}
+        {(hasCamera === true && !permissionDenied && !isHttpsRequired) && (
+          <div className="flex items-center gap-3 mb-3">
+            <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
+            <span className="text-slate-400 dark:text-slate-600 text-sm">
+              {t('qr.or')}
+            </span>
+            <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
           </div>
         )}
 

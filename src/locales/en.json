@@ -378,6 +378,10 @@
     "scanFailed": "Failed to scan QR code. Please try again.",
     "retry": "Try Again",
     "configExtracted": "Configuration extracted from QR code. Please verify and save.",
-    "inviteOnly": "This QR code contains an invitation link only. Please use it to accept the invitation."
+    "inviteOnly": "This QR code contains an invitation link only. Please use it to accept the invitation.",
+    "uploadImage": "Upload QR Code Image",
+    "or": "or",
+    "noQrFound": "No QR code found in the uploaded image. Please try another image.",
+    "invalidImage": "Invalid image file. Please upload a valid image file (JPG, PNG, etc.)."
   }
 }
