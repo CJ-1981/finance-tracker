@@ -9,6 +9,7 @@ import { decodeConfigFromInvite } from '../lib/inviteConfig'
 import type { SupabaseConfig } from '../types'
 import versionInfo from '../version.json'
 import QRScannerModal from '../components/QRScannerModal'
+import LanguageSelector from '../components/LanguageSelector'
 
 /**
  * Truncate a string in the middle for security (show prefix...suffix)
@@ -426,6 +427,9 @@ export default function ConfigPage() {
                 >
                   {theme === 'light' ? '🌙 Dark Mode: Off' : theme === 'dark' ? '🌙 Dark Mode: On' : '🌙 Dark Mode: Auto'}
                 </button>
+                <div className="w-full">
+                  <LanguageSelector />
+                </div>
                 <button
                   onClick={async () => {
                     await signOut()

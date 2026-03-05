@@ -6,12 +6,11 @@ import { getSupabaseClient, resetSupabaseClient } from '../lib/supabase'
 import { getConfig } from '../lib/config'
 import { getPendingInvitation } from '../lib/invitations'
 import type { Project } from '../types'
-import LanguageSelector from '../components/LanguageSelector'
 import { QRCodeDisplay } from '../components/QRCodeDisplay'
 
 export default function ProjectsPage() {
   const { t } = useTranslation()
-  const { user, signOut } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [projects, setProjects] = useState<(Project & { userRole: string })[]>([])
   const [showCreateForm, setShowCreateForm] = useState(false)
@@ -393,26 +392,6 @@ export default function ProjectsPage() {
     }
   }
 
-  const handleLogout = async () => {
-    try {
-      console.log('Logging out...')
-      // Clear any saved redirect paths to prevent redirect loops after logout
-      sessionStorage.removeItem('redirectAfterLogin')
-      await signOut()
-      console.log('Logged out successfully, redirecting...')
-      // Use BASE_URL to respect deployment path (e.g., /finance-tracker/)
-      // Use relative path with replace() for PWA compatibility
-      const basePath = (import.meta as any).env?.BASE_URL || '/'
-      window.location.replace(basePath)
-    } catch (error) {
-      console.error('Logout error:', error)
-      // Force redirect to landing page even if signOut fails
-      sessionStorage.removeItem('redirectAfterLogin')
-      const basePath = (import.meta as any).env?.BASE_URL || '/'
-      window.location.replace(basePath)
-    }
-  }
-
   const toggleProjectSelection = (projectId: string) => {
     setSelectedProjectIds(prev =>
       prev.includes(projectId)
@@ -432,7 +411,6 @@ export default function ProjectsPage() {
               <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">{t('projects.subtitle')}</p>
             </div>
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-              <LanguageSelector />
               {!isSelectionMode ? (
                 <>
                   <button onClick={() => setShowCreateForm(true)} className="btn btn-primary text-sm whitespace-nowrap" data-testid="create-project-button">
@@ -477,10 +455,6 @@ export default function ProjectsPage() {
               </button>
               <button onClick={() => { navigate('/config') }} className="btn btn-secondary text-sm whitespace-nowrap hidden sm:inline-flex" title={t('projects.reconfigure')}>
                 ⚙️ {t('common.settings')}
-              </button>
-              <button onClick={handleLogout} className="btn border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm whitespace-nowrap px-4 py-2 rounded-xl font-semibold transition-all">
-                <span className="hidden sm:inline">{t('common.logout')}</span>
-                <span className="sm:hidden">{t('common.logout')}</span>
               </button>
             </div>
           </div>

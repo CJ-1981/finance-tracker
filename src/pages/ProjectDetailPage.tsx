@@ -3,7 +3,6 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getSupabaseClient, resetSupabaseClient } from '../lib/supabase'
 import { getConfig } from '../lib/config'
-import { getPendingInvitation } from '../lib/invitations'
 import type { Project, Transaction, Category } from '../types'
 import TransactionModal from '../components/TransactionModal'
 import CashCounterModal from '../components/CashCounterModal'
@@ -53,12 +52,6 @@ export default function ProjectDetailPage() {
 
   const [isEditing, setIsEditing] = useState(false)
   const [editFormData, setEditFormData] = useState({ name: '', description: '', currency: 'USD' })
-  const [showInviteModal, setShowInviteModal] = useState(false)
-  const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState<'member' | 'viewer'>('member')
-  const [inviteLink, setInviteLink] = useState('')
-  const [showInviteLink, setShowInviteLink] = useState(false)
-  const [inviteRecipientEmail, setInviteRecipientEmail] = useState('') // Store for mailto link
 
   // Quick add transaction modal states
   const [showAddTransactionModal, setShowAddTransactionModal] = useState(false)
@@ -570,114 +563,6 @@ export default function ProjectDetailPage() {
     }
   }
 
-  const handleInvite = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!user || !id || !inviteEmail) return
-    try {
-      const supabase = getSupabaseClient()
-
-      // Check for existing pending invitation to this email for this project
-      const existingInvite = await getPendingInvitation(id!, inviteEmail)
-
-      let token: string | null = null
-      let isNewInvite = false
-
-      if (existingInvite) {
-        // Reuse existing invitation if role matches
-        if (existingInvite.role === inviteRole) {
-          if (!confirm(`An invitation to ${inviteEmail} is already pending. Resend the same invitation link?`)) {
-            return
-          }
-          token = existingInvite.token
-          isNewInvite = false
-        } else {
-          // Role changed - update existing invitation instead of creating new
-          const shouldUpdate = confirm(
-            `${inviteEmail} already has a pending invitation as ${existingInvite.role}.\n\n` +
-            `Click OK to update to ${inviteRole}.\n` +
-            `Click Cancel to keep the existing invitation.`
-          )
-          if (!shouldUpdate) {
-            return
-          }
-          // Update existing invitation with new role and new token
-          token = Math.random().toString(36).substring(2) + Date.now().toString(36)
-          const { error: updateError } = await (supabase.from('invitations') as any)
-            .update({
-              role: inviteRole,
-              token: token
-            })
-            .eq('id', existingInvite.id)
-          if (updateError) throw updateError
-          isNewInvite = false
-        }
-      } else {
-        isNewInvite = true
-      }
-
-      if (isNewInvite) {
-        // Create new invitation
-        token = Math.random().toString(36).substring(2) + Date.now().toString(36)
-        const { error } = await (supabase.from('invitations') as any).insert({
-          project_id: id,
-          email: inviteEmail,
-          role: inviteRole,
-          invited_by: user.id,
-          token: token
-        })
-        if (error) throw error
-      }
-
-      // Generate invite link with embedded config and store recipient email for mailto link
-      const { getConfig } = await import('../lib/config')
-      const { generateInviteLink } = await import('../lib/inviteConfig')
-      const config = getConfig()
-      const link = generateInviteLink(window.location.origin, token!, config || undefined)
-      setInviteLink(link)
-      setInviteRecipientEmail(inviteEmail) // Store before clearing
-      setShowInviteLink(true)
-      setShowInviteModal(false)
-      setInviteEmail('')
-    } catch (err) {
-      console.error('Error creating invitation:', err)
-
-      // Extract error message from Supabase error or generic error
-      let errorMessage = 'Unknown error'
-      if (err) {
-        if (typeof err === 'object' && 'message' in err) {
-          errorMessage = String(err.message)
-          // Check for specific Supabase error codes
-          if ('code' in err && typeof err.code === 'string') {
-            switch (err.code) {
-              case '42501':
-                errorMessage = 'Permission denied. You must be the project owner to send invitations.'
-                break
-              case '23505':
-                errorMessage = 'An invitation to this email already exists.'
-                break
-              case '23503':
-                errorMessage = 'Project not found or you do not have access to it.'
-                break
-            }
-          }
-          // Add details if available
-          if ('details' in err && err.details) {
-            errorMessage += ` (${String(err.details)})`
-          }
-          if ('hint' in err && err.hint) {
-            errorMessage += ` - ${String(err.hint)}`
-          }
-        } else if (err instanceof Error) {
-          errorMessage = err.message
-        } else {
-          errorMessage = String(err)
-        }
-      }
-
-      alert(`Failed to send invitation: ${errorMessage}`)
-    }
-  }
-
   const getCategoryName = (categoryId: string) => {
     const category = categories.find((c) => c.id === categoryId)
     return category?.name || t('projectDetail.uncategorized')
@@ -1094,12 +979,6 @@ export default function ProjectDetailPage() {
               )}
             </div>
             <div className="flex gap-2 flex-wrap">
-              {project?.owner_id === user?.id && (
-                <button onClick={() => setShowInviteModal(true)} className="btn btn-secondary border border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-sm whitespace-nowrap flex" title="Invite">
-                  <span>✉️</span>
-                  <span className="hidden sm:inline ml-1">{t('projectDetail.invite')}</span>
-                </button>
-              )}
               <button
                 onClick={() => {
                   const transactionsSection = document.getElementById('recent-transactions')
@@ -1126,88 +1005,6 @@ export default function ProjectDetailPage() {
           </div>
         </div>
       </header>
-
-      {showInviteModal && project?.owner_id === user?.id && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">{t('projectDetail.inviteToProject')}</h2>
-            <form onSubmit={handleInvite} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('auth.email')}</label>
-                <input type="email" required className="input" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="colleague@example.com" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('projects.role')}</label>
-                <select className="input" value={inviteRole} onChange={e => setInviteRole(e.target.value as any)}>
-                  <option value="member">{t('projects.roleMember')}</option>
-                  <option value="viewer">{t('projects.roleViewer')}</option>
-                </select>
-              </div>
-              <div className="flex gap-2 pt-2">
-                <button type="submit" className="btn btn-primary w-full">{t('projects.invite')}</button>
-                <button type="button" onClick={() => setShowInviteModal(false)} className="btn btn-secondary w-full">{t('common.cancel')}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {showInviteLink && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-lg w-full">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">{t('projectDetail.invitationCreated')}</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              {t('projectDetail.chooseSendMethod')}
-            </p>
-
-            {/* Email Client Button */}
-            <a
-              href={`mailto:${inviteRecipientEmail}?subject=${encodeURIComponent(t('projectDetail.invitationEmailSubject', { project: project?.name }))}&body=${encodeURIComponent(t('projectDetail.invitationEmailBody', { project: project?.name, role: inviteRole, link: inviteLink }))}`}
-              className="block w-full btn btn-primary text-center mb-3"
-            >
-              📧 {t('projectDetail.openEmailClient')}
-            </a>
-
-            {/* Invite Link */}
-            <div className="bg-gray-50 dark:bg-slate-900 p-3 rounded-md mb-3">
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('projectDetail.inviteLink')}</p>
-              <p className="text-sm text-blue-600 dark:text-blue-400 break-words">{inviteLink}</p>
-            </div>
-
-            {/* Actions */}
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => {
-                  const fullMessage =
-                    `${t('projectDetail.subject')}: ${t('projectDetail.invitationEmailSubject', { project: project?.name })}\n\n` +
-                    t('projectDetail.invitationEmailBody', { project: project?.name, role: inviteRole, link: inviteLink })
-                  navigator.clipboard.writeText(fullMessage)
-                  alert(t('projectDetail.fullInvitationCopied'))
-                }}
-                className="btn btn-secondary"
-              >
-                📋 {t('projectDetail.copyFullMessage')}
-              </button>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(inviteLink)
-                  alert(t('projectDetail.linkCopied'))
-                }}
-                className="btn btn-secondary"
-              >
-                🔗 {t('projectDetail.copyLinkOnly')}
-              </button>
-            </div>
-
-            <button
-              onClick={() => setShowInviteLink(false)}
-              className="w-full mt-3 text-sm text-gray-600 hover:text-gray-900"
-            >
-              {t('projectDetail.close')}
-            </button>
-          </div>
-        </div>
-      )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 overflow-x-hidden">
         <div className="grid gap-6 lg:grid-cols-3">
