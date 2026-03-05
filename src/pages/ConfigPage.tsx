@@ -429,7 +429,7 @@ export default function ConfigPage() {
                 <button
                   onClick={async () => {
                     await signOut()
-                    window.location.reload()
+                    navigate('/', { replace: true })
                   }}
                   className="w-full btn btn-secondary"
                 >
