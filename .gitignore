@@ -191,9 +191,6 @@ node_modules/
 .next/
 out/
 
-# Generated version file
-src/version.json
-
 # ===========================================
 # Build Tools & Frameworks
 # ===========================================
@@ -207,9 +204,9 @@ dist-ssr/
 .vercel/
 .netlify/
 .firebase/
-# ===========================================
-# Playwright Test Artifacts
-# ===========================================
+
+# User Custom Patterns (preserved by moai update)
+src/version.json
 test-results/
 playwright-report/
 playwright/.cache/
