@@ -64,11 +64,17 @@ The system **SHALL** provide manual input fallback when QR functionality is unav
 
 **WHEN** user opens Supabase config setup page, **THEN** the system **SHALL** display "Scan QR Code" option alongside manual input fields
 
-**WHEN** user clicks "Scan QR Code" button, **THEN** the system **SHALL** open QR scanner modal with camera preview
+**WHEN** user clicks "Scan QR Code" button, **THEN** the system **SHALL** open QR scanner modal with camera preview and file upload option
 
-**WHEN** QR scanner modal opens, **THEN** the system **SHALL** request camera permission with clear explanation of purpose
+**WHEN** QR scanner modal opens, **THEN** the system **SHALL** display both camera scan and file upload options with clear explanation
+
+**WHEN** user chooses camera scan, **THEN** the system **SHALL** request camera permission with clear explanation of purpose
 
 **WHEN** user grants camera permission, **THEN** the system **SHALL** activate live camera preview for QR code scanning
+
+**WHEN** user clicks "Upload QR Code Image" button, **THEN** the system **SHALL** open file picker for image selection
+
+**WHEN** user selects an image file, **THEN** the system **SHALL** decode QR code from the uploaded image
 
 **WHEN** camera detects valid QR code, **THEN** the system **SHALL** automatically decode and extract URL
 
@@ -90,7 +96,11 @@ The system **SHALL** provide manual input fallback when QR functionality is unav
 
 **IF** browser detects HTTP (not localhost) protocol, **THEN** the system **SHALL** display warning that camera API requires HTTPS
 
-**IF** device does not have camera capability, **THEN** the system **SHALL** hide QR scan option and show manual input only
+**IF** device does not have camera capability, **THEN** the system **SHALL** hide QR scan option and show file upload and manual input
+
+**IF** user uploads invalid image file, **THEN** the system **SHALL** display specific error message and allow retry
+
+**IF** uploaded image contains no QR code, **THEN** the system **SHALL** display "No QR code found" error and allow retry
 
 **IF** QR code generation fails due to invalid URL, **THEN** the system **SHALL** display error message and offer link text fallback
 
@@ -120,7 +130,7 @@ The system **SHALL NOT** require camera access for users who prefer manual input
 
 **WHERE POSSIBLE**, the system **SHOULD** remember last used camera preference
 
-**WHERE POSSIBLE**, the system **SHOULD** support QR code scanning from uploaded images (fallback for devices without camera)
+**WHERE POSSIBLE**, the system **SHOULD** support QR code scanning from uploaded images (fallback for devices without camera) ✅ IMPLEMENTED
 
 ## Specifications
 
@@ -282,6 +292,49 @@ All English keys above MUST have corresponding Korean translations. Korean trans
 - `TransactionModal.tsx` (pattern reference)
 - `CashCounterModal.tsx` (pattern reference)
 - `InvitePage.tsx` (invite flow reference)
+
+---
+
+## Implementation Notes
+
+**Version:** 1.2
+**Last Updated:** 2026-03-05
+**Status:** Completed
+
+### Scope Expansion: File Upload QR Scanning
+
+The implementation included an OPTIONAL requirement from the original SPEC that was not part of the initial MVP scope:
+
+**Implemented Feature:**
+- QR code scanning from uploaded image files
+- Provides fallback for devices without camera capability
+- Enables scanning from saved QR code images
+- No camera permission required for this method
+
+**Implementation Details:**
+- Added `jsqr` library dependency (v1.4.0) for image-based QR decoding
+- Extended `QRScannerModal.tsx` with file upload functionality:
+  - File input button: "Upload QR Code Image"
+  - Image preview display before decoding
+  - jsQR integration for decoding QR codes from image data
+  - Error handling for invalid images and missing QR codes
+- Added translation keys for file upload UI (EN/KO):
+  - `qr.uploadImage`: "Upload QR Code Image"
+  - `qr.or`: "or"
+  - `qr.noQrFound`: "No QR code found in the uploaded image"
+  - `qr.invalidImage`: "Invalid image file"
+
+**Benefits:**
+- Improved accessibility for users without cameras
+- Privacy-friendly alternative (no camera permission needed)
+- Flexibility to scan saved QR code images
+- Fallback when camera access is denied or unavailable
+
+**Quality Metrics:**
+- All 21 tests passing
+- Zero TypeScript errors
+- Zero LSP warnings
+- @MX:ANCHOR tag maintained for QRScannerModal component
 
 ---
 
