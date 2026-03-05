@@ -29,8 +29,8 @@ export function createSupabaseClient(config: SupabaseConfig): SupabaseClient<Dat
       ...(import.meta.env.VITE_SUPABASE_ENABLE_LOCK
         ? {}
         : {
-            lock: async (_name: string, _acquireTimeout: number, fn: () => Promise<any>) => fn(),
-          }
+          lock: async (_name: string, _acquireTimeout: number, fn: () => Promise<any>) => fn(),
+        }
       ),
     } as any,
   })
@@ -109,52 +109,34 @@ export async function testConnection(config: SupabaseConfig): Promise<boolean> {
       return false
     }
 
-    // Try to create a temporary client for connection testing
-    // We disable auth persistence and refresh to avoid "Multiple GoTrueClient instances" warnings
-    // and lock contention with the main client.
-    const client = createClient<Database>(config.url, config.anonKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false,
+    // Use direct HTTP fetch instead of createClient() to avoid triggering
+    // "Multiple GoTrueClient instances detected" warnings. A second GoTrueClient
+    // shares the same localStorage key as the main client even with persistSession: false,
+    // which causes the warning and can interfere with the auth state.
+    const response = await fetch(`${config.url}/rest/v1/`, {
+      headers: {
+        'apikey': config.anonKey,
+        'Authorization': `Bearer ${config.anonKey}`
       }
     })
 
-    // Try a simple query that should work even without auth
-    // Just checking if Supabase responds
-    const { error } = await client
-      .from('projects')
-      .select('id')
-      .limit(1)
-
-    // If error is "relation does not exist", that's OK - it means tables aren't set up yet
-    // but the connection works
-    if (error?.code === 'PGRST116' || error?.code === '42P01') {
+    // 200 OK          → endpoint reachable, anon key accepted
+    // 401 Unauthorized → endpoint reachable, but anon access restricted (still a valid connection)
+    // 404 Not Found   → endpoint exists (edge case for some Supabase setups)
+    // Anything else is likely a network or configuration error
+    if (response.ok || response.status === 401 || response.status === 404) {
       return true
     }
 
-    // If we got data, connection works
-    if (!error) {
-      return true
-    }
+    // Try the auth endpoint as a secondary check
+    const authResponse = await fetch(`${config.url}/auth/v1/health`, {
+      headers: {
+        'apikey': config.anonKey,
+      }
+    })
 
-    // Other errors might be RLS-related, let's check if the error mentions auth
-    if (error.message?.includes('JWT') || error.message?.includes('auth')) {
-      return false // Invalid credentials
-    }
+    return authResponse.ok || authResponse.status === 401
 
-    // For any other error, try the endpoint directly
-    try {
-      const response = await fetch(`${config.url}/rest/v1/`, {
-        headers: {
-          'apikey': config.anonKey,
-          'Authorization': `Bearer ${config.anonKey}`
-        }
-      })
-      return response.ok || response.status === 404 // 404 is OK, means endpoint exists
-    } catch {
-      return false
-    }
   } catch (err) {
     console.error('Connection test failed:', err)
     return false
