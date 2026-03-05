@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.5.2] - 2026-03-05
 
+### Changed
+
+- **Database Schema Consolidation** - Merged soft delete functionality into main schema.sql
+  - Added deleted_at and deleted_by columns to transactions table
+  - Added soft delete functions (soft_delete_transaction, restore_transaction, cleanup_old_deleted_transactions, permanently_delete_transaction)
+  - Updated RLS policies for soft delete workflow
+  - Added indexes for deleted_at and deleted_by columns
+  - Single schema.sql file now contains all necessary database setup
+
+- **Database Directory Cleanup** - Removed 17 outdated migration and utility files
+  - Removed migrations/ directory (outdated migration files)
+  - Removed fix scripts (fix-rls-owners.sql, fix-all-rls.sql, fix-category-rls.sql)
+  - Removed utility scripts (create-*.sql, add-*.sql, diagnose.sql, verify-setup.sql, etc.)
+  - Removed dangerous operations (reset-schema.sql)
+  - Simpler onboarding for new users (no migration history to navigate)
+
 ### Fixed
 
 - **PWA Logout Popup Issue** - Fixed persistent popup window when logging out on mobile PWA
