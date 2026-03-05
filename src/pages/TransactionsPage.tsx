@@ -184,7 +184,7 @@ export default function TransactionsPage() {
       const { data, error } = await Promise.race([
         supabase.from('projects').select('*').eq('id', projectId).single(),
         new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 8000)
+          setTimeout(() => reject(new Error('Request timeout')), 2000)
         )
       ])
 
@@ -211,7 +211,7 @@ export default function TransactionsPage() {
           const { data: memberData } = await Promise.race([
             supabase.from('project_members').select('role').eq('project_id', projectId).eq('user_id', user.id).single(),
             new Promise<any>((_, reject) =>
-              setTimeout(() => reject(new Error('Request timeout')), 8000)
+              setTimeout(() => reject(new Error('Request timeout')), 2000)
             )
           ])
 
@@ -246,11 +246,9 @@ export default function TransactionsPage() {
         addDebugMessage(`Retrying in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
         setRetryCount(nextAttempt)
 
-        // Resetting the client clears stale fetch connections. Safe now because
-        // we no longer call getSession(), so no GoTrueClient is kept alive by
-        // an abandoned promise during the reset.
-        addDebugMessage('Resetting Supabase client...')
-        await resetSupabaseClient(getConfig())
+        // No client reset — resetSupabaseClient() keeps triggering the
+        // "Multiple GoTrueClient instances" warning because useAuth holds
+        // the old client alive. Supabase fetch is stateless per-request.
         await new Promise(resolve => setTimeout(resolve, backoffDelay))
         return fetchProjectWithRetry(nextAttempt)
       }
@@ -301,9 +299,7 @@ export default function TransactionsPage() {
         // Increment retry count to prevent infinite loops
         setRetryCount(1)
 
-        // Resetting the client clears stale fetch connections. Safe now because
-        // we no longer call getSession().
-        await resetSupabaseClient(getConfig())
+        // No client reset — same reason as above.
         await new Promise(resolve => setTimeout(resolve, 1000))
 
         // Retry once more

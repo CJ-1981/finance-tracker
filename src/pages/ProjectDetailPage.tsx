@@ -262,7 +262,7 @@ export default function ProjectDetailPage() {
       const { data, error } = await Promise.race([
         supabase.from('projects').select('*').eq('id', id).single(),
         new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 8000)
+          setTimeout(() => reject(new Error('Request timeout')), 2000)
         )
       ])
 
@@ -293,10 +293,9 @@ export default function ProjectDetailPage() {
         addDebugMessage(`⚠️ Suspicious: Project data looks invalid (${newHash.slice(0, 50)}...) (safety retry ${attemptNumber + 1}/${maxRetries})`)
         addDebugMessage('Triggering safety check retry...')
 
-        // Resetting the client clears stale fetch connections. Safe now because
-        // we no longer call getSession(), so no GoTrueClient is kept alive by
-        // an abandoned promise during the reset.
-        await resetSupabaseClient(getConfig())
+        // No client reset — resetSupabaseClient() creates a new GoTrueClient
+        // while useAuth still holds the old one alive → triggers the warning.
+        // Supabase fetch is stateless per-request; backoff delay is enough.
         await new Promise(resolve => setTimeout(resolve, 1000))
 
         // Retry with incremented attempt number
@@ -326,7 +325,7 @@ export default function ProjectDetailPage() {
             .eq('user_id', user?.id)
             .single(),
           new Promise<any>((_, reject) =>
-            setTimeout(() => reject(new Error('Request timeout')), 8000)
+            setTimeout(() => reject(new Error('Request timeout')), 2000)
           )
         ])
         if (memberData && 'role' in memberData) {
@@ -359,11 +358,7 @@ export default function ProjectDetailPage() {
         addDebugMessage(`Retrying in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
         setRetryCount(nextAttempt)
 
-        // Resetting the client clears stale fetch connections. Safe now because
-        // we no longer call getSession(), so no GoTrueClient is kept alive by
-        // an abandoned promise during the reset.
-        addDebugMessage('Resetting Supabase client...')
-        await resetSupabaseClient(getConfig())
+        // No client reset — see comment above.
         await new Promise(resolve => setTimeout(resolve, backoffDelay))
         return fetchProjectWithRetry(nextAttempt)
       }
@@ -398,7 +393,7 @@ export default function ProjectDetailPage() {
       const { data, error } = await Promise.race([
         supabase.from('transactions').select('*').eq('project_id', id).is('deleted_at', null).order('date', { ascending: false }).order('created_at', { ascending: false }),
         new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 8000)
+          setTimeout(() => reject(new Error('Request timeout')), 2000)
         )
       ])
 
@@ -428,8 +423,7 @@ export default function ProjectDetailPage() {
         addDebugMessage('Previous hash:' + previousTransactionsHash.slice(0, 50))
         addDebugMessage('Current hash:' + currentHash)
 
-        // Resetting the client clears stale fetch connections.
-        await resetSupabaseClient(getConfig())
+        // No client reset — see comment above.
         await new Promise(resolve => setTimeout(resolve, 1000))
         return fetchTransactionsWithRetry(attemptNumber + 1)
       }
@@ -454,9 +448,7 @@ export default function ProjectDetailPage() {
         const nextAttempt = attemptNumber + 1
         addDebugMessage(`Retrying transactions in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
 
-        // Resetting the client clears stale fetch connections.
-        addDebugMessage('Resetting Supabase client...')
-        await resetSupabaseClient(getConfig())
+        // No client reset — see comment above.
         await new Promise(resolve => setTimeout(resolve, backoffDelay))
         return fetchTransactionsWithRetry(nextAttempt)
       }
@@ -485,7 +477,7 @@ export default function ProjectDetailPage() {
       const { data, error } = await Promise.race([
         supabase.from('categories').select('*').eq('project_id', id).order('order', { ascending: true }),
         new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 8000)
+          setTimeout(() => reject(new Error('Request timeout')), 2000)
         )
       ])
 
@@ -514,9 +506,7 @@ export default function ProjectDetailPage() {
         const nextAttempt = attemptNumber + 1
         addDebugMessage(`Retrying categories in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
 
-        // Resetting the client clears stale fetch connections.
-        addDebugMessage('Resetting Supabase client...')
-        await resetSupabaseClient(getConfig())
+        // No client reset — see comment above.
         await new Promise(resolve => setTimeout(resolve, backoffDelay))
         return fetchCategoriesWithRetry(nextAttempt)
       }

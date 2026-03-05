@@ -141,7 +141,7 @@ export default function ProjectsPage() {
       const { data, error } = await Promise.race([
         supabase.from('project_members').select('role, project_id, projects(*)').eq('user_id', user.id),
         new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 8000)
+          setTimeout(() => reject(new Error('Request timeout')), 2000)
         )
       ])
 
@@ -174,10 +174,11 @@ export default function ProjectsPage() {
         addDebugMessage('Triggering safety check retry...')
 
         // Reset Supabase client and retry once more
-        // Resetting the client clears stale fetch connections. Safe here because
-        // we no longer call getSession(), so no GoTrueClient is kept alive by an
-        // abandoned promise during the reset.
-        await resetSupabaseClient(getConfig())
+        // No client reset — resetSupabaseClient() creates a new GoTrueClient while
+        // useAuth still holds the old one alive, triggering the "Multiple GoTrueClient
+        // instances" warning. Supabase uses a fresh fetch per query (no persistent
+        // connection pool), so there is nothing stale to fix. Network recovery +
+        // the backoff delay is what makes retries succeed.
         await new Promise(resolve => setTimeout(resolve, 1000))
 
         // Mark as safety retry to prevent infinite loop
@@ -226,12 +227,7 @@ export default function ProjectsPage() {
         addDebugMessage(`Retrying in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
         setRetryCount(nextAttempt)
 
-        // Resetting the client clears any stale fetch connections from the
-        // timed-out request. This is safe now because we no longer call
-        // getSession() before queries — there is no abandoned GoTrueClient
-        // promise keeping the old instance alive during the reset.
-        addDebugMessage('Resetting Supabase client...')
-        await resetSupabaseClient(getConfig())
+        // No client reset — see comment above.
         await new Promise(resolve => setTimeout(resolve, backoffDelay))
         return fetchProjectsWithRetry(nextAttempt)
       }
