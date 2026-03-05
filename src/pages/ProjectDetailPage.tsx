@@ -986,16 +986,14 @@ export default function ProjectDetailPage() {
                     transactionsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
                   }
                 }}
-                className="btn btn-secondary text-sm whitespace-nowrap flex"
+                className="btn btn-secondary text-sm whitespace-nowrap"
                 title={t('projectDetail.viewTransactions')}
                 aria-label={t('projectDetail.viewTransactions')}
               >
-                <span>📋</span>
-                <span className="hidden sm:inline ml-1">{t('projectDetail.viewTransactions')}</span>
+                {t('projectDetail.viewTransactions')}
               </button>
-              <button onClick={() => setShowAddTransactionModal(true)} className="btn btn-primary text-sm whitespace-nowrap flex" title="Add Transaction">
-                <span>+</span>
-                <span className="hidden sm:inline ml-1">{t('projectDetail.addTransaction')}</span>
+              <button onClick={() => setShowAddTransactionModal(true)} className="btn btn-primary text-sm whitespace-nowrap" title="Add Transaction">
+                + {t('projectDetail.addTransaction')}
               </button>
               <button onClick={() => setShowCashCounterModal(true)} className="btn btn-secondary text-sm whitespace-nowrap flex" title="Cash Counter">
                 <span>🧮</span>
