@@ -353,7 +353,9 @@
     "coins": "Coins",
     "anonymousTotal": "Anonymous Total",
     "namedTotal": "Named Total",
-    "grandTotal": "Total Counted"
+    "grandTotal": "Total Counted",
+    "increase": "Increase",
+    "decrease": "Decrease"
   },
   "qr": {
     "show": "Show QR Code",

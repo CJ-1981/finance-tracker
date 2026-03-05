@@ -353,7 +353,9 @@
     "coins": "동전",
     "anonymousTotal": "무명 합계",
     "namedTotal": "기명 합계",
-    "grandTotal": "계산 합계"
+    "grandTotal": "계산 합계",
+    "increase": "증가",
+    "decrease": "감소"
   },
   "qr": {
     "show": "QR 코드 표시",

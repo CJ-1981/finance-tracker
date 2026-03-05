@@ -580,6 +580,8 @@ function DenominationRow({
 }: DenominationRowProps) {
   const { t } = useTranslation()
   const emoji = getCurrencyEmoji(currency, denomination.type)
+  const tIncrease = t('cashCounter.increase')
+  const tDecrease = t('cashCounter.decrease')
 
   return (
     <div className="mb-2 sm:mb-3">
@@ -604,6 +606,8 @@ function DenominationRow({
           onInput={(value) => onAnonymousInput(denomination.value, value)}
           color="teal"
           isMobile={false}
+          increaseLabel={tIncrease}
+          decreaseLabel={tDecrease}
         />
 
         {/* Named Controls */}
@@ -613,6 +617,8 @@ function DenominationRow({
           onInput={(value) => onNamedInput(denomination.value, value)}
           color="blue"
           isMobile={false}
+          increaseLabel={tIncrease}
+          decreaseLabel={tDecrease}
         />
       </div>
 
@@ -629,6 +635,8 @@ function DenominationRow({
             onInput={(value) => onAnonymousInput(denomination.value, value)}
             color="teal"
             isMobile={true}
+            increaseLabel={tIncrease}
+            decreaseLabel={tDecrease}
           />
         </div>
 
@@ -643,6 +651,8 @@ function DenominationRow({
             onInput={(value) => onNamedInput(denomination.value, value)}
             color="blue"
             isMobile={true}
+            increaseLabel={tIncrease}
+            decreaseLabel={tDecrease}
           />
         </div>
       </div>
@@ -656,12 +666,14 @@ interface DenominationControlsProps {
   onInput: (value: number) => void
   color: 'teal' | 'blue'
   isMobile?: boolean
+  increaseLabel: string
+  decreaseLabel: string
 }
 
 /**
  * Denomination Controls - Direct input with optional buttons on mobile
  */
-function DenominationControls({ count, onChange, onInput, color, isMobile }: DenominationControlsProps) {
+function DenominationControls({ count, onChange, onInput, color, isMobile, increaseLabel, decreaseLabel }: DenominationControlsProps) {
   const colorClasses = {
     teal: {
       minus: 'bg-red-500 hover:bg-red-600 disabled:bg-red-300',
@@ -681,7 +693,7 @@ function DenominationControls({ count, onChange, onInput, color, isMobile }: Den
         type="number"
         inputMode="numeric"
         min="0"
-        className="flex-1 text-center font-semibold text-base min-w-[60px] border rounded focus:outline-none focus:ring-2 py-2 px-3 dark:text-gray-700"
+        className={`flex-1 text-center font-semibold text-base min-w-[60px] border rounded focus:outline-none focus:ring-2 py-2 px-3 ${colorClasses[color].input}`}
         value={count}
         onChange={(e) => onInput(parseInt(e.target.value) || 0)}
       />
@@ -689,17 +701,17 @@ function DenominationControls({ count, onChange, onInput, color, isMobile }: Den
         <>
           <button
             type="button"
-            className={`w-10 h-10 rounded ${colorClasses[color].minus} text-white font-bold text-lg disabled:opacity-30`}
+            className={`min-w-[44px] min-h-[44px] rounded ${colorClasses[color].minus} text-white font-bold text-lg disabled:opacity-30`}
             onClick={() => onChange(-1)}
-            aria-label="Decrease"
+            aria-label={decreaseLabel}
           >
             −
           </button>
           <button
             type="button"
-            className={`w-10 h-10 rounded ${colorClasses[color].plus} text-white font-bold text-lg`}
+            className={`min-w-[44px] min-h-[44px] rounded ${colorClasses[color].plus} text-white font-bold text-lg`}
             onClick={() => onChange(1)}
-            aria-label="Increase"
+            aria-label={increaseLabel}
           >
             +
           </button>
