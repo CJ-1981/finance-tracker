@@ -580,8 +580,7 @@ interface DenominationRowProps {
 /**
  * Denomination Row - Displays a single denomination with anonymous and named controls
  *
- * Desktop layout: [Label] | [Anonymous Controls] | [Named Controls]
- * Mobile layout: Stacked with anonymous on top, named below
+ * New layout: Label spans top, inputs below, +/- buttons below inputs, totals at bottom
  */
 function DenominationRow({
   denomination,
@@ -598,47 +597,82 @@ function DenominationRow({
   const tIncrease = t('cashCounter.increase')
   const tDecrease = t('cashCounter.decrease')
 
+  // Calculate running totals for this denomination
+  const namedAmount = namedCount * denomination.value
+  const anonymousAmount = anonymousCount * denomination.value
+
   return (
-    <div className="mb-2">
-      {/* Compact Design - Equal width columns, works on all screen sizes */}
-      <div className="grid grid-cols-[auto_1fr_1fr] gap-2 items-start">
-        {/* Compact Label Inline */}
+    <div className="mb-4">
+      {/* Row 1: Label spans both columns */}
+      <div className="grid grid-cols-[auto_1fr_1fr] gap-2 items-center mb-1">
         <div className="text-xs sm:text-sm font-black text-center leading-tight">
           {emoji} {denomination.label}
         </div>
-
-        {/* Named Controls Column - Equal width with Anonymous */}
-        <div className="flex flex-col gap-1 min-w-0">
-          <div className="text-[9px] font-medium text-blue-600 dark:text-blue-400 text-center leading-none">
-            {t('cashCounter.named')}
-          </div>
-          <DenominationControls
-            count={namedCount}
-            onChange={(delta) => onNamedChange(denomination.value, delta)}
-            onInput={(value) => onNamedInput(denomination.value, value)}
-            color="blue"
-            isMobile={true}
-            increaseLabel={tIncrease}
-            decreaseLabel={tDecrease}
-            inputLabel={`${t('cashCounter.named')} ${denomination.label}`}
-          />
+        <div className="text-[9px] font-medium text-blue-600 dark:text-blue-400 text-center leading-none">
+          {t('cashCounter.named')}
         </div>
+        <div className="text-[9px] font-medium text-teal-600 dark:text-teal-400 text-center leading-none">
+          {t('cashCounter.anonymous')}
+        </div>
+      </div>
 
-        {/* Anonymous Controls Column - Equal width with Named */}
-        <div className="flex flex-col gap-1 min-w-0">
-          <div className="text-[9px] font-medium text-teal-600 dark:text-teal-400 text-center leading-none">
-            {t('cashCounter.anonymous')}
-          </div>
-          <DenominationControls
-            count={anonymousCount}
-            onChange={(delta) => onAnonymousChange(denomination.value, delta)}
-            onInput={(value) => onAnonymousInput(denomination.value, value)}
-            color="teal"
-            isMobile={true}
-            increaseLabel={tIncrease}
-            decreaseLabel={tDecrease}
-            inputLabel={`${t('cashCounter.anonymous')} ${denomination.label}`}
-          />
+      {/* Row 2: Input fields */}
+      <div className="grid grid-cols-[1fr_1fr] gap-2 mb-1">
+        <DenominationControls
+          count={namedCount}
+          onChange={(delta) => onNamedChange(denomination.value, delta)}
+          onInput={(value) => onNamedInput(denomination.value, value)}
+          color="blue"
+          isMobile={true}
+          increaseLabel={tIncrease}
+          decreaseLabel={tDecrease}
+          inputLabel={`${t('cashCounter.named')} ${denomination.label}`}
+        />
+        <DenominationControls
+          count={anonymousCount}
+          onChange={(delta) => onAnonymousChange(denomination.value, delta)}
+          onInput={(value) => onAnonymousInput(denomination.value, value)}
+          color="teal"
+          isMobile={true}
+          increaseLabel={tIncrease}
+          decreaseLabel={tDecrease}
+          inputLabel={`${t('cashCounter.anonymous')} ${denomination.label}`}
+        />
+      </div>
+
+      {/* Row 3: +/- buttons */}
+      <div className="grid grid-cols-[1fr_1fr] gap-2 mb-1">
+        <DenominationControls
+          count={namedCount}
+          onChange={(delta) => onNamedChange(denomination.value, delta)}
+          onInput={(value) => onNamedInput(denomination.value, value)}
+          color="blue"
+          isMobile={true}
+          buttonsOnly={true}
+          increaseLabel={tIncrease}
+          decreaseLabel={tDecrease}
+          inputLabel={`${t('cashCounter.named')} ${denomination.label}`}
+        />
+        <DenominationControls
+          count={anonymousCount}
+          onChange={(delta) => onAnonymousChange(denomination.value, delta)}
+          onInput={(value) => onAnonymousInput(denomination.value, value)}
+          color="teal"
+          isMobile={true}
+          buttonsOnly={true}
+          increaseLabel={tIncrease}
+          decreaseLabel={tDecrease}
+          inputLabel={`${t('cashCounter.anonymous')} ${denomination.label}`}
+        />
+      </div>
+
+      {/* Row 4: Running totals */}
+      <div className="grid grid-cols-[1fr_1fr] gap-2">
+        <div className="text-[9px] font-medium text-blue-600 dark:text-blue-400 text-center">
+          {currency} {namedAmount.toFixed(2)}
+        </div>
+        <div className="text-[9px] font-medium text-teal-600 dark:text-teal-400 text-center">
+          {currency} {anonymousAmount.toFixed(2)}
         </div>
       </div>
     </div>
@@ -651,6 +685,7 @@ interface DenominationControlsProps {
   onInput: (value: number) => void
   color: 'teal' | 'blue'
   isMobile?: boolean
+  buttonsOnly?: boolean  // New: only show +/- buttons, no input
   increaseLabel: string
   decreaseLabel: string
   inputLabel: string
@@ -658,8 +693,11 @@ interface DenominationControlsProps {
 
 /**
  * Denomination Controls - Direct input with optional vertical buttons for compact design
+ * Can be used in two modes:
+ * - With input (isMobile=true, buttonsOnly=undefined): Shows input + buttons below
+ * - Buttons only (buttonsOnly=true): Shows only +/- buttons
  */
-function DenominationControls({ count, onChange, onInput, color, isMobile, increaseLabel, decreaseLabel, inputLabel }: DenominationControlsProps) {
+function DenominationControls({ count, onChange, onInput, color, isMobile, buttonsOnly, increaseLabel, decreaseLabel, inputLabel }: DenominationControlsProps) {
   const colorClasses = {
     teal: {
       minus: 'bg-red-500 hover:bg-red-600 disabled:bg-red-300',
@@ -673,6 +711,31 @@ function DenominationControls({ count, onChange, onInput, color, isMobile, incre
     },
   }
 
+  // When buttonsOnly=true, only render buttons (no input)
+  if (buttonsOnly) {
+    return (
+      <div className="flex gap-1 items-center w-full justify-center">
+        <button
+          type="button"
+          className={`w-8 h-8 rounded ${colorClasses[color].minus} text-white font-bold text-xs disabled:opacity-30 flex items-center justify-center`}
+          onClick={() => onChange(-1)}
+          aria-label={decreaseLabel}
+        >
+          −
+        </button>
+        <button
+          type="button"
+          className={`w-8 h-8 rounded ${colorClasses[color].plus} text-white font-bold text-xs flex items-center justify-center`}
+          onClick={() => onChange(1)}
+          aria-label={increaseLabel}
+        >
+          +
+        </button>
+      </div>
+    )
+  }
+
+  // Default mode: input with buttons below
   return (
     <div className="flex flex-col gap-1 items-center">
       <input
