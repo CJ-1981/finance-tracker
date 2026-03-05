@@ -116,7 +116,12 @@ export default function TransactionModal({
                 return
             }
         }
-        onGoToSettings()
+        // Close modal first, then navigate to settings
+        onClose()
+        // Small delay to ensure modal closes before navigation
+        setTimeout(() => {
+            onGoToSettings()
+        }, 100)
     }
 
     const handleSubmit = async (e: React.FormEvent, continueNext: boolean = false) => {
