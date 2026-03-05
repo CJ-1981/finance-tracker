@@ -495,15 +495,23 @@ export default function CashCounterModal({
               </span>
             </div>
 
-            {/* Grand Total Breakdown */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="flex items-center justify-between bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg border border-yellow-200 dark:border-yellow-800/50">
-                <span className="text-gray-700 dark:text-gray-300 font-medium">💵 {t('cashCounter.bills')}:</span>
-                <span className="font-bold text-lg dark:text-white">{currency} {grandBreakdown.bills.toFixed(2)}</span>
+            {/* Grand Total Breakdown - Stacked Labels */}
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded-md border border-yellow-200 dark:border-yellow-800/50">
+                <div className="text-[9px] font-medium text-gray-700 dark:text-gray-300 mb-0.5">
+                  💵 {t('cashCounter.bills')}
+                </div>
+                <div className="text-base font-bold dark:text-white">
+                  {currency} {grandBreakdown.bills.toFixed(2)}
+                </div>
               </div>
-              <div className="flex items-center justify-between bg-gray-100 dark:bg-slate-700 p-3 rounded-lg border border-gray-200 dark:border-slate-600">
-                <span className="text-gray-700 dark:text-gray-300 font-medium">⚪ {t('cashCounter.coins')}:</span>
-                <span className="font-bold text-lg dark:text-white">{currency} {grandBreakdown.coins.toFixed(2)}</span>
+              <div className="bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded-md border border-gray-200 dark:border-slate-600">
+                <div className="text-[9px] font-medium text-gray-700 dark:text-gray-300 mb-0.5">
+                  ⚪ {t('cashCounter.coins')}
+                </div>
+                <div className="text-base font-bold dark:text-white">
+                  {currency} {grandBreakdown.coins.toFixed(2)}
+                </div>
               </div>
             </div>
 
