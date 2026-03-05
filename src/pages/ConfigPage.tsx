@@ -434,10 +434,11 @@ export default function ConfigPage() {
                 <button
                   onClick={async () => {
                     await signOut()
-                    // Use BASE_URL to respect deployment path (e.g., /finance-tracker/)
-                    // Use relative path with replace() for PWA compatibility
+                    // Clear any local state and redirect to avoid PWA prompts
+                    sessionStorage.clear()
                     const basePath = (import.meta as any).env?.BASE_URL || '/'
-                    window.location.replace(basePath)
+                    // Add timestamp to prevent caching
+                    window.location.href = basePath + '?t=' + Date.now()
                   }}
                   className="w-full btn btn-secondary"
                 >
