@@ -408,7 +408,7 @@ export default function TransactionModal({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="btn btn-secondary flex-1 min-w-0 text-center text-sm sm:text-base whitespace-nowrap overflow-hidden text-ellipsis"
+                            className="btn btn-secondary flex-1 text-center text-xs sm:text-sm"
                             disabled={saving}
                         >
                             {t('common.cancel')}
@@ -417,7 +417,7 @@ export default function TransactionModal({
                             <button
                                 type="button"
                                 onClick={(e) => handleSubmit(e as any, true)}
-                                className="btn bg-slate-600 hover:bg-slate-700 text-white flex-1 min-w-0 text-center text-sm sm:text-base whitespace-nowrap overflow-hidden text-ellipsis"
+                                className="btn bg-slate-600 hover:bg-slate-700 text-white flex-1 text-center text-xs sm:text-sm"
                                 disabled={saving}
                             >
                                 {saving ? t('transactions.saving') : t('transactions.saveAndContinue')}
@@ -425,7 +425,7 @@ export default function TransactionModal({
                         )}
                         <button
                             type="submit"
-                            className="btn btn-primary flex-1 min-w-0 text-center text-sm sm:text-base"
+                            className="btn btn-primary flex-1 text-center text-xs sm:text-sm"
                             disabled={saving}
                         >
                             {saving ? t('transactions.saving') : (transaction ? t('common.save') : t('common.add'))}
