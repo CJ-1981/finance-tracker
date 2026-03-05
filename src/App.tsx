@@ -63,7 +63,8 @@ function App() {
     // Save the current path so we can redirect back after login
     // but only if it's a protected route (not a public page)
     const isProtectedPath = !PUBLIC_PATHS.some(p => location.pathname === p || location.pathname.startsWith(p + '/'))
-    if (isProtectedPath && location.pathname !== '/') {
+    if (isProtectedPath && location.pathname !== '/' && location.pathname !== '/login') {
+      // Only save redirect if not already on login page to prevent redirect loops
       sessionStorage.setItem('redirectAfterLogin', location.pathname + location.search)
     }
 

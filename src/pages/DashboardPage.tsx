@@ -149,7 +149,7 @@ export default function DashboardPage() {
               <button onClick={() => { navigate('/config') }} className="btn btn-secondary text-sm whitespace-nowrap" title={t('common.settingsTooltip')}>
                 ⚙️ {t('common.settings')}
               </button>
-              <button onClick={() => { signOut(); window.location.reload() }} className="btn btn-secondary text-sm whitespace-nowrap">
+              <button onClick={() => { signOut(); navigate('/') }} className="btn btn-secondary text-sm whitespace-nowrap">
                 {t('common.logout')}
               </button>
             </div>

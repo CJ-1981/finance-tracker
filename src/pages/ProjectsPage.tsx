@@ -396,13 +396,17 @@ export default function ProjectsPage() {
   const handleLogout = async () => {
     try {
       console.log('Logging out...')
+      // Clear any saved redirect paths to prevent redirect loops after logout
+      sessionStorage.removeItem('redirectAfterLogin')
       await signOut()
-      console.log('Logged out successfully, reloading...')
-      window.location.href = import.meta.env.BASE_URL || '/'
+      console.log('Logged out successfully, redirecting...')
+      // Use replace instead of href to prevent opening new window on mobile
+      window.location.replace(import.meta.env.BASE_URL || '/')
     } catch (error) {
       console.error('Logout error:', error)
       // Force redirect to landing page even if signOut fails
-      window.location.href = import.meta.env.BASE_URL || '/'
+      sessionStorage.removeItem('redirectAfterLogin')
+      window.location.replace(import.meta.env.BASE_URL || '/')
     }
   }
 
