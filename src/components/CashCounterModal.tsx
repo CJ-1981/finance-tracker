@@ -405,12 +405,12 @@ export default function CashCounterModal({
             </h3>
 
             {/* Header Row */}
-            <div className="hidden sm:grid grid-cols-[80px_1fr_1fr] gap-4 mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">
+            <div className="hidden sm:grid grid-cols-[80px_1fr_1fr] gap-2 mb-1 text-[9px] font-medium text-gray-500 dark:text-gray-400">
               <div></div>
-              <div className="text-teal-600 dark:text-teal-400">
+              <div className="text-teal-600 dark:text-teal-400 leading-none">
                 {t('cashCounter.anonymous')}
               </div>
-              <div className="text-blue-600 dark:text-blue-400">
+              <div className="text-blue-600 dark:text-blue-400 leading-none">
                 {t('cashCounter.named')}
               </div>
             </div>
@@ -453,23 +453,23 @@ export default function CashCounterModal({
             ))}
           </div>
 
-          {/* Section Totals */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-            <div className="p-4 bg-teal-50 dark:bg-teal-900/20 rounded-lg border-2 border-teal-200 dark:border-teal-800/50">
-              <div className="text-sm font-medium text-teal-700 dark:text-teal-300 mb-1">
-                {t('cashCounter.anonymousTotal')}
+          {/* Section Totals - Swapped: Named first, Anonymous second */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800/50">
+              <div className="text-[10px] font-medium text-blue-700 dark:text-blue-400 mb-1">
+                {t('cashCounter.namedTotal')}
               </div>
-              <div className="text-2xl font-bold text-teal-900 dark:text-teal-100">
-                {currency} {anonymousTotal.toFixed(2)}
+              <div className="text-lg font-bold text-blue-900 dark:text-blue-100">
+                {currency} {namedTotal.toFixed(2)}
               </div>
             </div>
 
-            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-2 border-blue-200 dark:border-blue-800/50">
-              <div className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">
-                {t('cashCounter.namedTotal')}
+            <div className="p-2 bg-teal-50 dark:bg-teal-900/20 rounded-md border border-teal-200 dark:border-teal-800/50">
+              <div className="text-[10px] font-medium text-teal-700 dark:text-teal-400 mb-1">
+                {t('cashCounter.anonymousTotal')}
               </div>
-              <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                {currency} {namedTotal.toFixed(2)}
+              <div className="text-lg font-bold text-teal-900 dark:text-teal-100">
+                {currency} {anonymousTotal.toFixed(2)}
               </div>
             </div>
           </div>
@@ -592,16 +592,16 @@ function DenominationRow({
 
   return (
     <div className="mb-2">
-      {/* Compact Design - Works on both mobile and desktop */}
-      <div className="grid grid-cols-[auto_1fr_1fr] gap-3 items-start">
+      {/* Compact Design - Equal width columns, works on all screen sizes */}
+      <div className="grid grid-cols-[auto_1fr_1fr] gap-2 items-start">
         {/* Compact Label Inline */}
-        <div className="text-sm sm:text-base font-black text-center">
+        <div className="text-xs sm:text-sm font-black text-center leading-tight">
           {emoji} {denomination.label}
         </div>
 
-        {/* Named Controls Column */}
-        <div className="flex flex-col gap-2">
-          <div className="text-xs font-medium text-blue-600 dark:text-blue-400 text-center mb-1">
+        {/* Named Controls Column - Equal width with Anonymous */}
+        <div className="flex flex-col gap-1 min-w-0">
+          <div className="text-[9px] font-medium text-blue-600 dark:text-blue-400 text-center leading-none">
             {t('cashCounter.named')}
           </div>
           <DenominationControls
@@ -616,9 +616,9 @@ function DenominationRow({
           />
         </div>
 
-        {/* Anonymous Controls Column */}
-        <div className="flex flex-col gap-2">
-          <div className="text-xs font-medium text-teal-600 dark:text-teal-400 text-center mb-1">
+        {/* Anonymous Controls Column - Equal width with Named */}
+        <div className="flex flex-col gap-1 min-w-0">
+          <div className="text-[9px] font-medium text-teal-600 dark:text-teal-400 text-center leading-none">
             {t('cashCounter.anonymous')}
           </div>
           <DenominationControls
@@ -671,7 +671,7 @@ function DenominationControls({ count, onChange, onInput, color, isMobile, incre
         type="number"
         inputMode="numeric"
         min="0"
-        className={`text-center font-semibold text-base w-full border rounded focus:outline-none focus:ring-2 py-1 px-2 ${colorClasses[color].input}`}
+        className={`text-center font-semibold text-sm w-full border rounded focus:outline-none focus:ring-2 py-0.5 px-1 ${colorClasses[color].input}`}
         value={count}
         onChange={(e) => onInput(parseInt(e.target.value) || 0)}
         aria-label={inputLabel}
@@ -680,7 +680,7 @@ function DenominationControls({ count, onChange, onInput, color, isMobile, incre
         <div className="flex gap-1 justify-center">
           <button
             type="button"
-            className={`min-w-[36px] min-h-[36px] rounded ${colorClasses[color].minus} text-white font-bold text-sm disabled:opacity-30`}
+            className={`min-w-[32px] min-h-[32px] rounded ${colorClasses[color].minus} text-white font-bold text-xs disabled:opacity-30`}
             onClick={() => onChange(-1)}
             aria-label={decreaseLabel}
           >
@@ -688,7 +688,7 @@ function DenominationControls({ count, onChange, onInput, color, isMobile, incre
           </button>
           <button
             type="button"
-            className={`min-w-[36px] min-h-[36px] rounded ${colorClasses[color].plus} text-white font-bold text-sm`}
+            className={`min-w-[32px] min-h-[32px] rounded ${colorClasses[color].plus} text-white font-bold text-xs`}
             onClick={() => onChange(1)}
             aria-label={increaseLabel}
           >
