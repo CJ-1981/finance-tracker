@@ -83,9 +83,12 @@ describe('CashCounterModal - Characterization Tests (DDD PRESERVE)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     localStorageMock.clear()
+    vi.useFakeTimers()
   })
 
   afterAll(() => {
+    vi.useRealTimers()
+    vi.clearAllTimers()
     vi.restoreAllMocks()
   })
 

@@ -321,28 +321,26 @@ describe('CashCounterModal - Simplified Implementation (SPEC-UI-003)', () => {
       // Anonymous total should initially be 0
       expect(screen.getByText(/Anonymous Total/)).toBeInTheDocument()
 
-      // Add some counts to anonymous (teal section)
-      const tealContainer = document.querySelector('.bg-teal-50, .dark\\:bg-teal-900\\/20')
-      const inputs = tealContainer?.querySelectorAll('input[type="number"]') || []
-      const hundredInput = Array.from(inputs).find(input => {
-        const container = input.closest('.p-2, .p-3') || input.closest('div[class*="grid"]')
-        return container?.textContent?.includes('100')
-      }) as HTMLInputElement
+      // Find grid row with 100 denomination and get anonymous input (second input)
+      const gridRows = Array.from(document.querySelectorAll('.grid'))
+      const hundredRow = gridRows.find(row => row.textContent?.includes('100'))
+      expect(hundredRow).toBeDefined()
 
-      if (hundredInput) {
-        fireEvent.change(hundredInput, { target: { value: '2' } })
+      const rowInputs = Array.from(hundredRow?.querySelectorAll('input[type="number"]') || [])
+      const hundredInput = rowInputs[1] as HTMLInputElement  // Anonymous is second column
 
-        // Wait for debounce
-        vi.advanceTimersByTime(500)
+      expect(hundredInput).toBeDefined()
 
-        // Anonymous total should now be 200.00
-        const euroSymbols = screen.getAllByText('€')
-        const anonymousTotal = euroSymbols.find(el => {
-          return el.parentElement?.textContent?.includes('Anonymous Total') ||
-                 el.parentElement?.parentElement?.textContent?.includes('Anonymous Total')
-        })
-        expect(anonymousTotal?.textContent).toContain('200.00')
-      }
+      fireEvent.change(hundredInput, { target: { value: '2' } })
+
+      // Wait for debounce
+      vi.advanceTimersByTime(500)
+
+      // Anonymous total should now be 200.00
+      const anonymousTotalText = screen.getByText(/Anonymous Total/)
+      const anonymousTotal = anonymousTotalText.nextElementSibling?.textContent
+
+      expect(anonymousTotal).toContain('200.00')
     })
 
     it('should calculate named total in real-time', () => {
@@ -355,28 +353,26 @@ describe('CashCounterModal - Simplified Implementation (SPEC-UI-003)', () => {
         />
       )
 
-      // Add some counts to named (blue section)
-      const blueContainer = document.querySelector('.bg-blue-50, .dark\\:bg-blue-900\\/20')
-      const inputs = blueContainer?.querySelectorAll('input[type="number"]') || []
-      const fiftyInput = Array.from(inputs).find(input => {
-        const container = input.closest('.p-2, .p-3') || input.closest('div[class*="grid"]')
-        return container?.textContent?.includes('50')
-      }) as HTMLInputElement
+      // Find grid row with 50 denomination and get named input (first input)
+      const gridRows = Array.from(document.querySelectorAll('.grid'))
+      const fiftyRow = gridRows.find(row => row.textContent?.includes('50'))
+      expect(fiftyRow).toBeDefined()
 
-      if (fiftyInput) {
-        fireEvent.change(fiftyInput, { target: { value: '1' } })
+      const rowInputs = Array.from(fiftyRow?.querySelectorAll('input[type="number"]') || [])
+      const fiftyInput = rowInputs[0] as HTMLInputElement  // Named is first column
 
-        // Wait for debounce
-        vi.advanceTimersByTime(500)
+      expect(fiftyInput).toBeDefined()
 
-        // Named total should now be 50.00
-        const euroSymbols = screen.getAllByText('€')
-        const namedTotal = euroSymbols.find(el => {
-          return el.parentElement?.textContent?.includes('Named Total') ||
-                 el.parentElement?.parentElement?.textContent?.includes('Named Total')
-        })
-        expect(namedTotal?.textContent).toContain('50.00')
-      }
+      fireEvent.change(fiftyInput, { target: { value: '1' } })
+
+      // Wait for debounce
+      vi.advanceTimersByTime(500)
+
+      // Named total should now be 50.00
+      const namedTotalText = screen.getByText(/Named Total/)
+      const namedTotal = namedTotalText.nextElementSibling?.textContent
+
+      expect(namedTotal).toContain('50.00')
     })
 
     it('should calculate grand total as sum of anonymous and named', () => {
@@ -389,21 +385,18 @@ describe('CashCounterModal - Simplified Implementation (SPEC-UI-003)', () => {
         />
       )
 
-      // Find all desktop grid rows (they have both mobile and desktop layouts)
-      // Desktop: hidden sm:grid | Mobile: sm:hidden
-      const gridRows = Array.from(document.querySelectorAll('[class*="grid"][class*="hidden"]'))
-        .filter(row => row.textContent?.includes('100'))
-
+      // Find the grid row with 100 denomination
+      const gridRows = Array.from(document.querySelectorAll('.grid'))
       const hundredRow = gridRows.find(row => row.textContent?.includes('100'))
       expect(hundredRow).toBeDefined()
 
-      // Get inputs from the row - first is anonymous, second is named
+      // Get inputs from the row - first is Named (blue), second is Anonymous (teal)
       const rowInputs = Array.from(hundredRow?.querySelectorAll('input[type="number"]') || [])
-      const hundredInput = rowInputs[0] as HTMLInputElement
-      const hundredNamedInput = rowInputs[1] as HTMLInputElement
+      const hundredNamedInput = rowInputs[0] as HTMLInputElement  // Named column first
+      const hundredInput = rowInputs[1] as HTMLInputElement   // Anonymous column second
 
-      expect(hundredInput).toBeDefined()
       expect(hundredNamedInput).toBeDefined()
+      expect(hundredInput).toBeDefined()
 
       fireEvent.change(hundredInput, { target: { value: '1' } })
       fireEvent.change(hundredNamedInput, { target: { value: '1' } })

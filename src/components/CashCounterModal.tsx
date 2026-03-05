@@ -591,68 +591,17 @@ function DenominationRow({
   const tDecrease = t('cashCounter.decrease')
 
   return (
-    <div className="mb-2 sm:mb-3">
-      {/* Mobile: Label */}
-      <div className="sm:hidden mb-2">
-        <span className="text-base sm:text-lg font-black">
-          {emoji} {denomination.label}
-        </span>
-      </div>
-
-      {/* Desktop Layout */}
-      <div className="hidden sm:grid grid-cols-[80px_1fr_1fr] gap-4 items-center">
-        {/* Label */}
-        <div className="text-base sm:text-lg font-black">
+    <div className="mb-2">
+      {/* Compact Design - Works on both mobile and desktop */}
+      <div className="grid grid-cols-[auto_1fr_1fr] gap-3 items-start">
+        {/* Compact Label Inline */}
+        <div className="text-sm sm:text-base font-black text-center">
           {emoji} {denomination.label}
         </div>
 
-        {/* Anonymous Controls */}
-        <DenominationControls
-          count={anonymousCount}
-          onChange={(delta) => onAnonymousChange(denomination.value, delta)}
-          onInput={(value) => onAnonymousInput(denomination.value, value)}
-          color="teal"
-          isMobile={false}
-          increaseLabel={tIncrease}
-          decreaseLabel={tDecrease}
-          inputLabel={`${t('cashCounter.anonymous')} ${denomination.label}`}
-        />
-
-        {/* Named Controls */}
-        <DenominationControls
-          count={namedCount}
-          onChange={(delta) => onNamedChange(denomination.value, delta)}
-          onInput={(value) => onNamedInput(denomination.value, value)}
-          color="blue"
-          isMobile={false}
-          increaseLabel={tIncrease}
-          decreaseLabel={tDecrease}
-          inputLabel={`${t('cashCounter.named')} ${denomination.label}`}
-        />
-      </div>
-
-      {/* Mobile Layout */}
-      <div className="sm:hidden space-y-2">
-        {/* Anonymous Controls */}
-        <div className="p-3 rounded-lg border-2 border-teal-200 dark:border-teal-800/50 bg-teal-50 dark:bg-teal-900/20">
-          <div className="text-xs font-medium text-teal-600 dark:text-teal-400 mb-2">
-            {t('cashCounter.anonymous')}
-          </div>
-          <DenominationControls
-            count={anonymousCount}
-            onChange={(delta) => onAnonymousChange(denomination.value, delta)}
-            onInput={(value) => onAnonymousInput(denomination.value, value)}
-            color="teal"
-            isMobile={true}
-            increaseLabel={tIncrease}
-            decreaseLabel={tDecrease}
-            inputLabel={`${t('cashCounter.anonymous')} ${denomination.label}`}
-          />
-        </div>
-
-        {/* Named Controls */}
-        <div className="p-3 rounded-lg border-2 border-blue-200 dark:border-blue-800/50 bg-blue-50 dark:bg-blue-900/20">
-          <div className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-2">
+        {/* Named Controls Column */}
+        <div className="flex flex-col gap-2">
+          <div className="text-xs font-medium text-blue-600 dark:text-blue-400 text-center mb-1">
             {t('cashCounter.named')}
           </div>
           <DenominationControls
@@ -664,6 +613,23 @@ function DenominationRow({
             increaseLabel={tIncrease}
             decreaseLabel={tDecrease}
             inputLabel={`${t('cashCounter.named')} ${denomination.label}`}
+          />
+        </div>
+
+        {/* Anonymous Controls Column */}
+        <div className="flex flex-col gap-2">
+          <div className="text-xs font-medium text-teal-600 dark:text-teal-400 text-center mb-1">
+            {t('cashCounter.anonymous')}
+          </div>
+          <DenominationControls
+            count={anonymousCount}
+            onChange={(delta) => onAnonymousChange(denomination.value, delta)}
+            onInput={(value) => onAnonymousInput(denomination.value, value)}
+            color="teal"
+            isMobile={true}
+            increaseLabel={tIncrease}
+            decreaseLabel={tDecrease}
+            inputLabel={`${t('cashCounter.anonymous')} ${denomination.label}`}
           />
         </div>
       </div>
@@ -683,7 +649,7 @@ interface DenominationControlsProps {
 }
 
 /**
- * Denomination Controls - Direct input with optional buttons on mobile
+ * Denomination Controls - Direct input with optional vertical buttons for compact design
  */
 function DenominationControls({ count, onChange, onInput, color, isMobile, increaseLabel, decreaseLabel, inputLabel }: DenominationControlsProps) {
   const colorClasses = {
@@ -700,21 +666,21 @@ function DenominationControls({ count, onChange, onInput, color, isMobile, incre
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-col gap-1">
       <input
         type="number"
         inputMode="numeric"
         min="0"
-        className={`flex-1 text-center font-semibold text-base min-w-[60px] border rounded focus:outline-none focus:ring-2 py-2 px-3 ${colorClasses[color].input}`}
+        className={`text-center font-semibold text-base w-full border rounded focus:outline-none focus:ring-2 py-1 px-2 ${colorClasses[color].input}`}
         value={count}
         onChange={(e) => onInput(parseInt(e.target.value) || 0)}
         aria-label={inputLabel}
       />
       {isMobile && (
-        <>
+        <div className="flex gap-1 justify-center">
           <button
             type="button"
-            className={`min-w-[44px] min-h-[44px] rounded ${colorClasses[color].minus} text-white font-bold text-lg disabled:opacity-30`}
+            className={`min-w-[36px] min-h-[36px] rounded ${colorClasses[color].minus} text-white font-bold text-sm disabled:opacity-30`}
             onClick={() => onChange(-1)}
             aria-label={decreaseLabel}
           >
@@ -722,13 +688,13 @@ function DenominationControls({ count, onChange, onInput, color, isMobile, incre
           </button>
           <button
             type="button"
-            className={`min-w-[44px] min-h-[44px] rounded ${colorClasses[color].plus} text-white font-bold text-lg`}
+            className={`min-w-[36px] min-h-[36px] rounded ${colorClasses[color].plus} text-white font-bold text-sm`}
             onClick={() => onChange(1)}
             aria-label={increaseLabel}
           >
             +
           </button>
-        </>
+        </div>
       )}
     </div>
   )
