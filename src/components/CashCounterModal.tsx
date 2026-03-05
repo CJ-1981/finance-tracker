@@ -398,24 +398,24 @@ export default function CashCounterModal({
 
         {/* Main Content */}
         <div className="px-4 sm:px-6 py-4">
-          {/* Bills Section */}
-          <div className="mb-6">
-            <h3 className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
-              💵 {t('cashCounter.bills')}
-            </h3>
-
-            {/* Header Row */}
-            <div className="hidden sm:grid grid-cols-[80px_1fr_1fr] gap-2 mb-1 text-[9px] font-medium text-gray-500 dark:text-gray-400">
-              <div></div>
-              <div className="text-teal-600 dark:text-teal-400 leading-none">
-                {t('cashCounter.anonymous')}
+          {/* Column Headers - Only at top, with boundary boxes */}
+          <div className="mb-4">
+            <div className="grid grid-cols-[1fr_1fr] gap-2">
+              <div className="px-2 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800/50">
+                <div className="text-[10px] font-medium text-blue-700 dark:text-blue-400 text-center">
+                  {t('cashCounter.named')}
+                </div>
               </div>
-              <div className="text-blue-600 dark:text-blue-400 leading-none">
-                {t('cashCounter.named')}
+              <div className="px-2 py-1 bg-teal-50 dark:bg-teal-900/20 rounded-md border border-teal-200 dark:border-teal-800/50">
+                <div className="text-[10px] font-medium text-teal-700 dark:text-teal-400 text-center">
+                  {t('cashCounter.anonymous')}
+                </div>
               </div>
             </div>
+          </div>
 
-            {/* Denomination Rows */}
+          {/* Bills Section */}
+          <div className="mb-6">
             {bills.map((denom) => (
               <DenominationRow
                 key={denom.value}
@@ -433,11 +433,6 @@ export default function CashCounterModal({
 
           {/* Coins Section */}
           <div className="mb-6">
-            <h3 className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
-              ⚪ {t('cashCounter.coins')}
-            </h3>
-
-            {/* Denomination Rows */}
             {coins.map((denom) => (
               <DenominationRow
                 key={denom.value}
@@ -563,9 +558,6 @@ export default function CashCounterModal({
     </div>
   )
 }
-
-// ==================== SUBCOMPONENTS ====================
-
 interface DenominationRowProps {
   denomination: { value: number; label: string; type: 'bill' | 'coin' }
   currency: string
@@ -576,11 +568,10 @@ interface DenominationRowProps {
   onNamedChange: (denomination: number, delta: number) => void
   onNamedInput: (denomination: number, value: number) => void
 }
-
 /**
  * Denomination Row - Displays a single denomination with anonymous and named controls
  *
- * New layout: Label spans top, inputs below, +/- buttons below inputs, totals at bottom
+ * Simplified layout: Label at top, inputs with +/- buttons below, totals at bottom
  */
 function DenominationRow({
   denomination,
@@ -603,27 +594,18 @@ function DenominationRow({
 
   return (
     <div className="mb-4">
-      {/* Row 1: Label spans both columns */}
-      <div className="grid grid-cols-[auto_1fr_1fr] gap-2 items-center mb-1">
-        <div className="text-xs sm:text-sm font-black text-center leading-tight">
-          {emoji} {denomination.label}
-        </div>
-        <div className="text-[9px] font-medium text-blue-600 dark:text-blue-400 text-center leading-none">
-          {t('cashCounter.named')}
-        </div>
-        <div className="text-[9px] font-medium text-teal-600 dark:text-teal-400 text-center leading-none">
-          {t('cashCounter.anonymous')}
-        </div>
+      {/* Row 1: Label centered */}
+      <div className="text-xs sm:text-sm font-black text-center mb-2">
+        {emoji} {denomination.label}
       </div>
 
-      {/* Row 2: Input fields */}
+      {/* Row 2: Input fields with centered +/- buttons */}
       <div className="grid grid-cols-[1fr_1fr] gap-2 mb-1">
         <DenominationControls
           count={namedCount}
           onChange={(delta) => onNamedChange(denomination.value, delta)}
           onInput={(value) => onNamedInput(denomination.value, value)}
           color="blue"
-          isMobile={true}
           increaseLabel={tIncrease}
           decreaseLabel={tDecrease}
           inputLabel={`${t('cashCounter.named')} ${denomination.label}`}
@@ -633,41 +615,14 @@ function DenominationRow({
           onChange={(delta) => onAnonymousChange(denomination.value, delta)}
           onInput={(value) => onAnonymousInput(denomination.value, value)}
           color="teal"
-          isMobile={true}
           increaseLabel={tIncrease}
           decreaseLabel={tDecrease}
           inputLabel={`${t('cashCounter.anonymous')} ${denomination.label}`}
         />
       </div>
 
-      {/* Row 3: +/- buttons */}
-      <div className="grid grid-cols-[1fr_1fr] gap-2 mb-1">
-        <DenominationControls
-          count={namedCount}
-          onChange={(delta) => onNamedChange(denomination.value, delta)}
-          onInput={(value) => onNamedInput(denomination.value, value)}
-          color="blue"
-          isMobile={true}
-          buttonsOnly={true}
-          increaseLabel={tIncrease}
-          decreaseLabel={tDecrease}
-          inputLabel={`${t('cashCounter.named')} ${denomination.label}`}
-        />
-        <DenominationControls
-          count={anonymousCount}
-          onChange={(delta) => onAnonymousChange(denomination.value, delta)}
-          onInput={(value) => onAnonymousInput(denomination.value, value)}
-          color="teal"
-          isMobile={true}
-          buttonsOnly={true}
-          increaseLabel={tIncrease}
-          decreaseLabel={tDecrease}
-          inputLabel={`${t('cashCounter.anonymous')} ${denomination.label}`}
-        />
-      </div>
-
-      {/* Row 4: Running totals */}
-      <div className="grid grid-cols-[1fr_1fr] gap-2">
+      {/* Row 3: Running totals */}
+      <div className="grid grid-cols-[1fr_1fr] gap-2 mt-1">
         <div className="text-[9px] font-medium text-blue-600 dark:text-blue-400 text-center">
           {currency} {namedAmount.toFixed(2)}
         </div>
@@ -678,47 +633,55 @@ function DenominationRow({
     </div>
   )
 }
-
 interface DenominationControlsProps {
   count: number
   onChange: (delta: number) => void
   onInput: (value: number) => void
   color: 'teal' | 'blue'
-  isMobile?: boolean
-  buttonsOnly?: boolean  // New: only show +/- buttons, no input
   increaseLabel: string
   decreaseLabel: string
   inputLabel: string
 }
 
 /**
- * Denomination Controls - Direct input with optional vertical buttons for compact design
- * Can be used in two modes:
- * - With input (isMobile=true, buttonsOnly=undefined): Shows input + buttons below
- * - Buttons only (buttonsOnly=true): Shows only +/- buttons
+ * Denomination Controls - Direct input with centered +/- buttons below
+ * Input fields have boundary boxes matching the color theme
  */
-function DenominationControls({ count, onChange, onInput, color, isMobile, buttonsOnly, increaseLabel, decreaseLabel, inputLabel }: DenominationControlsProps) {
+function DenominationControls({ count, onChange, onInput, color, increaseLabel, decreaseLabel, inputLabel }: DenominationControlsProps) {
   const colorClasses = {
     teal: {
       minus: 'bg-red-500 hover:bg-red-600 disabled:bg-red-300',
       plus: 'bg-green-500 hover:bg-green-600',
+      container: 'bg-teal-50 dark:bg-teal-900/20 border-teal-200 dark:border-teal-800/50',
       input: 'border-gray-300 dark:border-slate-600 focus:ring-teal-500 dark:bg-slate-700 dark:text-white',
     },
     blue: {
       minus: 'bg-red-500 hover:bg-red-600 disabled:bg-red-300',
       plus: 'bg-green-500 hover:bg-green-600',
+      container: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/50',
       input: 'border-gray-300 dark:border-slate-600 focus:ring-blue-500 dark:bg-slate-700 dark:text-white',
     },
   }
 
-  // When buttonsOnly=true, only render buttons (no input)
-  if (buttonsOnly) {
-    return (
+  return (
+    <div className="flex flex-col gap-1 items-center">
+      <div className={`p-1 rounded-md border ${colorClasses[color].container} w-full`}>
+        <input
+          type="number"
+          inputMode="numeric"
+          min="0"
+          className={`text-center font-semibold text-sm w-full border rounded focus:outline-none focus:ring-2 py-1 px-1 ${colorClasses[color].input}`}
+          value={count}
+          onChange={(e) => onInput(parseInt(e.target.value) || 0)}
+          aria-label={inputLabel}
+        />
+      </div>
       <div className="flex gap-1 items-center w-full justify-center">
         <button
           type="button"
           className={`w-8 h-8 rounded ${colorClasses[color].minus} text-white font-bold text-xs disabled:opacity-30 flex items-center justify-center`}
           onClick={() => onChange(-1)}
+          disabled={count === 0}
           aria-label={decreaseLabel}
         >
           −
@@ -732,41 +695,6 @@ function DenominationControls({ count, onChange, onInput, color, isMobile, butto
           +
         </button>
       </div>
-    )
-  }
-
-  // Default mode: input with buttons below
-  return (
-    <div className="flex flex-col gap-1 items-center">
-      <input
-        type="number"
-        inputMode="numeric"
-        min="0"
-        className={`text-center font-semibold text-sm w-full border rounded focus:outline-none focus:ring-2 py-1 px-1 ${colorClasses[color].input}`}
-        value={count}
-        onChange={(e) => onInput(parseInt(e.target.value) || 0)}
-        aria-label={inputLabel}
-      />
-      {isMobile && (
-        <div className="flex gap-1 items-center w-full">
-          <button
-            type="button"
-            className={`w-8 h-8 rounded ${colorClasses[color].minus} text-white font-bold text-xs disabled:opacity-30 flex items-center justify-center`}
-            onClick={() => onChange(-1)}
-            aria-label={decreaseLabel}
-          >
-            −
-          </button>
-          <button
-            type="button"
-            className={`w-8 h-8 rounded ${colorClasses[color].plus} text-white font-bold text-xs flex items-center justify-center`}
-            onClick={() => onChange(1)}
-            aria-label={increaseLabel}
-          >
-            +
-          </button>
-        </div>
-      )}
     </div>
   )
 }
