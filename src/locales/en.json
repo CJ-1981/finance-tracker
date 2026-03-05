@@ -355,7 +355,10 @@
     "namedTotal": "Named Total",
     "grandTotal": "Total Counted",
     "increase": "Increase",
-    "decrease": "Decrease"
+    "decrease": "Decrease",
+    "share": "Export",
+    "copied": "Copied!",
+    "denomination": "Denomination"
   },
   "qr": {
     "show": "Show QR Code",

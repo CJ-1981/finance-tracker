@@ -174,6 +174,9 @@ export default function ProjectsPage() {
         addDebugMessage('Triggering safety check retry...')
 
         // Reset Supabase client and retry once more
+        // Resetting the client clears stale fetch connections. Safe here because
+        // we no longer call getSession(), so no GoTrueClient is kept alive by an
+        // abandoned promise during the reset.
         await resetSupabaseClient(getConfig())
         await new Promise(resolve => setTimeout(resolve, 1000))
 
@@ -223,10 +226,12 @@ export default function ProjectsPage() {
         addDebugMessage(`Retrying in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
         setRetryCount(nextAttempt)
 
-        // Do NOT reset the Supabase client here — destroying and recreating it
-        // while an old promise is still in flight causes "Multiple GoTrueClient
-        // instances" warnings. The singleton client is healthy; we just need
-        // a backoff delay before retrying the query.
+        // Resetting the client clears any stale fetch connections from the
+        // timed-out request. This is safe now because we no longer call
+        // getSession() before queries — there is no abandoned GoTrueClient
+        // promise keeping the old instance alive during the reset.
+        addDebugMessage('Resetting Supabase client...')
+        await resetSupabaseClient(getConfig())
         await new Promise(resolve => setTimeout(resolve, backoffDelay))
         return fetchProjectsWithRetry(nextAttempt)
       }

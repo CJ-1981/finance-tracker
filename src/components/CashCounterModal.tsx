@@ -59,21 +59,21 @@ export const DENOMINATIONS: Array<{
   label: string
   type: 'bill' | 'coin'
 }> = [
-  { value: 200, label: '200', type: 'bill' },
-  { value: 100, label: '100', type: 'bill' },
-  { value: 50, label: '50', type: 'bill' },
-  { value: 20, label: '20', type: 'bill' },
-  { value: 10, label: '10', type: 'bill' },
-  { value: 5, label: '5', type: 'bill' },
-  { value: 2, label: '2', type: 'coin' },
-  { value: 1, label: '1', type: 'coin' },
-  { value: 0.50, label: '0.50', type: 'coin' },
-  { value: 0.20, label: '0.20', type: 'coin' },
-  { value: 0.10, label: '0.10', type: 'coin' },
-  { value: 0.05, label: '0.05', type: 'coin' },
-  { value: 0.02, label: '0.02', type: 'coin' },
-  { value: 0.01, label: '0.01', type: 'coin' },
-]
+    { value: 200, label: '200', type: 'bill' },
+    { value: 100, label: '100', type: 'bill' },
+    { value: 50, label: '50', type: 'bill' },
+    { value: 20, label: '20', type: 'bill' },
+    { value: 10, label: '10', type: 'bill' },
+    { value: 5, label: '5', type: 'bill' },
+    { value: 2, label: '2', type: 'coin' },
+    { value: 1, label: '1', type: 'coin' },
+    { value: 0.50, label: '0.50', type: 'coin' },
+    { value: 0.20, label: '0.20', type: 'coin' },
+    { value: 0.10, label: '0.10', type: 'coin' },
+    { value: 0.05, label: '0.05', type: 'coin' },
+    { value: 0.02, label: '0.02', type: 'coin' },
+    { value: 0.01, label: '0.01', type: 'coin' },
+  ]
 
 // ==================== UTILITY FUNCTIONS ====================
 
@@ -250,7 +250,7 @@ export default function CashCounterModal({
         if ('version' in data && data.version === 2) {
           // V2 format - validate and load directly
           if (typeof data.anonymous === 'object' && data.anonymous !== null &&
-              typeof data.namedCounts === 'object' && data.namedCounts !== null) {
+            typeof data.namedCounts === 'object' && data.namedCounts !== null) {
             setState({
               anonymous: data.anonymous,
               namedCounts: data.namedCounts,
@@ -341,6 +341,104 @@ export default function CashCounterModal({
       localStorage.removeItem(`cash_counter_${project.id}`)
     }
   }, [project.id, t])
+
+  const [copySuccess, setCopySuccess] = useState(false)
+
+  const handleShare = useCallback(() => {
+    const currency = project.settings?.currency || 'EUR'
+    const today = getLocalDateString()
+
+    const lines: string[] = []
+    lines.push(`## 🧮 ${t('cashCounter.title')} — ${today}`)
+    lines.push('')
+
+    // Named column
+    const namedTotalLocal = calculateTotal(state.namedCounts)
+    const namedBreakdownLocal = calculateBreakdown(state.namedCounts)
+    const namedHasData = namedTotalLocal > 0
+
+    // Anonymous column
+    const anonymousTotalLocal = calculateTotal(state.anonymous)
+    const anonymousBreakdownLocal = calculateBreakdown(state.anonymous)
+    const anonymousHasData = anonymousTotalLocal > 0
+
+    if (namedHasData || anonymousHasData) {
+      // Bills
+      const billsWithData = DENOMINATIONS.filter(
+        d => d.type === 'bill' && ((state.namedCounts[d.value] || 0) > 0 || (state.anonymous[d.value] || 0) > 0)
+      )
+      if (billsWithData.length > 0) {
+        lines.push(`### 💵 ${t('cashCounter.bills')}`)
+        lines.push(`| ${t('cashCounter.denomination')} | ${t('cashCounter.named')} | ${t('cashCounter.anonymous')} |`)
+        lines.push('|---|---|---|')
+        for (const d of billsWithData) {
+          const nc = state.namedCounts[d.value] || 0
+          const ac = state.anonymous[d.value] || 0
+          lines.push(`| ${d.label} | ${nc > 0 ? `${nc} × ${currency} ${d.label} = **${currency} ${(nc * d.value).toFixed(2)}**` : '—'} | ${ac > 0 ? `${ac} × ${currency} ${d.label} = **${currency} ${(ac * d.value).toFixed(2)}**` : '—'} |`)
+        }
+        lines.push('')
+      }
+
+      // Coins
+      const coinsWithData = DENOMINATIONS.filter(
+        d => d.type === 'coin' && ((state.namedCounts[d.value] || 0) > 0 || (state.anonymous[d.value] || 0) > 0)
+      )
+      if (coinsWithData.length > 0) {
+        lines.push(`### ⚪ ${t('cashCounter.coins')}`)
+        lines.push(`| ${t('cashCounter.denomination')} | ${t('cashCounter.named')} | ${t('cashCounter.anonymous')} |`)
+        lines.push('|---|---|---|')
+        for (const d of coinsWithData) {
+          const nc = state.namedCounts[d.value] || 0
+          const ac = state.anonymous[d.value] || 0
+          lines.push(`| ${d.label} | ${nc > 0 ? `${nc} × ${currency} ${d.label} = **${currency} ${(nc * d.value).toFixed(2)}**` : '—'} | ${ac > 0 ? `${ac} × ${currency} ${d.label} = **${currency} ${(ac * d.value).toFixed(2)}**` : '—'} |`)
+        }
+        lines.push('')
+      }
+    }
+
+    // Subtotals
+    lines.push('---')
+    lines.push(`**${t('cashCounter.namedTotal')}:** ${currency} ${namedTotalLocal.toFixed(2)} (${t('cashCounter.bills')}: ${currency} ${namedBreakdownLocal.bills.toFixed(2)}, ${t('cashCounter.coins')}: ${currency} ${namedBreakdownLocal.coins.toFixed(2)})`)
+    lines.push(`**${t('cashCounter.anonymousTotal')}:** ${currency} ${anonymousTotalLocal.toFixed(2)} (${t('cashCounter.bills')}: ${currency} ${anonymousBreakdownLocal.bills.toFixed(2)}, ${t('cashCounter.coins')}: ${currency} ${anonymousBreakdownLocal.coins.toFixed(2)})`)
+    lines.push('')
+
+    const grandTotalLocal = namedTotalLocal + anonymousTotalLocal
+    const grandBreakdownLocal = {
+      bills: namedBreakdownLocal.bills + anonymousBreakdownLocal.bills,
+      coins: namedBreakdownLocal.coins + anonymousBreakdownLocal.coins,
+    }
+
+    lines.push(`**${t('cashCounter.grandTotal')}:** ${currency} ${grandTotalLocal.toFixed(2)} (${t('cashCounter.bills')}: ${currency} ${grandBreakdownLocal.bills.toFixed(2)}, ${t('cashCounter.coins')}: ${currency} ${grandBreakdownLocal.coins.toFixed(2)})`)
+    lines.push(`**${t('cashCounter.transactionsTotal')}:** ${currency} ${totalTransactionsAmount.toFixed(2)}`)
+    lines.push('')
+
+    const diff = grandTotalLocal - totalTransactionsAmount
+    const absDiff = Math.abs(diff)
+    const tolerance = 0.01
+    if (absDiff <= tolerance) {
+      lines.push(`✅ **${t('cashCounter.match')}** — ${currency} ${absDiff.toFixed(2)}`)
+    } else if (diff > 0) {
+      lines.push(`⬆️ **${t('cashCounter.excess')}** — ${currency} ${absDiff.toFixed(2)}`)
+    } else {
+      lines.push(`⬇️ **${t('cashCounter.shortage')}** — ${currency} ${absDiff.toFixed(2)}`)
+    }
+
+    const markdown = lines.join('\n')
+    navigator.clipboard.writeText(markdown).then(() => {
+      setCopySuccess(true)
+      setTimeout(() => setCopySuccess(false), 2000)
+    }).catch(() => {
+      // Fallback for environments without navigator.clipboard
+      const textarea = document.createElement('textarea')
+      textarea.value = markdown
+      document.body.appendChild(textarea)
+      textarea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textarea)
+      setCopySuccess(true)
+      setTimeout(() => setCopySuccess(false), 2000)
+    })
+  }, [state, project, totalTransactionsAmount, t])
 
   // ==================== CALCULATIONS ====================
 
@@ -478,13 +576,12 @@ export default function CashCounterModal({
                 {t('cashCounter.grandTotal')}:
               </span>
               <span
-                className={`text-3xl font-black dark:text-white ${
-                  matchStatus === 'match'
+                className={`text-3xl font-black dark:text-white ${matchStatus === 'match'
                     ? 'text-green-600 dark:text-green-400'
                     : matchStatus === 'excess'
-                    ? 'text-blue-600 dark:text-blue-400'
-                    : 'text-red-600 dark:text-red-400'
-                }`}
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-red-600 dark:text-red-400'
+                  }`}
               >
                 {currency} {grandTotal.toFixed(2)}
               </span>
@@ -522,21 +619,20 @@ export default function CashCounterModal({
 
             {/* Difference */}
             <div
-              className={`flex justify-between items-center p-3 rounded-lg ${
-                matchStatus === 'match'
+              className={`flex justify-between items-center p-3 rounded-lg ${matchStatus === 'match'
                   ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
                   : matchStatus === 'excess'
-                  ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400'
-                  : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'
-              }`}
+                    ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400'
+                    : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'
+                }`}
             >
               <span className="font-semibold">
                 {matchStatus === 'match'
                   ? '✓ ' + t('cashCounter.match')
                   : matchStatus === 'excess'
-                  ? '↑ ' + t('cashCounter.excess')
-                  : '↓ ' + t('cashCounter.shortage')}:
-                </span>
+                    ? '↑ ' + t('cashCounter.excess')
+                    : '↓ ' + t('cashCounter.shortage')}:
+              </span>
               <span className="font-bold text-lg dark:text-white">
                 {currency} {Math.abs(grandTotal - totalTransactionsAmount).toFixed(2)}
               </span>
@@ -544,13 +640,27 @@ export default function CashCounterModal({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end">
+          <div className="flex justify-between items-center">
             <button
               type="button"
               onClick={handleClearAll}
               className="px-6 btn btn-secondary text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
             >
               {t('cashCounter.clearAll')}
+            </button>
+            <button
+              type="button"
+              onClick={handleShare}
+              className={`px-6 btn btn-secondary flex items-center gap-2 transition-colors ${copySuccess
+                  ? 'text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300'
+                  : 'text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300'
+                }`}
+            >
+              {copySuccess ? (
+                <><span>✓</span> {t('cashCounter.copied')}</>
+              ) : (
+                <><span>📋</span> {t('cashCounter.share')}</>
+              )}
             </button>
           </div>
         </div>

@@ -246,8 +246,11 @@ export default function TransactionsPage() {
         addDebugMessage(`Retrying in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
         setRetryCount(nextAttempt)
 
-        // Do NOT reset the Supabase client — it creates a second GoTrueClient
-        // while the old abandoned promise still holds a reference to the first.
+        // Resetting the client clears stale fetch connections. Safe now because
+        // we no longer call getSession(), so no GoTrueClient is kept alive by
+        // an abandoned promise during the reset.
+        addDebugMessage('Resetting Supabase client...')
+        await resetSupabaseClient(getConfig())
         await new Promise(resolve => setTimeout(resolve, backoffDelay))
         return fetchProjectWithRetry(nextAttempt)
       }
@@ -298,7 +301,9 @@ export default function TransactionsPage() {
         // Increment retry count to prevent infinite loops
         setRetryCount(1)
 
-        // Retry after a brief delay — no client reset needed
+        // Resetting the client clears stale fetch connections. Safe now because
+        // we no longer call getSession().
+        await resetSupabaseClient(getConfig())
         await new Promise(resolve => setTimeout(resolve, 1000))
 
         // Retry once more
@@ -1579,8 +1584,8 @@ export default function TransactionsPage() {
                           }
                         }}
                         className={`btn text-sm whitespace-nowrap ${showDeleted
-                            ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/40 border border-red-300 dark:border-red-800'
-                            : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 border border-gray-300 dark:border-slate-600'
+                          ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/40 border border-red-300 dark:border-red-800'
+                          : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 border border-gray-300 dark:border-slate-600'
                           }`}
                       >
                         {showDeleted ? 'Hide Deleted' : 'Show Deleted'}

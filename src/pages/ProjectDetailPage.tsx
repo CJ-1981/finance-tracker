@@ -293,7 +293,10 @@ export default function ProjectDetailPage() {
         addDebugMessage(`⚠️ Suspicious: Project data looks invalid (${newHash.slice(0, 50)}...) (safety retry ${attemptNumber + 1}/${maxRetries})`)
         addDebugMessage('Triggering safety check retry...')
 
-        // Retry after a brief delay — no client reset needed
+        // Resetting the client clears stale fetch connections. Safe now because
+        // we no longer call getSession(), so no GoTrueClient is kept alive by
+        // an abandoned promise during the reset.
+        await resetSupabaseClient(getConfig())
         await new Promise(resolve => setTimeout(resolve, 1000))
 
         // Retry with incremented attempt number
@@ -356,8 +359,11 @@ export default function ProjectDetailPage() {
         addDebugMessage(`Retrying in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
         setRetryCount(nextAttempt)
 
-        // Do NOT reset the Supabase client — it creates a second GoTrueClient
-        // while the old abandoned promise still holds a reference to the first.
+        // Resetting the client clears stale fetch connections. Safe now because
+        // we no longer call getSession(), so no GoTrueClient is kept alive by
+        // an abandoned promise during the reset.
+        addDebugMessage('Resetting Supabase client...')
+        await resetSupabaseClient(getConfig())
         await new Promise(resolve => setTimeout(resolve, backoffDelay))
         return fetchProjectWithRetry(nextAttempt)
       }
@@ -422,7 +428,8 @@ export default function ProjectDetailPage() {
         addDebugMessage('Previous hash:' + previousTransactionsHash.slice(0, 50))
         addDebugMessage('Current hash:' + currentHash)
 
-        // Retry after a brief delay — no client reset needed
+        // Resetting the client clears stale fetch connections.
+        await resetSupabaseClient(getConfig())
         await new Promise(resolve => setTimeout(resolve, 1000))
         return fetchTransactionsWithRetry(attemptNumber + 1)
       }
@@ -447,7 +454,9 @@ export default function ProjectDetailPage() {
         const nextAttempt = attemptNumber + 1
         addDebugMessage(`Retrying transactions in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
 
-        // Do NOT reset the Supabase client — same reason as above.
+        // Resetting the client clears stale fetch connections.
+        addDebugMessage('Resetting Supabase client...')
+        await resetSupabaseClient(getConfig())
         await new Promise(resolve => setTimeout(resolve, backoffDelay))
         return fetchTransactionsWithRetry(nextAttempt)
       }
@@ -505,7 +514,9 @@ export default function ProjectDetailPage() {
         const nextAttempt = attemptNumber + 1
         addDebugMessage(`Retrying categories in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
 
-        // Do NOT reset the Supabase client — same reason as above.
+        // Resetting the client clears stale fetch connections.
+        addDebugMessage('Resetting Supabase client...')
+        await resetSupabaseClient(getConfig())
         await new Promise(resolve => setTimeout(resolve, backoffDelay))
         return fetchCategoriesWithRetry(nextAttempt)
       }
