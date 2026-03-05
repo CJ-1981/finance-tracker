@@ -1155,7 +1155,7 @@ export default function TransactionsPage() {
                 setEditingTransactionId(null)
                 setShowAddForm(true)
               }} className="btn btn-primary text-sm whitespace-nowrap">
-                {t('transactions.addTransaction')}
+                + {t('transactions.addTransaction')}
               </button>
             </div>
           </div>
@@ -1457,7 +1457,7 @@ export default function TransactionsPage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('transactions.noTransactionsYet')}</h2>
             <p className="text-gray-600 mb-6">{t('transactions.addFirstTransaction')}</p>
             <button onClick={() => setShowAddForm(true)} className="btn btn-primary">
-              {t('transactions.addTransaction')}
+              + {t('transactions.addTransaction')}
             </button>
           </div>
         ) : (
