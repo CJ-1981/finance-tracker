@@ -208,11 +208,15 @@ export default function ConfigPage() {
       <div className="max-w-md w-full mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('auth.financialTracker')}</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
-            {mode === 'configure' ? t('config.setupConfiguration') :
-              mode === 'signin' ? t('auth.signInToAccount') :
-                t('config.supabaseConfig')}
-          </p>
+          {mode === 'authenticated' ? (
+            <div className="mt-4 flex justify-center">
+              <LanguageSelector />
+            </div>
+          ) : (
+            <p className="text-gray-600 dark:text-gray-400 mt-2">
+              {mode === 'configure' ? t('config.setupConfiguration') : t('auth.signInToAccount')}
+            </p>
+          )}
         </div>
 
         <div className="card">
@@ -427,9 +431,6 @@ export default function ConfigPage() {
                 >
                   {theme === 'light' ? '🌙 Dark Mode: Off' : theme === 'dark' ? '🌙 Dark Mode: On' : '🌙 Dark Mode: Auto'}
                 </button>
-                <div className="w-full">
-                  <LanguageSelector />
-                </div>
                 <button
                   onClick={async () => {
                     await signOut()
