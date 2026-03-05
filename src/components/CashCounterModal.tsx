@@ -248,11 +248,18 @@ export default function CashCounterModal({
 
         // Check version and migrate if needed
         if ('version' in data && data.version === 2) {
-          // V2 format - load directly
-          setState({
-            anonymous: data.anonymous,
-            namedCounts: data.namedCounts,
-          })
+          // V2 format - validate and load directly
+          if (typeof data.anonymous === 'object' && data.anonymous !== null &&
+              typeof data.namedCounts === 'object' && data.namedCounts !== null) {
+            setState({
+              anonymous: data.anonymous,
+              namedCounts: data.namedCounts,
+            })
+          } else {
+            // Invalid V2 payload - reset to empty state
+            console.error('Invalid V2 payload structure, resetting to empty state')
+            setState(createEmptyState())
+          }
         } else {
           // V1 format - migrate
           const v2Data = migrateV1ToV2(data as StoredCashDataV1)
@@ -447,7 +454,7 @@ export default function CashCounterModal({
           </div>
 
           {/* Section Totals */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             <div className="p-4 bg-teal-50 dark:bg-teal-900/20 rounded-lg border-2 border-teal-200 dark:border-teal-800/50">
               <div className="text-sm font-medium text-teal-700 dark:text-teal-300 mb-1">
                 {t('cashCounter.anonymousTotal')}
@@ -608,6 +615,7 @@ function DenominationRow({
           isMobile={false}
           increaseLabel={tIncrease}
           decreaseLabel={tDecrease}
+          inputLabel={`${t('cashCounter.anonymous')} ${denomination.label}`}
         />
 
         {/* Named Controls */}
@@ -619,6 +627,7 @@ function DenominationRow({
           isMobile={false}
           increaseLabel={tIncrease}
           decreaseLabel={tDecrease}
+          inputLabel={`${t('cashCounter.named')} ${denomination.label}`}
         />
       </div>
 
@@ -637,6 +646,7 @@ function DenominationRow({
             isMobile={true}
             increaseLabel={tIncrease}
             decreaseLabel={tDecrease}
+            inputLabel={`${t('cashCounter.anonymous')} ${denomination.label}`}
           />
         </div>
 
@@ -653,6 +663,7 @@ function DenominationRow({
             isMobile={true}
             increaseLabel={tIncrease}
             decreaseLabel={tDecrease}
+            inputLabel={`${t('cashCounter.named')} ${denomination.label}`}
           />
         </div>
       </div>
@@ -668,12 +679,13 @@ interface DenominationControlsProps {
   isMobile?: boolean
   increaseLabel: string
   decreaseLabel: string
+  inputLabel: string
 }
 
 /**
  * Denomination Controls - Direct input with optional buttons on mobile
  */
-function DenominationControls({ count, onChange, onInput, color, isMobile, increaseLabel, decreaseLabel }: DenominationControlsProps) {
+function DenominationControls({ count, onChange, onInput, color, isMobile, increaseLabel, decreaseLabel, inputLabel }: DenominationControlsProps) {
   const colorClasses = {
     teal: {
       minus: 'bg-red-500 hover:bg-red-600 disabled:bg-red-300',
@@ -696,6 +708,7 @@ function DenominationControls({ count, onChange, onInput, color, isMobile, incre
         className={`flex-1 text-center font-semibold text-base min-w-[60px] border rounded focus:outline-none focus:ring-2 py-2 px-3 ${colorClasses[color].input}`}
         value={count}
         onChange={(e) => onInput(parseInt(e.target.value) || 0)}
+        aria-label={inputLabel}
       />
       {isMobile && (
         <>
