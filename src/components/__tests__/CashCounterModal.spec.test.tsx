@@ -389,33 +389,31 @@ describe('CashCounterModal - Simplified Implementation (SPEC-UI-003)', () => {
         />
       )
 
-      // Add 100 to anonymous
-      const tealContainer = document.querySelector('.bg-teal-50, .dark\\:bg-teal-900\\/20')
-      const tealInputs = tealContainer?.querySelectorAll('input[type="number"]') || []
-      const hundredInput = Array.from(tealInputs).find(input => {
-        const container = input.closest('.p-2, .p-3') || input.closest('div[class*="grid"]')
-        return container?.textContent?.includes('100')
-      }) as HTMLInputElement
+      // Find all desktop grid rows (they have both mobile and desktop layouts)
+      // Desktop: hidden sm:grid | Mobile: sm:hidden
+      const gridRows = Array.from(document.querySelectorAll('[class*="grid"][class*="hidden"]'))
+        .filter(row => row.textContent?.includes('100'))
 
-      // Add 50 to named
-      const blueContainer = document.querySelector('.bg-blue-50, .dark\\:bg-blue-900\\/20')
-      const blueInputs = blueContainer?.querySelectorAll('input[type="number"]') || []
-      const fiftyInput = Array.from(blueInputs).find(input => {
-        const container = input.closest('.p-2, .p-3') || input.closest('div[class*="grid"]')
-        return container?.textContent?.includes('50')
-      }) as HTMLInputElement
+      const hundredRow = gridRows.find(row => row.textContent?.includes('100'))
+      expect(hundredRow).toBeDefined()
 
-      if (hundredInput && fiftyInput) {
-        fireEvent.change(hundredInput, { target: { value: '1' } })
-        fireEvent.change(fiftyInput, { target: { value: '1' } })
+      // Get inputs from the row - first is anonymous, second is named
+      const rowInputs = Array.from(hundredRow?.querySelectorAll('input[type="number"]') || [])
+      const hundredInput = rowInputs[0] as HTMLInputElement
+      const hundredNamedInput = rowInputs[1] as HTMLInputElement
 
-        vi.advanceTimersByTime(500)
+      expect(hundredInput).toBeDefined()
+      expect(hundredNamedInput).toBeDefined()
 
-        // Grand total should be 150.00
-        const grandTotalText = screen.getByText(/Grand Total/)
-        const grandTotalValue = grandTotalText.nextElementSibling?.textContent
-        expect(grandTotalValue).toContain('150.00')
-      }
+      fireEvent.change(hundredInput, { target: { value: '1' } })
+      fireEvent.change(hundredNamedInput, { target: { value: '1' } })
+
+      vi.advanceTimersByTime(500)
+
+      // Grand total should be 200.00 (100*1 + 100*1)
+      const grandTotalText = screen.getByText(/Total Counted/)
+      const grandTotalValue = grandTotalText.nextElementSibling?.textContent
+      expect(grandTotalValue).toContain('200.00')
     })
   })
 
