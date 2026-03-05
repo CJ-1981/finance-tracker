@@ -177,6 +177,14 @@ const migrateV1ToV2 = (v1Data: StoredCashDataV1): StoredCashDataV2 => {
   }
 }
 
+/**
+ * Create empty cash counter state with all denominations initialized to 0
+ */
+const createEmptyState = (): CashCounterState => ({
+  anonymous: DENOMINATIONS.reduce((acc, d) => ({ ...acc, [d.value]: 0 }), {} as Record<number, number>),
+  namedEntries: [],
+})
+
 // ==================== MAIN MODAL COMPONENT ====================
 
 interface CashCounterModalProps {
@@ -206,10 +214,7 @@ export default function CashCounterModal({
 
   // ==================== STATE ====================
 
-  const [state, setState] = useState<CashCounterState>(() => ({
-    anonymous: DENOMINATIONS.reduce((acc, d) => ({ ...acc, [d.value]: 0 }), {} as Record<number, number>),
-    namedEntries: [],
-  }))
+  const [state, setState] = useState<CashCounterState>(createEmptyState)
 
   const [isNamedEntriesModalOpen, setIsNamedEntriesModalOpen] = useState(false)
   const saveTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
@@ -251,8 +256,9 @@ export default function CashCounterModal({
         // Check if date has changed
         const today = getLocalDateString()
         if (data.lastDate !== today) {
-          // Clear old data
+          // Clear old data and reset state
           localStorage.removeItem(storageKey)
+          setState(createEmptyState())
           return
         }
 
@@ -273,9 +279,13 @@ export default function CashCounterModal({
           // Save migrated data
           localStorage.setItem(storageKey, JSON.stringify(v2Data))
         }
+      } else {
+        // No localStorage data exists - start fresh
+        setState(createEmptyState())
       }
     } catch (err) {
       console.error('Error loading cash counter data:', err)
+      setState(createEmptyState())
     }
   }, [isOpen, project?.id])
 
@@ -341,10 +351,7 @@ export default function CashCounterModal({
 
   const handleClearAll = useCallback(() => {
     if (confirm(t('cashCounter.clearAllConfirm'))) {
-      setState({
-        anonymous: DENOMINATIONS.reduce((acc, d) => ({ ...acc, [d.value]: 0 }), {} as Record<number, number>),
-        namedEntries: [],
-      })
+      setState(createEmptyState())
       localStorage.removeItem(`cash_counter_${project.id}`)
     }
   }, [project.id, t])

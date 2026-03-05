@@ -223,17 +223,12 @@ describe('CashCounterModal - Characterization Tests (DDD PRESERVE)', () => {
 
   describe('Match Status Calculation (Preserved)', () => {
     it('should show match status when totals match within tolerance', async () => {
-      // Pre-populate localStorage with entry totaling 236.01
+      // Pre-populate localStorage with V2 data totaling 236.01
       localStorageMock.setItem(`cash_counter_${mockProject.id}`, JSON.stringify({
         projectId: mockProject.id,
-        entries: [
-          {
-            id: 'entry-1',
-            category: 'anonymous',
-            denominations: { 200: 1, 20: 1, 10: 1, 5: 1, 1: 1 },
-            timestamp: Date.now(),
-          },
-        ],
+        version: 2,
+        anonymous: { 200: 1, 20: 1, 10: 1, 5: 1, 1: 1 },
+        namedEntries: [],
         lastDate: mockGetLocalDateString(),
       }))
 
@@ -253,14 +248,9 @@ describe('CashCounterModal - Characterization Tests (DDD PRESERVE)', () => {
     it('should show excess status when counted > transactions', () => {
       localStorageMock.setItem(`cash_counter_${mockProject.id}`, JSON.stringify({
         projectId: mockProject.id,
-        entries: [
-          {
-            id: 'entry-1',
-            category: 'anonymous',
-            denominations: { 200: 1 },
-            timestamp: Date.now(),
-          },
-        ],
+        version: 2,
+        anonymous: { 200: 1 },
+        namedEntries: [],
         lastDate: mockGetLocalDateString(),
       }))
 
@@ -279,14 +269,9 @@ describe('CashCounterModal - Characterization Tests (DDD PRESERVE)', () => {
     it('should show shortage status when counted < transactions', () => {
       localStorageMock.setItem(`cash_counter_${mockProject.id}`, JSON.stringify({
         projectId: mockProject.id,
-        entries: [
-          {
-            id: 'entry-1',
-            category: 'anonymous',
-            denominations: { 100: 2 },
-            timestamp: Date.now(),
-          },
-        ],
+        version: 2,
+        anonymous: { 100: 2 },
+        namedEntries: [],
         lastDate: mockGetLocalDateString(),
       }))
 
@@ -304,7 +289,7 @@ describe('CashCounterModal - Characterization Tests (DDD PRESERVE)', () => {
   })
 
   describe('localStorage Persistence (Preserved)', () => {
-    it('should persist entries to localStorage', () => {
+    it('should persist anonymous counts to localStorage', () => {
       renderWithI18n(
         <CashCounterModal
           isOpen={true}
@@ -313,10 +298,6 @@ describe('CashCounterModal - Characterization Tests (DDD PRESERVE)', () => {
           totalTransactionsAmount={totalTransactionsAmount}
         />
       )
-
-      // Set up counts for anonymous entry
-      const anonymousButton = screen.getByText('Anonymous')
-      fireEvent.click(anonymousButton)
 
       // Add some counts (find a 100 denomination input)
       const inputs = screen.getAllByDisplayValue('0')
@@ -327,31 +308,24 @@ describe('CashCounterModal - Characterization Tests (DDD PRESERVE)', () => {
 
       fireEvent.change(hundredInput, { target: { value: '2' } })
 
-      // Click Add Entry
-      const addButton = screen.getByText(/Add Entry/)
-      fireEvent.click(addButton)
+      // Wait for debounced save (500ms)
+      vi.advanceTimersByTime(500)
 
       // Verify localStorage was updated
       const storedData = localStorageMock.getItem(`cash_counter_${mockProject.id}`)
       expect(storedData).toBeDefined()
 
       const parsed = JSON.parse(storedData!)
-      expect(parsed.entries).toHaveLength(1)
-      expect(parsed.entries[0].category).toBe('anonymous')
-      expect(parsed.entries[0].denominations[100]).toBe(2)
+      expect(parsed.version).toBe(2)
+      expect(parsed.anonymous[100]).toBe(2)
     })
 
-    it('should load entries from localStorage on mount', () => {
+    it('should load V2 format data from localStorage on mount', () => {
       localStorageMock.setItem(`cash_counter_${mockProject.id}`, JSON.stringify({
         projectId: mockProject.id,
-        entries: [
-          {
-            id: 'entry-1',
-            category: 'anonymous',
-            denominations: { 100: 2 },
-            timestamp: Date.now(),
-          },
-        ],
+        version: 2,
+        anonymous: { 100: 2 },
+        namedEntries: [],
         lastDate: mockGetLocalDateString(),
       }))
 
@@ -364,13 +338,7 @@ describe('CashCounterModal - Characterization Tests (DDD PRESERVE)', () => {
         />
       )
 
-      // Entries section should be visible
-      expect(screen.getByText('Entries')).toBeInTheDocument()
-
-      // Entry should display "Anonymous" name
-      expect(screen.getByText('Anonymous')).toBeInTheDocument()
-
-      // Entry total should be 200.00
+      // Anonymous total should be 200.00
       expect(screen.getByText(/€200\.00/)).toBeInTheDocument()
     })
   })
@@ -381,14 +349,9 @@ describe('CashCounterModal - Characterization Tests (DDD PRESERVE)', () => {
       const yesterday = '2026-03-04'
       localStorageMock.setItem(`cash_counter_${mockProject.id}`, JSON.stringify({
         projectId: mockProject.id,
-        entries: [
-          {
-            id: 'entry-1',
-            category: 'anonymous',
-            denominations: { 100: 2 },
-            timestamp: Date.now(),
-          },
-        ],
+        version: 2,
+        anonymous: { 100: 2 },
+        namedEntries: [],
         lastDate: yesterday,
       }))
 
@@ -401,25 +364,21 @@ describe('CashCounterModal - Characterization Tests (DDD PRESERVE)', () => {
         />
       )
 
-      // Data should be cleared (entries list should not be visible)
-      expect(screen.queryByText('Entries')).not.toBeInTheDocument()
-
       // localStorage should be removed
       const storedData = localStorageMock.getItem(`cash_counter_${mockProject.id}`)
       expect(storedData).toBeNull()
+
+      // Anonymous section should be visible with 0 values
+      const inputs = screen.getAllByDisplayValue('0')
+      expect(inputs.length).toBeGreaterThan(0)
     })
 
     it('should preserve data when date is same', () => {
       localStorageMock.setItem(`cash_counter_${mockProject.id}`, JSON.stringify({
         projectId: mockProject.id,
-        entries: [
-          {
-            id: 'entry-1',
-            category: 'anonymous',
-            denominations: { 100: 2 },
-            timestamp: Date.now(),
-          },
-        ],
+        version: 2,
+        anonymous: { 100: 2 },
+        namedEntries: [],
         lastDate: mockGetLocalDateString(),
       }))
 
@@ -432,22 +391,22 @@ describe('CashCounterModal - Characterization Tests (DDD PRESERVE)', () => {
         />
       )
 
-      // Entries should be displayed
-      expect(screen.getByText('Entries')).toBeInTheDocument()
-      expect(screen.getByText('Anonymous')).toBeInTheDocument()
+      // Should show the loaded data
+      expect(screen.getByText(/€200\.00/)).toBeInTheDocument()
     })
   })
 
   describe('Delete Entry Behavior (Preserved)', () => {
-    it('should remove entry when delete button clicked', () => {
+    it('should remove named entry when delete button clicked', () => {
       localStorageMock.setItem(`cash_counter_${mockProject.id}`, JSON.stringify({
         projectId: mockProject.id,
-        entries: [
+        version: 2,
+        anonymous: { 100: 2 },
+        namedEntries: [
           {
             id: 'entry-1',
-            category: 'anonymous',
-            denominations: { 100: 2 },
-            timestamp: Date.now(),
+            name: 'Test Person',
+            denominations: { 50: 1 },
           },
         ],
         lastDate: mockGetLocalDateString(),
@@ -462,15 +421,16 @@ describe('CashCounterModal - Characterization Tests (DDD PRESERVE)', () => {
         />
       )
 
+      // Open named entries modal
+      const addButton = screen.getByText(/Add Person/)
+      fireEvent.click(addButton)
+
+      // Find and click delete button
       const deleteButton = screen.getByText('Delete')
       fireEvent.click(deleteButton)
 
-      // Entry should be removed
-      expect(screen.queryByText('Anonymous')).not.toBeInTheDocument()
-
-      // localStorage should be cleared (no entries left)
-      const storedData = localStorageMock.getItem(`cash_counter_${mockProject.id}`)
-      expect(storedData).toBeNull()
+      // Entry should be removed from modal
+      expect(screen.queryByText('Test Person')).not.toBeInTheDocument()
     })
   })
 
@@ -494,19 +454,14 @@ describe('CashCounterModal - Characterization Tests (DDD PRESERVE)', () => {
       confirmSpy.mockRestore()
     })
 
-    it('should clear all entries when confirmed', () => {
+    it('should clear all data when confirmed', () => {
       const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
 
       localStorageMock.setItem(`cash_counter_${mockProject.id}`, JSON.stringify({
         projectId: mockProject.id,
-        entries: [
-          {
-            id: 'entry-1',
-            category: 'anonymous',
-            denominations: { 100: 2 },
-            timestamp: Date.now(),
-          },
-        ],
+        version: 2,
+        anonymous: { 100: 2 },
+        namedEntries: [],
         lastDate: mockGetLocalDateString(),
       }))
 

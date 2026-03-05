@@ -11,7 +11,7 @@
 
 import { render, screen, fireEvent, within } from '@testing-library/react'
 import { I18nextProvider } from 'react-i18next'
-import { describe, it, expect, beforeEach, afterAll, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, afterAll, vi } from 'vitest'
 import i18n from '../../lib/i18n'
 import CashCounterModal, { DENOMINATIONS, type NamedEntry } from '../CashCounterModal'
 import type { Project } from '../../types'
@@ -72,8 +72,13 @@ describe('CashCounterModal - Refactored Implementation (SPEC-UI-003)', () => {
   }
 
   beforeEach(() => {
+    vi.useFakeTimers()
     vi.clearAllMocks()
     localStorageMock.clear()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   afterAll(() => {
