@@ -200,20 +200,21 @@ export default function TransactionModal({
 
     return (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-700 p-8 max-w-md w-full max-h-[90vh] overflow-y-auto relative">
+            <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-700 p-6 sm:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto relative">
                 {/* Close button */}
                 <button
                     type="button"
                     onClick={onClose}
                     className="absolute top-4 right-4 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors z-10"
+                    aria-label={t('common.close')}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
 
-                <div className="flex justify-between items-center mb-6 pr-12">
-                    <h2 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+                <div className="flex justify-between items-center mb-4 sm:mb-6 pr-12">
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
                         {transaction ? t('transactions.editTransaction') : t('transactions.addTransaction')}
                     </h2>
                     {userRole === 'owner' && (
@@ -398,11 +399,11 @@ export default function TransactionModal({
                         </div>
                     ))}
 
-                    <div className="flex gap-3 pt-4">
+                    <div className="flex gap-2 sm:gap-3 pt-4">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="btn btn-secondary flex-1"
+                            className="btn btn-secondary flex-1 min-w-0 text-center text-sm sm:text-base whitespace-nowrap overflow-hidden text-ellipsis"
                             disabled={saving}
                         >
                             {t('common.cancel')}
@@ -411,7 +412,7 @@ export default function TransactionModal({
                             <button
                                 type="button"
                                 onClick={(e) => handleSubmit(e as any, true)}
-                                className="btn bg-slate-600 hover:bg-slate-700 text-white flex-1"
+                                className="btn bg-slate-600 hover:bg-slate-700 text-white flex-1 min-w-0 text-center text-sm sm:text-base whitespace-nowrap overflow-hidden text-ellipsis"
                                 disabled={saving}
                             >
                                 {saving ? t('transactions.saving') : t('transactions.saveAndContinue')}
@@ -419,7 +420,7 @@ export default function TransactionModal({
                         )}
                         <button
                             type="submit"
-                            className="btn btn-primary flex-1"
+                            className="btn btn-primary flex-1 min-w-0 text-center text-sm sm:text-base"
                             disabled={saving}
                         >
                             {saving ? t('transactions.saving') : (transaction ? t('common.save') : t('common.add'))}
