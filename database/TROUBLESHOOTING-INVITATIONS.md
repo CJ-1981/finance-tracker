@@ -42,11 +42,11 @@ WHERE schemaname = 'public' AND tablename = 'invitations';
 
 #### Fix missing policies:
 
-If the policies are missing, run the migration script:
+If the policies are missing, re-run the main schema script:
 
 1. Go to your Supabase project dashboard
 2. Navigate to **SQL Editor**
-3. Copy and run the contents of `database/migration_fix_invitation_permissions.sql`
+3. Copy and run the contents of `database/schema.sql`
 
 Or manually run:
 
@@ -130,8 +130,7 @@ If the issue persists after following these steps:
 
 ---
 
-**Last Updated**: 2026-03-02
+**Last Updated**: 2026-03-05
 **Related Files**:
-- `database/schema.sql` - Full database schema with RLS policies
-- `database/migration_fix_invitation_permissions.sql` - Migration to fix permissions
+- `database/schema.sql` - Full database schema with RLS policies and soft delete functionality
 - `src/pages/ProjectDetailPage.tsx` - Invitation creation UI with improved error handling
