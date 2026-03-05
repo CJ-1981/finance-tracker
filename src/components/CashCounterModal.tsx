@@ -674,21 +674,21 @@ function DenominationControls({ count, onChange, onInput, color, isMobile, incre
   }
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1 items-center">
       <input
         type="number"
         inputMode="numeric"
         min="0"
-        className={`text-center font-semibold text-sm w-full border rounded focus:outline-none focus:ring-2 py-0.5 px-1 ${colorClasses[color].input}`}
+        className={`text-center font-semibold text-sm w-full border rounded focus:outline-none focus:ring-2 py-1 px-1 ${colorClasses[color].input}`}
         value={count}
         onChange={(e) => onInput(parseInt(e.target.value) || 0)}
         aria-label={inputLabel}
       />
       {isMobile && (
-        <div className="flex gap-1 justify-center">
+        <div className="flex gap-1 items-center w-full">
           <button
             type="button"
-            className={`min-w-[32px] min-h-[32px] rounded ${colorClasses[color].minus} text-white font-bold text-xs disabled:opacity-30`}
+            className={`w-8 h-8 rounded ${colorClasses[color].minus} text-white font-bold text-xs disabled:opacity-30 flex items-center justify-center`}
             onClick={() => onChange(-1)}
             aria-label={decreaseLabel}
           >
@@ -696,7 +696,7 @@ function DenominationControls({ count, onChange, onInput, color, isMobile, incre
           </button>
           <button
             type="button"
-            className={`min-w-[32px] min-h-[32px] rounded ${colorClasses[color].plus} text-white font-bold text-xs`}
+            className={`w-8 h-8 rounded ${colorClasses[color].plus} text-white font-bold text-xs flex items-center justify-center`}
             onClick={() => onChange(1)}
             aria-label={increaseLabel}
           >
