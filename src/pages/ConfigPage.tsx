@@ -433,12 +433,12 @@ export default function ConfigPage() {
                 </button>
                 <button
                   onClick={async () => {
+                    // Clear redirect-after-login flag before sign out
+                    sessionStorage.removeItem('redirectAfterLogin')
+                    // Sign out first and wait for completion
                     await signOut()
-                    // Clear any local state and redirect to avoid PWA prompts
-                    sessionStorage.clear()
-                    const basePath = (import.meta as any).env?.BASE_URL || '/'
-                    // Add timestamp to prevent caching
-                    window.location.href = basePath + '?t=' + Date.now()
+                    // Navigate to home page using react-router
+                    navigate('/')
                   }}
                   className="w-full btn btn-secondary"
                 >
