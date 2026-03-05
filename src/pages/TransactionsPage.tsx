@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../hooks/useAuth'
 import { getSupabaseClient, resetSupabaseClient } from '../lib/supabase'
@@ -132,16 +132,22 @@ export default function TransactionsPage() {
       fetchTransactions()
       fetchCategories()
     }
-
-    // Check for settings parameter in URL
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('settings') === 'true') {
-      setShowSettings(true)
-      setTimeout(() => {
-        document.getElementById('manage-custom-fields')?.scrollIntoView({ behavior: 'smooth' })
-      }, 500)
-    }
   }, [projectId])
+
+  // Check for settings parameter in URL using useSearchParams
+  const [searchParams] = useSearchParams()
+  useEffect(() => {
+    if (searchParams.get('settings') === 'true') {
+      setShowSettings(true)
+      // Scroll to settings after a short delay to ensure DOM is ready
+      setTimeout(() => {
+        const element = document.getElementById('manage-custom-fields')
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 300)
+    }
+  }, [searchParams])
 
   const fetchProjectWithRetry = async (attemptNumber: number = 0): Promise<boolean> => {
     if (!projectId) return false
