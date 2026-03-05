@@ -603,6 +603,7 @@ function DenominationRow({
           onChange={(delta) => onAnonymousChange(denomination.value, delta)}
           onInput={(value) => onAnonymousInput(denomination.value, value)}
           color="teal"
+          isMobile={false}
         />
 
         {/* Named Controls */}
@@ -611,6 +612,7 @@ function DenominationRow({
           onChange={(delta) => onNamedChange(denomination.value, delta)}
           onInput={(value) => onNamedInput(denomination.value, value)}
           color="blue"
+          isMobile={false}
         />
       </div>
 
@@ -626,6 +628,7 @@ function DenominationRow({
             onChange={(delta) => onAnonymousChange(denomination.value, delta)}
             onInput={(value) => onAnonymousInput(denomination.value, value)}
             color="teal"
+            isMobile={true}
           />
         </div>
 
@@ -639,6 +642,7 @@ function DenominationRow({
             onChange={(delta) => onNamedChange(denomination.value, delta)}
             onInput={(value) => onNamedInput(denomination.value, value)}
             color="blue"
+            isMobile={true}
           />
         </div>
       </div>
@@ -651,12 +655,13 @@ interface DenominationControlsProps {
   onChange: (delta: number) => void
   onInput: (value: number) => void
   color: 'teal' | 'blue'
+  isMobile?: boolean
 }
 
 /**
- * Denomination Controls - Direct input only (no buttons)
+ * Denomination Controls - Direct input with optional buttons on mobile
  */
-function DenominationControls({ count, onChange, onInput, color }: DenominationControlsProps) {
+function DenominationControls({ count, onChange, onInput, color, isMobile }: DenominationControlsProps) {
   const colorClasses = {
     teal: {
       minus: 'bg-red-500 hover:bg-red-600 disabled:bg-red-300',
@@ -670,8 +675,6 @@ function DenominationControls({ count, onChange, onInput, color }: DenominationC
     },
   }
 
-  const classes = colorClasses[color]
-
   return (
     <div className="flex items-center gap-2">
       <input
@@ -682,6 +685,26 @@ function DenominationControls({ count, onChange, onInput, color }: DenominationC
         value={count}
         onChange={(e) => onInput(parseInt(e.target.value) || 0)}
       />
+      {isMobile && (
+        <>
+          <button
+            type="button"
+            className={`w-10 h-10 rounded ${colorClasses[color].minus} text-white font-bold text-lg disabled:opacity-30`}
+            onClick={() => onChange(-1)}
+            aria-label="Decrease"
+          >
+            −
+          </button>
+          <button
+            type="button"
+            className={`w-10 h-10 rounded ${colorClasses[color].plus} text-white font-bold text-lg`}
+            onClick={() => onChange(1)}
+            aria-label="Increase"
+          >
+            +
+          </button>
+        </>
+      )}
     </div>
   )
 }
