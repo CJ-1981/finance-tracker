@@ -43,6 +43,9 @@ A collaborative financial tracking web application built with React, TypeScript,
   - Dark mode support for QR display
 - **QR Code Config Scanner** - Scan QR codes to configure Supabase settings
   - Camera-based QR code scanner with live preview
+  - **File upload support** - Scan QR codes from saved images (no camera required)
+  - Image preview before decoding
+  - Support for all common image formats (JPG, PNG, etc.)
   - Automatic config extraction from scanned codes
   - HTTPS detection and camera permission handling
   - Graceful fallback to manual input
@@ -62,7 +65,7 @@ A collaborative financial tracking web application built with React, TypeScript,
 - **Charts**: Chart.js with react-chartjs-2
 - **Routing**: React Router v7
 - **Internationalization**: i18next with react-i18next
-- **QR Codes**: react-qr-code, qr-scanner
+- **QR Codes**: react-qr-code, qr-scanner, jsQR (image-based scanning)
 - **CSV Export**: PapaParse
 - **Date Handling**: Native browser date pickers
 - **Testing**: Vitest (unit), Playwright (E2E)
@@ -112,7 +115,9 @@ npm run dev
 
 6. **Configure the app:**
    - Click "Get Started" on the landing page
-   - **Option 1**: Scan QR code containing Supabase config (requires HTTPS or localhost)
+   - **Option 1**: Scan QR code containing Supabase config
+     - Use camera for live scanning (requires HTTPS or localhost)
+     - Or upload QR code image file (no camera required)
    - **Option 2**: Manually enter your Supabase Project URL and anon key
    - Click "Save Configuration"
 
