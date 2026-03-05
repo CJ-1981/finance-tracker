@@ -5,6 +5,55 @@ All notable changes to the Finance Tracker application will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.2] - 2026-03-05
+
+### Fixed
+
+- **PWA Logout Popup Issue** - Fixed persistent popup window when logging out on mobile PWA
+  - Root cause: `window.location.href` triggering popup in PWA context
+  - Final solution: `window.location.replace(basePath)` with relative path
+  - Uses `import.meta.env.BASE_URL` for GitHub Pages deployment path compatibility
+  - Multiple iterations tested: href → replace() → navigate() → replace(basepath)
+
+- **GitHub Pages Deployment Path** - Fixed 404 error after logout on GitHub Pages
+  - Added BASE_URL support to respect `/finance-tracker/` deployment path
+  - Both ProjectsPage and ConfigPage now use correct base path for redirects
+  - Prevents redirect to root domain which causes 404
+
+- **Logout Redirect Consistency** - Ensured both logout flows go to landing page
+  - ProjectsPage.logout and ConfigPage.signOut now use identical redirect pattern
+  - Previous inconsistency: one went to /login, other went to landing page
+  - Both now consistently redirect to landing page using base path
+
+### Changed
+
+- **Mobile TransactionModal Layout** - Improved responsive design for mobile devices
+  - Responsive padding: `p-6` on mobile, `p-8` on desktop
+  - Responsive title size: `text-xl` on mobile, `text-2xl` on desktop
+  - Responsive button gap: `gap-2` on mobile, `gap-3` on desktop
+  - Responsive button text: `text-xs` on mobile, `text-sm` on desktop
+  - Removed text truncation ellipsis in favor of smaller fonts
+
+- **Delete Button Permissions** - Restricted delete button visibility to transaction creator and project owner
+  - Previously: Delete button visible to all users
+  - Now: Only owner and transaction creator can delete
+  - Consistent with existing edit button permission model
+
+- **Settings Navigation Reliability** - Improved settings panel navigation from TransactionModal
+  - Modal closure before navigation prevents jarring UX
+  - Uses `useSearchParams` hook for reliable URL parameter detection
+  - Auto-scroll to settings panel after navigation with element validation
+  - Reduced scroll delay from 500ms to 300ms
+
+### Documentation
+
+- **README.md** - Added documentation for QR code file upload feature
+  - Documented file upload support in QR Code Config Scanner section
+  - Added image preview and supported formats details
+  - Updated Tech Stack section to include jsQR library
+  - Updated Configuration section to show both camera and file upload options
+  - Feature was implemented in v2.5.0 but missing from README
+
 ## [2.5.1] - 2026-03-04
 
 ### Fixed
