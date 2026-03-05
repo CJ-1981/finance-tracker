@@ -654,7 +654,7 @@ interface DenominationControlsProps {
 }
 
 /**
- * Denomination Controls - Plus/minus buttons and direct input
+ * Denomination Controls - Direct input only (no buttons)
  */
 function DenominationControls({ count, onChange, onInput, color }: DenominationControlsProps) {
   const colorClasses = {
@@ -674,31 +674,14 @@ function DenominationControls({ count, onChange, onInput, color }: DenominationC
 
   return (
     <div className="flex items-center gap-2">
-      <button
-        type="button"
-        onClick={() => onChange(-1)}
-        className={`w-10 h-10 rounded ${classes.minus} text-white font-bold text-lg disabled:opacity-30`}
-        disabled={count === 0}
-        aria-label="Decrease"
-      >
-        −
-      </button>
       <input
         type="number"
         inputMode="numeric"
         min="0"
-        className="flex-1 text-center font-semibold text-base min-w-[60px] border rounded focus:outline-none focus:ring-2 py-2 px-3"
+        className="flex-1 text-center font-semibold text-base min-w-[60px] border rounded focus:outline-none focus:ring-2 py-2 px-3 dark:text-gray-700"
         value={count}
         onChange={(e) => onInput(parseInt(e.target.value) || 0)}
       />
-      <button
-        type="button"
-        onClick={() => onChange(1)}
-        className={`w-10 h-10 rounded ${classes.plus} text-white font-bold text-lg`}
-        aria-label="Increase"
-      >
-        +
-      </button>
     </div>
   )
 }
