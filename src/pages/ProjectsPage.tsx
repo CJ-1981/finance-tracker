@@ -400,14 +400,15 @@ export default function ProjectsPage() {
       sessionStorage.removeItem('redirectAfterLogin')
       await signOut()
       console.log('Logged out successfully, redirecting...')
-      // Use window.location.replace to bypass React Router and go directly to landing page
-      // This prevents the redirect to /login that would happen with navigate('/')
-      window.location.replace('/')
+      // Use BASE_URL to respect deployment path (e.g., /finance-tracker/)
+      const basePath = (import.meta as any).env?.BASE_URL || ''
+      window.location.href = window.location.origin + basePath
     } catch (error) {
       console.error('Logout error:', error)
       // Force redirect to landing page even if signOut fails
       sessionStorage.removeItem('redirectAfterLogin')
-      window.location.replace('/')
+      const basePath = (import.meta as any).env?.BASE_URL || ''
+      window.location.href = window.location.origin + basePath
     }
   }
 
