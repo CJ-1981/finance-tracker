@@ -401,15 +401,15 @@ export default function ProjectsPage() {
       await signOut()
       console.log('Logged out successfully, redirecting...')
       // Use BASE_URL to respect deployment path (e.g., /finance-tracker/)
-      // Use replace() instead of href to avoid popup in PWA
-      const basePath = (import.meta as any).env?.BASE_URL || ''
-      window.location.replace(window.location.origin + basePath)
+      // Use relative path with replace() for PWA compatibility
+      const basePath = (import.meta as any).env?.BASE_URL || '/'
+      window.location.replace(basePath)
     } catch (error) {
       console.error('Logout error:', error)
       // Force redirect to landing page even if signOut fails
       sessionStorage.removeItem('redirectAfterLogin')
-      const basePath = (import.meta as any).env?.BASE_URL || ''
-      window.location.replace(window.location.origin + basePath)
+      const basePath = (import.meta as any).env?.BASE_URL || '/'
+      window.location.replace(basePath)
     }
   }
 
