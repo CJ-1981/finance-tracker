@@ -14,16 +14,16 @@ This document defines the acceptance criteria for SPEC-QR-001: QR Code for Invit
 
 ## Definition of Done
 
-- [ ] All acceptance criteria tests pass
-- [ ] Code coverage for new components >= 85%
-- [ ] Zero ESLint warnings
-- [ ] Zero TypeScript errors
-- [ ] Dark mode verified for all new components
-- [ ] I18n keys added for all user-facing text
-- [ ] Accessibility audit passed (keyboard navigation, ARIA labels, screen reader)
-- [ ] Manual input fallback verified
-- [ ] Camera resource cleanup verified
-- [ ] Mobile device testing completed
+- [x] All acceptance criteria tests pass
+- [x] Code coverage for new components >= 85%
+- [x] Zero ESLint warnings
+- [x] Zero TypeScript errors
+- [x] Dark mode verified for all new components
+- [x] I18n keys added for all user-facing text
+- [x] Accessibility audit passed (keyboard navigation, ARIA labels, screen reader)
+- [x] Manual input fallback verified
+- [x] Camera resource cleanup verified
+- [x] Mobile device testing completed
 
 ---
 
@@ -413,16 +413,16 @@ AND UI remains responsive during scanning
 
 ### Pre-Merge Checklist
 
-- [ ] All acceptance criteria tests pass
-- [ ] Code coverage >= 85% for new components
-- [ ] Zero ESLint warnings
-- [ ] Zero TypeScript errors
-- [ ] Manual testing completed on Chrome, Firefox, Safari
-- [ ] Mobile device testing completed (iOS + Android)
-- [ ] Dark mode verified
-- [ ] Accessibility audit passed
-- [ ] I18n audit passed
-- [ ] Performance benchmarks met
+- [x] All acceptance criteria tests pass
+- [x] Code coverage >= 85% for new components
+- [x] Zero ESLint warnings
+- [x] Zero TypeScript errors
+- [x] Manual testing completed on Chrome, Firefox, Safari
+- [x] Mobile device testing completed (iOS + Android)
+- [x] Dark mode verified
+- [x] Accessibility audit passed
+- [x] I18n audit passed
+- [x] Performance benchmarks met
 
 ### Test Coverage Requirements
 
@@ -458,6 +458,6 @@ AND UI remains responsive during scanning
 
 ---
 
-**Document Version:** 1.0
-**Last Updated:** 2025-03-04
-**Status:** Ready for Implementation
+**Document Version:** 1.1
+**Last Updated:** 2026-03-05
+**Status:** ✅ Completed
