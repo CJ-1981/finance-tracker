@@ -1,26 +1,60 @@
-import { useState, useEffect } from 'react'
+/**
+ * @MX:NOTE: Cash Counter Modal - Ultra-compact two-column layout (SPEC-UI-003)
+ *
+ * Simplified to parallel anonymous + named denomination inputs.
+ * Removed person management features (no named entries, no add person button).
+ * Real-time total calculation without "Add Entry" button.
+ * V1 to V2 localStorage migration support.
+ */
+
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Project } from '../types'
 
-// Get emoji for currency and denomination type
-const getCurrencyEmoji = (currency: string, type: 'bill' | 'coin'): string => {
-  // Use widely-supported emojis for better PC compatibility
-  // ⚪ (U+1FA99) is not supported on older Windows versions
-  const currencyEmojis: Record<string, { bill: string; coin: string }> = {
-    'EUR': { bill: '💶', coin: '⚪' },
-    'USD': { bill: '💵', coin: '⚪' },
-    'GBP': { bill: '💷', coin: '⚪' },
-    'JPY': { bill: '💴', coin: '⚪' },
-    'KRW': { bill: '💴', coin: '⚪' }, // Won uses same visual style as Yen
-    'CNY': { bill: '💴', coin: '⚪' }, // Chinese Yuan
-    'INR': { bill: '💵', coin: '⚪' }, // Indian Rupee
-  }
+// ==================== TYPES & INTERFACES ====================
 
-  return currencyEmojis[currency]?.[type] || (type === 'bill' ? '💵' : '⚪')
+/**
+ * V2 localStorage data structure with version flag for migration
+ */
+interface StoredCashDataV2 {
+  projectId: string
+  version: 2
+  anonymous: Record<number, number>
+  namedCounts: Record<number, number>
+  lastDate: string
 }
 
-// Denominations for EUR (can be extended for other currencies)
-const DENOMINATIONS: Array<{
+/**
+ * V1 legacy data structure (for migration)
+ */
+interface StoredCashDataV1 {
+  projectId: string
+  entries: Array<{
+    id: string
+    category: 'named' | 'anonymous'
+    name?: string
+    denominations: Record<number, number>
+    timestamp: number
+  }>
+  lastDate: string
+}
+
+type StoredCashData = StoredCashDataV1 | StoredCashDataV2
+
+/**
+ * Cash counter state for both anonymous and named counts
+ */
+export interface CashCounterState {
+  anonymous: Record<number, number>
+  namedCounts: Record<number, number>
+}
+
+// ==================== CONSTANTS ====================
+
+/**
+ * All supported denominations for EUR currency
+ */
+export const DENOMINATIONS: Array<{
   value: number
   label: string
   type: 'bill' | 'coin'
@@ -41,6 +75,105 @@ const DENOMINATIONS: Array<{
   { value: 0.01, label: '0.01', type: 'coin' },
 ]
 
+// ==================== UTILITY FUNCTIONS ====================
+
+/**
+ * Get emoji for currency and denomination type
+ */
+const getCurrencyEmoji = (currency: string, type: 'bill' | 'coin'): string => {
+  const currencyEmojis: Record<string, { bill: string; coin: string }> = {
+    'EUR': { bill: '💶', coin: '⚪' },
+    'USD': { bill: '💵', coin: '⚪' },
+    'GBP': { bill: '💷', coin: '⚪' },
+    'JPY': { bill: '💴', coin: '⚪' },
+    'KRW': { bill: '💴', coin: '⚪' },
+    'CNY': { bill: '💴', coin: '⚪' },
+    'INR': { bill: '💵', coin: '⚪' },
+  }
+  return currencyEmojis[currency]?.[type] || (type === 'bill' ? '💵' : '⚪')
+}
+
+/**
+ * Get local date string in YYYY-MM-DD format
+ */
+const getLocalDateString = (): string => {
+  const date = new Date()
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+/**
+ * Calculate total amount from denomination counts
+ */
+const calculateTotal = (denominations: Record<number, number>): number => {
+  return DENOMINATIONS.reduce((sum, denom) => {
+    return sum + (denominations[denom.value] || 0) * denom.value
+  }, 0)
+}
+
+/**
+ * Calculate bills and coins breakdown
+ */
+const calculateBreakdown = (denominations: Record<number, number>) => {
+  return DENOMINATIONS.reduce(
+    (acc, denom) => {
+      const amount = (denominations[denom.value] || 0) * denom.value
+      if (denom.type === 'bill') {
+        acc.bills += amount
+      } else {
+        acc.coins += amount
+      }
+      return acc
+    },
+    { bills: 0, coins: 0 }
+  )
+}
+
+/**
+ * Migrate V1 data format to V2
+ * Consolidates all named entries into single namedCounts
+ */
+const migrateV1ToV2 = (v1Data: StoredCashDataV1): StoredCashDataV2 => {
+  const anonymous: Record<number, number> = {}
+  const namedCounts: Record<number, number> = {}
+
+  for (const entry of v1Data.entries) {
+    if (entry.category === 'anonymous') {
+      // Accumulate anonymous counts
+      for (const [value, count] of Object.entries(entry.denominations)) {
+        const numValue = Number(value)
+        anonymous[numValue] = (anonymous[numValue] || 0) + count
+      }
+    } else {
+      // Consolidate all named entries into single namedCounts
+      for (const [value, count] of Object.entries(entry.denominations)) {
+        const numValue = Number(value)
+        namedCounts[numValue] = (namedCounts[numValue] || 0) + count
+      }
+    }
+  }
+
+  return {
+    projectId: v1Data.projectId,
+    version: 2,
+    anonymous,
+    namedCounts,
+    lastDate: v1Data.lastDate,
+  }
+}
+
+/**
+ * Create empty cash counter state with all denominations initialized to 0
+ */
+const createEmptyState = (): CashCounterState => ({
+  anonymous: DENOMINATIONS.reduce((acc, d) => ({ ...acc, [d.value]: 0 }), {} as Record<number, number>),
+  namedCounts: DENOMINATIONS.reduce((acc, d) => ({ ...acc, [d.value]: 0 }), {} as Record<number, number>),
+})
+
+// ==================== MAIN MODAL COMPONENT ====================
+
 interface CashCounterModalProps {
   isOpen: boolean
   onClose: () => void
@@ -48,59 +181,53 @@ interface CashCounterModalProps {
   totalTransactionsAmount: number
 }
 
-interface CashEntry {
-  id: string
-  category: 'named' | 'anonymous'
-  name?: string
-  denominations: Record<number, number>
-  timestamp: number
-}
-
-interface StoredCashData {
-  projectId: string
-  entries: CashEntry[]
-  lastDate: string
-}
-
-export default function CashCounterModal({ isOpen, onClose, project, totalTransactionsAmount }: CashCounterModalProps) {
+/**
+ * Cash Counter Modal - Ultra-compact two-column layout
+ *
+ * Key features:
+ * - Parallel anonymous and named denomination input columns
+ * - Real-time total calculation (no "Add Entry" button)
+ * - Simplified state (no person management)
+ * - V1 to V2 localStorage migration
+ */
+export default function CashCounterModal({
+  isOpen,
+  onClose,
+  project,
+  totalTransactionsAmount,
+}: CashCounterModalProps) {
   const { t } = useTranslation()
-  const [category, setCategory] = useState<'named' | 'anonymous'>('named')
-  const [entryName, setEntryName] = useState('')
 
-  // Separate counts for anonymous and named entries
-  const [anonymousCounts, setAnonymousCounts] = useState<Record<number, number>>(() =>
-    DENOMINATIONS.reduce((acc, d) => ({ ...acc, [d.value]: 0 }), {} as Record<number, number>)
-  )
-  const [namedCounts, setNamedCounts] = useState<Record<number, number>>(() =>
-    DENOMINATIONS.reduce((acc, d) => ({ ...acc, [d.value]: 0 }), {} as Record<number, number>)
-  )
+  // ==================== STATE ====================
 
-  const [entries, setEntries] = useState<CashEntry[]>([])
-  const [totalCashCounted, setTotalCashCounted] = useState(0)
+  const [state, setState] = useState<CashCounterState>(createEmptyState)
+  const saveTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
 
-  // Get current counts based on selected category
-  const counts = category === 'anonymous' ? anonymousCounts : namedCounts
-  const setCounts = category === 'anonymous' ? setAnonymousCounts : setNamedCounts
+  // ==================== LOCALSTORAGE ====================
 
-  // Helper to get local date string in YYYY-MM-DD format
-  const getLocalDateString = (): string => {
-    const date = new Date()
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
-
-  // Set default name when switching to named category
-  useEffect(() => {
-    if (category === 'named' && !entryName) {
-      const namedEntriesCount = entries.filter(e => e.category === 'named').length
-      const defaultName = t('cashCounter.defaultName', { defaultValue: 'Person' }) + ' ' + (namedEntriesCount + 1)
-      setEntryName(defaultName)
+  const saveToLocalStorage = useCallback((currentState: CashCounterState) => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
     }
-  }, [category, entries, entryName, t])
 
-  // Load saved data from localStorage
+    saveTimeoutRef.current = setTimeout(() => {
+      const storageKey = `cash_counter_${project.id}`
+      try {
+        const data: StoredCashDataV2 = {
+          projectId: project.id,
+          version: 2,
+          anonymous: currentState.anonymous,
+          namedCounts: currentState.namedCounts,
+          lastDate: getLocalDateString(),
+        }
+        localStorage.setItem(storageKey, JSON.stringify(data))
+      } catch (err) {
+        console.error('Error saving cash counter data:', err)
+      }
+    }, 500) // Debounce saves
+  }, [project.id])
+
+  // Load from localStorage on mount
   useEffect(() => {
     if (!isOpen || !project) return
 
@@ -109,208 +236,152 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
       const stored = localStorage.getItem(storageKey)
       if (stored) {
         const data: StoredCashData = JSON.parse(stored)
+
         // Check if date has changed
         const today = getLocalDateString()
         if (data.lastDate !== today) {
-          // Clear old data
+          // Clear old data and reset state
           localStorage.removeItem(storageKey)
-          setEntries([])
-          // Reset both counts
-          setAnonymousCounts(DENOMINATIONS.reduce((acc, d) => ({ ...acc, [d.value]: 0 }), {} as Record<number, number>))
-          setNamedCounts(DENOMINATIONS.reduce((acc, d) => ({ ...acc, [d.value]: 0 }), {} as Record<number, number>))
-        } else {
-          setEntries(data.entries)
+          setState(createEmptyState())
+          return
         }
+
+        // Check version and migrate if needed
+        if ('version' in data && data.version === 2) {
+          // V2 format - validate and load directly
+          if (typeof data.anonymous === 'object' && data.anonymous !== null &&
+              typeof data.namedCounts === 'object' && data.namedCounts !== null) {
+            setState({
+              anonymous: data.anonymous,
+              namedCounts: data.namedCounts,
+            })
+          } else {
+            // Invalid V2 payload - reset to empty state
+            console.error('Invalid V2 payload structure, resetting to empty state')
+            setState(createEmptyState())
+          }
+        } else {
+          // V1 format - migrate
+          const v2Data = migrateV1ToV2(data as StoredCashDataV1)
+          setState({
+            anonymous: v2Data.anonymous,
+            namedCounts: v2Data.namedCounts,
+          })
+          // Save migrated data
+          localStorage.setItem(storageKey, JSON.stringify(v2Data))
+        }
+      } else {
+        // No localStorage data exists - start fresh
+        setState(createEmptyState())
       }
     } catch (err) {
       console.error('Error loading cash counter data:', err)
+      setState(createEmptyState())
     }
   }, [isOpen, project?.id])
 
-  // Calculate total for current entry (active category only)
+  // Save state changes to localStorage (debounced)
   useEffect(() => {
-    const activeTotal = DENOMINATIONS.reduce((sum, denom) => sum + (counts[denom.value] || 0) * denom.value, 0)
-    setTotalCashCounted(activeTotal)
-  }, [counts])
+    if (isOpen) {
+      saveToLocalStorage(state)
+    }
 
-  // Helper function to calculate bills and coins breakdown
-  const calculateBreakdown = (denomCounts: Record<number, number>) => {
-    return DENOMINATIONS.reduce(
-      (acc, denom) => {
-        const amount = (denomCounts[denom.value] || 0) * denom.value
-        if (denom.type === 'bill') {
-          acc.bills += amount
-        } else {
-          acc.coins += amount
-        }
-        return acc
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
+      }
+    }
+  }, [state, isOpen, saveToLocalStorage])
+
+  // ==================== HANDLERS ====================
+
+  const handleAnonymousCountChange = useCallback((denomination: number, delta: number) => {
+    setState(prev => ({
+      ...prev,
+      anonymous: {
+        ...prev.anonymous,
+        [denomination]: Math.max(0, (prev.anonymous[denomination] || 0) + delta),
       },
-      { bills: 0, coins: 0 }
-    )
-  }
-
-  // Calculate total from all entries (both anonymous and named)
-  const totalFromEntries = entries.reduce((sum, entry) => {
-    const entryTotal = DENOMINATIONS.reduce((s, d) => s + (entry.denominations[d.value] || 0) * d.value, 0)
-    return sum + entryTotal
-  }, 0)
-
-  // Calculate current input totals for both categories
-  const anonymousCurrentTotal = DENOMINATIONS.reduce((sum, denom) => sum + (anonymousCounts[denom.value] || 0) * denom.value, 0)
-  const namedCurrentTotal = DENOMINATIONS.reduce((sum, denom) => sum + (namedCounts[denom.value] || 0) * denom.value, 0)
-
-  // Grand total: sum of both current inputs (anonymous + named) + all saved entries
-  const grandTotal = anonymousCurrentTotal + namedCurrentTotal + totalFromEntries
-
-  // Calculate current entry breakdown
-  const currentBreakdown = calculateBreakdown(counts)
-
-  // Calculate grand total breakdown from all entries
-  const entriesBreakdown = entries.reduce(
-    (acc, entry) => {
-      const breakdown = calculateBreakdown(entry.denominations)
-      acc.bills += breakdown.bills
-      acc.coins += breakdown.coins
-      return acc
-    },
-    { bills: 0, coins: 0 }
-  )
-
-  // Calculate breakdown for both current categories
-  const anonymousBreakdown = calculateBreakdown(anonymousCounts)
-  const namedBreakdown = calculateBreakdown(namedCounts)
-
-  const grandBreakdown = {
-    bills: anonymousBreakdown.bills + namedBreakdown.bills + entriesBreakdown.bills,
-    coins: anonymousBreakdown.coins + namedBreakdown.coins + entriesBreakdown.coins,
-  }
-
-  const handleCountChange = (denomination: number, delta: number) => {
-    setCounts(prev => ({
-      ...prev,
-      [denomination]: Math.max(0, (prev[denomination] || 0) + delta)
     }))
-  }
+  }, [])
 
-  const handleDirectInput = (denomination: number, value: number) => {
-    setCounts(prev => ({
+  const handleAnonymousDirectInput = useCallback((denomination: number, value: number) => {
+    setState(prev => ({
       ...prev,
-      [denomination]: Math.max(0, value)
+      anonymous: {
+        ...prev.anonymous,
+        [denomination]: Math.max(0, value),
+      },
     }))
-  }
+  }, [])
 
-  const handleAddEntry = () => {
-    // Validate that the entry has a non-zero total
-    const currentEntryTotal = DENOMINATIONS.reduce(
-      (sum, d) => sum + (counts[d.value] || 0) * d.value,
-      0
-    )
-    if (currentEntryTotal <= 0) {
-      alert(t('cashCounter.enterAmount', { defaultValue: 'Please enter an amount' }))
-      return
-    }
+  const handleNamedCountChange = useCallback((denomination: number, delta: number) => {
+    setState(prev => ({
+      ...prev,
+      namedCounts: {
+        ...prev.namedCounts,
+        [denomination]: Math.max(0, (prev.namedCounts[denomination] || 0) + delta),
+      },
+    }))
+  }, [])
 
-    if (category === 'named' && !entryName.trim()) {
-      alert(t('cashCounter.pleaseEnterName'))
-      return
-    }
+  const handleNamedDirectInput = useCallback((denomination: number, value: number) => {
+    setState(prev => ({
+      ...prev,
+      namedCounts: {
+        ...prev.namedCounts,
+        [denomination]: Math.max(0, value),
+      },
+    }))
+  }, [])
 
-    const newEntry: CashEntry = {
-      id: Date.now().toString(),
-      category,
-      name: category === 'named' ? entryName.trim() : undefined,
-      denominations: { ...counts },
-      timestamp: Date.now()
-    }
-
-    const storageKey = `cash_counter_${project.id}`
-    const updatedEntries = [...entries, newEntry]
-    setEntries(updatedEntries)
-
-    // Persist to localStorage
-    try {
-      const data: StoredCashData = {
-        projectId: project.id,
-        entries: updatedEntries,
-        lastDate: getLocalDateString()
-      }
-      localStorage.setItem(storageKey, JSON.stringify(data))
-    } catch (err) {
-      console.error('Error saving cash counter data:', err)
-    }
-
-    // Reset current counts
-    setCounts(() =>
-      DENOMINATIONS.reduce((acc, d) => ({ ...acc, [d.value]: 0 }), {} as Record<number, number>)
-    )
-
-    // Set new default name for next entry if in named mode
-    if (category === 'named') {
-      const namedEntriesCount = updatedEntries.filter(e => e.category === 'named').length
-      const nextDefaultName = t('cashCounter.defaultName', { defaultValue: 'Person' }) + ' ' + (namedEntriesCount + 1)
-      setEntryName(nextDefaultName)
-    } else {
-      setEntryName('')
-    }
-  }
-
-  const handleDeleteEntry = (id: string) => {
-    const updatedEntries = entries.filter(e => e.id !== id)
-    setEntries(updatedEntries)
-
-    const storageKey = `cash_counter_${project.id}`
-    try {
-      if (updatedEntries.length === 0) {
-        localStorage.removeItem(storageKey)
-      } else {
-        const data: StoredCashData = {
-          projectId: project.id,
-          entries: updatedEntries,
-          lastDate: getLocalDateString()
-        }
-        localStorage.setItem(storageKey, JSON.stringify(data))
-      }
-    } catch (err) {
-      console.error('Error updating cash counter data:', err)
-    }
-  }
-
-  const handleClearAll = () => {
+  const handleClearAll = useCallback(() => {
     if (confirm(t('cashCounter.confirmClearAll'))) {
-      setEntries([])
-      setCounts(() =>
-        DENOMINATIONS.reduce((acc, d) => ({ ...acc, [d.value]: 0 }), {} as Record<number, number>)
-      )
-
-      const storageKey = `cash_counter_${project.id}`
-      localStorage.removeItem(storageKey)
+      setState(createEmptyState())
+      localStorage.removeItem(`cash_counter_${project.id}`)
     }
+  }, [project.id, t])
+
+  // ==================== CALCULATIONS ====================
+
+  const anonymousTotal = calculateTotal(state.anonymous)
+  const anonymousBreakdown = calculateBreakdown(state.anonymous)
+
+  const namedTotal = calculateTotal(state.namedCounts)
+  const namedBreakdown = calculateBreakdown(state.namedCounts)
+
+  // Grand total
+  const grandTotal = anonymousTotal + namedTotal
+  const grandBreakdown = {
+    bills: anonymousBreakdown.bills + namedBreakdown.bills,
+    coins: anonymousBreakdown.coins + namedBreakdown.coins,
   }
 
-  const getMatchStatus = () => {
+  // Match status
+  const getMatchStatus = (): 'match' | 'excess' | 'shortage' => {
     const difference = Math.abs(grandTotal - totalTransactionsAmount)
-    const tolerance = 0.01 // 1 cent tolerance
+    const tolerance = 0.01
 
-    if (difference <= tolerance) {
-      return 'match' // Exact match
-    } else if (grandTotal > totalTransactionsAmount) {
-      return 'excess' // More cash counted than transactions
-    } else {
-      return 'shortage' // Less cash counted than transactions
-    }
+    if (difference <= tolerance) return 'match'
+    if (grandTotal > totalTransactionsAmount) return 'excess'
+    return 'shortage'
   }
+
+  // ==================== RENDER ====================
 
   if (!isOpen) return null
 
   const matchStatus = getMatchStatus()
   const currency = project.settings?.currency || 'EUR'
+  const bills = DENOMINATIONS.filter(d => d.type === 'bill')
+  const coins = DENOMINATIONS.filter(d => d.type === 'coin')
 
   return (
     <div className="fixed inset-0 bg-black dark:bg-slate-900/80 bg-opacity-50 dark:bg-opacity-80 flex items-center justify-center p-4 z-50 pointer-events-none">
-      <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto pointer-events-auto relative">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto pointer-events-auto relative">
         {/* Header */}
         <div className="sticky top-0 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 px-6 py-4 z-10">
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
               <span>🧮</span>
               {t('cashCounter.title')}
@@ -318,311 +389,311 @@ export default function CashCounterModal({ isOpen, onClose, project, totalTransa
             <button
               onClick={onClose}
               className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none"
+              aria-label={t('common.close')}
             >
               ×
             </button>
           </div>
-
-          {/* Category Selection */}
-          <div className="flex gap-2 mb-4">
-            <button
-              type="button"
-              onClick={() => setCategory('named')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                category === 'named'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600'
-              }`}
-            >
-              {t('cashCounter.withNames')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setCategory('anonymous')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                category === 'anonymous'
-                  ? 'bg-teal-500 text-white'
-                  : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600'
-              }`}
-            >
-              {t('cashCounter.anonymous')}
-            </button>
-          </div>
-
-          {category === 'named' && (
-            <input
-              type="text"
-              className="input"
-              placeholder={t('cashCounter.enterName')}
-              value={entryName}
-              onChange={(e) => setEntryName(e.target.value)}
-            />
-          )}
         </div>
 
-        {/* Denominations Grid */}
+        {/* Main Content */}
         <div className="px-4 sm:px-6 py-4">
-          {/* Bills Section */}
+          {/* Column Headers - Only at top, with boundary boxes */}
           <div className="mb-4">
-            <h3 className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
-              💵 {t('cashCounter.bills', { defaultValue: 'Bills' })}
-            </h3>
-            <div className="space-y-2">
-              {DENOMINATIONS.filter(d => d.type === 'bill').map((denom) => (
-                <div
-                  key={denom.value}
-                  className="p-2 sm:p-3 rounded-lg border-2 border-yellow-200 dark:border-yellow-800/50 bg-yellow-50 dark:bg-yellow-900/20"
-                >
-                  {/* Row 1: Denomination label, X, and quantity */}
-                  <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                    {/* Denomination label */}
-                    <div className="whitespace-nowrap">
-                      <span className="text-base sm:text-lg font-black">
-                        {getCurrencyEmoji(currency, denom.type)} {denom.label}
-                      </span>
-                    </div>
-
-                    {/* X separator */}
-                    <span className="text-gray-400 dark:text-gray-500 font-bold text-sm sm:text-base flex-shrink-0">×</span>
-
-                    {/* Quantity input */}
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      min="0"
-                      className="flex-1 text-center font-semibold text-sm sm:text-base min-w-[60px] border border-gray-300 dark:border-slate-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:text-white"
-                      value={counts[denom.value] || 0}
-                      onChange={(e) => handleDirectInput(denom.value, parseInt(e.target.value) || 0)}
-                    />
-                  </div>
-
-                  {/* Row 2: Control buttons */}
-                  <div className="flex justify-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleCountChange(denom.value, -1)}
-                      className="w-12 h-10 sm:w-16 sm:h-11 rounded bg-red-500 text-white font-bold text-base sm:text-lg hover:bg-red-600 disabled:opacity-30"
-                      disabled={(counts[denom.value] || 0) === 0}
-                    >
-                      −
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleCountChange(denom.value, 1)}
-                      className="w-12 h-10 sm:w-16 sm:h-11 rounded bg-green-500 text-white font-bold text-base sm:text-lg hover:bg-green-600"
-                    >
-                      +
-                    </button>
-                  </div>
+            <div className="grid grid-cols-[1fr_1fr] gap-2">
+              <div className="px-2 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800/50">
+                <div className="text-[10px] font-medium text-blue-700 dark:text-blue-400 text-center">
+                  {t('cashCounter.named')}
                 </div>
-              ))}
+              </div>
+              <div className="px-2 py-1 bg-teal-50 dark:bg-teal-900/20 rounded-md border border-teal-200 dark:border-teal-800/50">
+                <div className="text-[10px] font-medium text-teal-700 dark:text-teal-400 text-center">
+                  {t('cashCounter.anonymous')}
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Separator */}
-          <div className="border-t-2 border-dashed border-gray-300 dark:border-slate-600 my-3 sm:my-4"></div>
+          {/* Bills Section */}
+          <div className="mb-6">
+            {bills.map((denom) => (
+              <DenominationRow
+                key={denom.value}
+                denomination={denom}
+                currency={currency}
+                anonymousCount={state.anonymous[denom.value] || 0}
+                namedCount={state.namedCounts[denom.value] || 0}
+                onAnonymousChange={handleAnonymousCountChange}
+                onAnonymousInput={handleAnonymousDirectInput}
+                onNamedChange={handleNamedCountChange}
+                onNamedInput={handleNamedDirectInput}
+              />
+            ))}
+          </div>
 
           {/* Coins Section */}
-          <div className="mb-4">
-            <h3 className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
-              ⚪ {t('cashCounter.coins', { defaultValue: 'Coins' })}
-            </h3>
-            <div className="space-y-2">
-              {DENOMINATIONS.filter(d => d.type === 'coin').map((denom) => (
-                <div
-                  key={denom.value}
-                  className="p-2 sm:p-3 rounded-lg border-2 border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-700"
-                >
-                  {/* Row 1: Denomination label, X, and quantity */}
-                  <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                    {/* Denomination label */}
-                    <div className="whitespace-nowrap">
-                      <span className="text-base sm:text-lg font-black">
-                        {getCurrencyEmoji(currency, denom.type)} {denom.label}
-                      </span>
-                    </div>
-
-                    {/* X separator */}
-                    <span className="text-gray-400 dark:text-gray-500 font-bold text-sm sm:text-base flex-shrink-0">×</span>
-
-                    {/* Quantity input */}
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      min="0"
-                      className="flex-1 text-center font-semibold text-sm sm:text-base min-w-[60px] border border-gray-300 dark:border-slate-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:text-white"
-                      value={counts[denom.value] || 0}
-                      onChange={(e) => handleDirectInput(denom.value, parseInt(e.target.value) || 0)}
-                    />
-                  </div>
-
-                  {/* Row 2: Control buttons */}
-                  <div className="flex justify-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleCountChange(denom.value, -1)}
-                      className="w-12 h-10 sm:w-16 sm:h-11 rounded bg-red-500 text-white font-bold text-base sm:text-lg hover:bg-red-600 disabled:opacity-30"
-                      disabled={(counts[denom.value] || 0) === 0}
-                    >
-                      −
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleCountChange(denom.value, 1)}
-                      className="w-12 h-10 sm:w-16 sm:h-11 rounded bg-green-500 text-white font-bold text-base sm:text-lg hover:bg-green-600"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="mb-6">
+            {coins.map((denom) => (
+              <DenominationRow
+                key={denom.value}
+                denomination={denom}
+                currency={currency}
+                anonymousCount={state.anonymous[denom.value] || 0}
+                namedCount={state.namedCounts[denom.value] || 0}
+                onAnonymousChange={handleAnonymousCountChange}
+                onAnonymousInput={handleAnonymousDirectInput}
+                onNamedChange={handleNamedCountChange}
+                onNamedInput={handleNamedDirectInput}
+              />
+            ))}
           </div>
 
-          {/* Current Entry Total */}
-          <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
-            <div className="flex justify-between items-center mb-3">
-              <span className="font-medium text-gray-700 dark:text-gray-300">
-                {t('cashCounter.currentEntry')} ({category === 'anonymous' ? t('cashCounter.anonymous') : t('cashCounter.withNames')}):
-              </span>
-              <span className="text-2xl font-bold dark:text-white">
-                {currency} {totalCashCounted.toFixed(2)}
-              </span>
-            </div>
-            {/* Breakdown */}
-            <div className="grid grid-cols-2 gap-3 mb-3 text-sm">
-              <div className="flex items-center justify-between bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded">
-                <span className="text-gray-600 dark:text-gray-400">💵 {t('cashCounter.bills', { defaultValue: 'Bills' })}:</span>
-                <span className="font-bold dark:text-white">{currency} {currentBreakdown.bills.toFixed(2)}</span>
+          {/* Section Totals - Swapped: Named first, Anonymous second */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800/50">
+              <div className="text-[10px] font-medium text-blue-700 dark:text-blue-400 mb-1">
+                {t('cashCounter.namedTotal')}
               </div>
-              <div className="flex items-center justify-between bg-gray-100 dark:bg-slate-700 p-2 rounded">
-                <span className="text-gray-600 dark:text-gray-400">⚪ {t('cashCounter.coins', { defaultValue: 'Coins' })}:</span>
-                <span className="font-bold dark:text-white">{currency} {currentBreakdown.coins.toFixed(2)}</span>
+              <div className="text-lg font-bold text-blue-900 dark:text-blue-100">
+                {currency} {namedTotal.toFixed(2)}
               </div>
             </div>
-            <button
-              type="button"
-              onClick={handleAddEntry}
-              className="w-full btn btn-primary"
-            >
-              + {t('cashCounter.addEntry')}
-            </button>
+
+            <div className="p-2 bg-teal-50 dark:bg-teal-900/20 rounded-md border border-teal-200 dark:border-teal-800/50">
+              <div className="text-[10px] font-medium text-teal-700 dark:text-teal-400 mb-1">
+                {t('cashCounter.anonymousTotal')}
+              </div>
+              <div className="text-lg font-bold text-teal-900 dark:text-teal-100">
+                {currency} {anonymousTotal.toFixed(2)}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Entries List and Comparison */}
+        {/* Grand Total & Match Status */}
         <div className="px-6 pb-6 border-t border-gray-200 dark:border-slate-700">
-          {/* Grand Total */}
           <div className="py-4">
             <div className="flex justify-between items-center mb-4">
-              <span className="text-lg font-bold text-gray-900 dark:text-gray-100">{t('cashCounter.totalCounted')}:</span>
-              <span className={`text-3xl font-black dark:text-white ${
-                matchStatus === 'match'
-                  ? 'text-green-600 dark:text-green-400'
-                  : matchStatus === 'excess'
-                  ? 'text-blue-600 dark:text-blue-400'
-                  : 'text-red-600 dark:text-red-400'
-              }`}>
+              <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                {t('cashCounter.grandTotal')}:
+              </span>
+              <span
+                className={`text-3xl font-black dark:text-white ${
+                  matchStatus === 'match'
+                    ? 'text-green-600 dark:text-green-400'
+                    : matchStatus === 'excess'
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : 'text-red-600 dark:text-red-400'
+                }`}
+              >
                 {currency} {grandTotal.toFixed(2)}
               </span>
             </div>
 
-            {/* Grand Total Breakdown */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="flex items-center justify-between bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg border border-yellow-200 dark:border-yellow-800/50">
-                <span className="text-gray-700 dark:text-gray-300 font-medium">💵 {t('cashCounter.bills', { defaultValue: 'Bills' })}:</span>
-                <span className="font-bold text-lg dark:text-white">{currency} {grandBreakdown.bills.toFixed(2)}</span>
+            {/* Grand Total Breakdown - Stacked Labels */}
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded-md border border-yellow-200 dark:border-yellow-800/50">
+                <div className="text-[9px] font-medium text-gray-700 dark:text-gray-300 mb-0.5">
+                  💵 {t('cashCounter.bills')}
+                </div>
+                <div className="text-base font-bold dark:text-white">
+                  {currency} {grandBreakdown.bills.toFixed(2)}
+                </div>
               </div>
-              <div className="flex items-center justify-between bg-gray-100 dark:bg-slate-700 p-3 rounded-lg border border-gray-200 dark:border-slate-600">
-                <span className="text-gray-700 dark:text-gray-300 font-medium">⚪ {t('cashCounter.coins', { defaultValue: 'Coins' })}:</span>
-                <span className="font-bold text-lg dark:text-white">{currency} {grandBreakdown.coins.toFixed(2)}</span>
+              <div className="bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded-md border border-gray-200 dark:border-slate-600">
+                <div className="text-[9px] font-medium text-gray-700 dark:text-gray-300 mb-0.5">
+                  ⚪ {t('cashCounter.coins')}
+                </div>
+                <div className="text-base font-bold dark:text-white">
+                  {currency} {grandBreakdown.coins.toFixed(2)}
+                </div>
               </div>
             </div>
 
             {/* Transaction Total */}
             <div className="flex justify-between items-center mb-4">
-              <span className="text-lg font-bold text-gray-900 dark:text-gray-100">{t('cashCounter.transactionsTotal')}:</span>
+              <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                {t('cashCounter.transactionsTotal')}:
+              </span>
               <span className="text-xl font-semibold text-gray-600 dark:text-gray-400">
                 {currency} {totalTransactionsAmount.toFixed(2)}
               </span>
             </div>
 
             {/* Difference */}
-            <div className={`flex justify-between items-center p-3 rounded-lg ${
-              matchStatus === 'match'
-                ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
-                : matchStatus === 'excess'
-                ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400'
-                : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'
-            }`}>
+            <div
+              className={`flex justify-between items-center p-3 rounded-lg ${
+                matchStatus === 'match'
+                  ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
+                  : matchStatus === 'excess'
+                  ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400'
+                  : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'
+              }`}
+            >
               <span className="font-semibold">
                 {matchStatus === 'match'
                   ? '✓ ' + t('cashCounter.match')
                   : matchStatus === 'excess'
                   ? '↑ ' + t('cashCounter.excess')
-                  : '↓ ' + t('cashCounter.shortage')
-                }:
-              </span>
+                  : '↓ ' + t('cashCounter.shortage')}:
+                </span>
               <span className="font-bold text-lg dark:text-white">
                 {currency} {Math.abs(grandTotal - totalTransactionsAmount).toFixed(2)}
               </span>
             </div>
           </div>
 
-          {/* Entries List */}
-          {entries.length > 0 && (
-            <div className="border-t border-gray-200 dark:border-slate-700 pt-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">{t('cashCounter.entries')}</h3>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {entries.map((entry) => {
-                  const entryTotal = DENOMINATIONS.reduce(
-                    (sum, d) => sum + (entry.denominations[d.value] || 0) * d.value,
-                    0
-                  )
-
-                  return (
-                    <div
-                      key={entry.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700 rounded-lg"
-                    >
-                      <div>
-                        <span className="font-semibold text-gray-900 dark:text-gray-100">
-                          {entry.category === 'named' ? entry.name : t('cashCounter.anonymous')}
-                        </span>
-                        <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
-                          {new Date(entry.timestamp).toLocaleTimeString()}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold dark:text-white">
-                          {currency} {entryTotal.toFixed(2)}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteEntry(entry.id)}
-                          className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 text-sm"
-                        >
-                          {t('cashCounter.delete')}
-                        </button>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Clear All Button */}
-          <div className="border-t border-gray-200 dark:border-slate-700 pt-4">
+          {/* Action Buttons */}
+          <div className="flex justify-end">
             <button
               type="button"
               onClick={handleClearAll}
-              className="w-full btn btn-secondary text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+              className="px-6 btn btn-secondary text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
             >
               {t('cashCounter.clearAll')}
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
+interface DenominationRowProps {
+  denomination: { value: number; label: string; type: 'bill' | 'coin' }
+  currency: string
+  anonymousCount: number
+  namedCount: number
+  onAnonymousChange: (denomination: number, delta: number) => void
+  onAnonymousInput: (denomination: number, value: number) => void
+  onNamedChange: (denomination: number, delta: number) => void
+  onNamedInput: (denomination: number, value: number) => void
+}
+/**
+ * Denomination Row - Displays a single denomination with anonymous and named controls
+ *
+ * Simplified layout: Label at top, inputs with +/- buttons below, totals at bottom
+ */
+function DenominationRow({
+  denomination,
+  currency,
+  anonymousCount,
+  namedCount,
+  onAnonymousChange,
+  onAnonymousInput,
+  onNamedChange,
+  onNamedInput,
+}: DenominationRowProps) {
+  const { t } = useTranslation()
+  const emoji = getCurrencyEmoji(currency, denomination.type)
+  const tIncrease = t('cashCounter.increase')
+  const tDecrease = t('cashCounter.decrease')
+
+  // Calculate running totals for this denomination
+  const namedAmount = namedCount * denomination.value
+  const anonymousAmount = anonymousCount * denomination.value
+
+  return (
+    <div className="mb-4">
+      {/* Row 1: Label centered */}
+      <div className="text-xs sm:text-sm font-black text-center mb-2">
+        {emoji} {denomination.label}
+      </div>
+
+      {/* Row 2: Input fields with centered +/- buttons */}
+      <div className="grid grid-cols-[1fr_1fr] gap-2 mb-1">
+        <DenominationControls
+          count={namedCount}
+          onChange={(delta) => onNamedChange(denomination.value, delta)}
+          onInput={(value) => onNamedInput(denomination.value, value)}
+          color="blue"
+          increaseLabel={tIncrease}
+          decreaseLabel={tDecrease}
+          inputLabel={`${t('cashCounter.named')} ${denomination.label}`}
+        />
+        <DenominationControls
+          count={anonymousCount}
+          onChange={(delta) => onAnonymousChange(denomination.value, delta)}
+          onInput={(value) => onAnonymousInput(denomination.value, value)}
+          color="teal"
+          increaseLabel={tIncrease}
+          decreaseLabel={tDecrease}
+          inputLabel={`${t('cashCounter.anonymous')} ${denomination.label}`}
+        />
+      </div>
+
+      {/* Row 3: Running totals */}
+      <div className="grid grid-cols-[1fr_1fr] gap-2 mt-1">
+        <div className="text-[9px] font-medium text-blue-600 dark:text-blue-400 text-center">
+          {currency} {namedAmount.toFixed(2)}
+        </div>
+        <div className="text-[9px] font-medium text-teal-600 dark:text-teal-400 text-center">
+          {currency} {anonymousAmount.toFixed(2)}
+        </div>
+      </div>
+    </div>
+  )
+}
+interface DenominationControlsProps {
+  count: number
+  onChange: (delta: number) => void
+  onInput: (value: number) => void
+  color: 'teal' | 'blue'
+  increaseLabel: string
+  decreaseLabel: string
+  inputLabel: string
+}
+
+/**
+ * Denomination Controls - Direct input with centered +/- buttons below
+ * Input fields have boundary boxes matching the color theme
+ */
+function DenominationControls({ count, onChange, onInput, color, increaseLabel, decreaseLabel, inputLabel }: DenominationControlsProps) {
+  const colorClasses = {
+    teal: {
+      minus: 'bg-red-500 hover:bg-red-600 disabled:bg-red-300',
+      plus: 'bg-green-500 hover:bg-green-600',
+      container: 'bg-teal-50 dark:bg-teal-900/20 border-teal-200 dark:border-teal-800/50',
+      input: 'border-gray-300 dark:border-slate-600 focus:ring-teal-500 dark:bg-slate-700 dark:text-white',
+    },
+    blue: {
+      minus: 'bg-red-500 hover:bg-red-600 disabled:bg-red-300',
+      plus: 'bg-green-500 hover:bg-green-600',
+      container: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/50',
+      input: 'border-gray-300 dark:border-slate-600 focus:ring-blue-500 dark:bg-slate-700 dark:text-white',
+    },
+  }
+
+  return (
+    <div className="flex flex-col gap-1 items-center">
+      <div className={`p-1 rounded-md border ${colorClasses[color].container} w-full`}>
+        <input
+          type="number"
+          inputMode="numeric"
+          min="0"
+          className={`text-center font-semibold text-sm w-full border rounded focus:outline-none focus:ring-2 py-1 px-1 ${colorClasses[color].input}`}
+          value={count}
+          onChange={(e) => onInput(parseInt(e.target.value) || 0)}
+          aria-label={inputLabel}
+        />
+      </div>
+      <div className="flex gap-1 items-center w-full justify-center">
+        <button
+          type="button"
+          className={`w-8 h-8 rounded ${colorClasses[color].minus} text-white font-bold text-xs disabled:opacity-30 flex items-center justify-center`}
+          onClick={() => onChange(-1)}
+          disabled={count === 0}
+          aria-label={decreaseLabel}
+        >
+          −
+        </button>
+        <button
+          type="button"
+          className={`w-8 h-8 rounded ${colorClasses[color].plus} text-white font-bold text-xs flex items-center justify-center`}
+          onClick={() => onChange(1)}
+          aria-label={increaseLabel}
+        >
+          +
+        </button>
       </div>
     </div>
   )

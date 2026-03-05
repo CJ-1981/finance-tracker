@@ -971,9 +971,6 @@ export default function ProjectDetailPage() {
                       <option value="thisYear">{t('projectDetail.thisYear')}</option>
                       <option value="all">{t('projectDetail.allTime')}</option>
                     </select>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
-                      ({filteredTransactions.length} {t('projectDetail.transactions')})
-                    </span>
                   </div>
                 </div>
               )}

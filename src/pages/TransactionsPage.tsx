@@ -1541,7 +1541,7 @@ export default function TransactionsPage() {
                 </h2>
                 <button
                   onClick={isMultiSelectMode ? handleCancelMultiSelect : () => setIsMultiSelectMode(true)}
-                  className={`text-sm px-3 py-1 rounded ${isMultiSelectMode ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`}
+                  className={`text-sm px-3 py-1 rounded border transition-all ${isMultiSelectMode ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700' : 'border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600'}`}
                 >
                   {isMultiSelectMode ? 'Cancel' : 'Select'}
                 </button>
