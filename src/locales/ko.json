@@ -357,7 +357,20 @@
     "confirmClearAll": "모든 항목을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
     "pleaseEnterName": "이 항목의 이름을 입력해주세요.",
     "bills": "지폐",
-    "coins": "동전"
+    "coins": "동전",
+    "anonymousSection": "무명 현금",
+    "namedSection": "기명 항목",
+    "addPerson": "+ 사람 추가",
+    "addAnotherPerson": "+ 또 다른 사람 추가",
+    "personName": "사람 이름",
+    "person": "사람",
+    "deletePerson": "제거",
+    "anonymousTotal": "무명 합계",
+    "namedTotal": "기명 합계",
+    "grandTotal": "계산 합계",
+    "noNamedEntries": "아직 기명 항목이 없습니다. \"사람 추가\"를 클릭하여 만드세요.",
+    "total": "합계",
+    "enterAmount": "금액을 입력해주세요"
   },
   "qr": {
     "show": "QR 코드 표시",
