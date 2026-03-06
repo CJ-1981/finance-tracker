@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         case 'TOKEN_REFRESHED':
           // Session is valid or was refreshed
           if (session?.user) {
-            await fetchUserProfile(session.user, supabase).catch(err => {
+            await fetchUserProfileWithTimeout(session.user, supabase, cancelledRef).catch(err => {
               console.error('Error fetching user profile:', err)
               if (!cancelledRef.current) setAuthState({ user: null, session: null, loading: false })
             })
@@ -94,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         default:
           // Handle any other events defensively
           if (session?.user) {
-            await fetchUserProfile(session.user, supabase).catch(err => {
+            await fetchUserProfileWithTimeout(session.user, supabase, cancelledRef).catch(err => {
               console.error('Error fetching user profile:', err)
               if (!cancelledRef.current) setAuthState({ user: null, session: null, loading: false })
             })
@@ -208,6 +208,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // @MX:NOTE: Timeout wrapper for fetchUserProfile to prevent indefinite loading state
+  // Ensures auth loading state is always cleared within 5 seconds, preventing UI freeze
+  const fetchUserProfileWithTimeout = async (
+    user: User,
+    supabase: ReturnType<typeof getSupabaseClient>,
+    cancelledRef: { current: boolean }
+  ) => {
+    const PROFILE_FETCH_TIMEOUT = 5000 // 5 seconds
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
+
+    // Check if cancelled before starting
+    if (cancelledRef.current) {
+      throw new Error('Operation cancelled')
+    }
+
+    // Create timeout promise
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => {
+        reject(new Error('Profile fetch timed out after 5s'))
+      }, PROFILE_FETCH_TIMEOUT)
+    })
+
+    try {
+      // Race between actual fetch and timeout
+      const result = await Promise.race([
+        fetchUserProfile(user, supabase),
+        timeoutPromise,
+      ])
+      return result
+    } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
+    }
+  }
+
   const signIn = async (email?: string, password?: string) => {
     const supabase = getSupabaseClient()
 
@@ -222,9 +258,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // onAuthStateChange will fire and load the profile automatically;
-      // but call fetchUserProfile here too so the caller awaits completion.
+      // but call fetchUserProfileWithTimeout here too so the caller awaits completion.
       if (data.user) {
-        await fetchUserProfile(data.user, supabase)
+        await fetchUserProfileWithTimeout(data.user, supabase, cancelledRef)
       }
 
       return { error: null }
