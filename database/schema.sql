@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS public.project_members (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID REFERENCES public.projects(id) ON DELETE CASCADE,
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
-  role TEXT DEFAULT 'member' CHECK (role IN ('owner', 'member', 'viewer')),
+  role TEXT DEFAULT 'member' CHECK (role IN ('owner', 'admin', 'member', 'viewer')),
   joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(project_id, user_id)
 );
@@ -341,18 +341,23 @@ CREATE POLICY "Members can view project members"
 -- Note: Duplicate owner checks (is_project_owner + is_project_member_with_role with 'owner')
 -- are intentional for defense-in-depth and to tolerate drift between projects.owner_id
 -- and project_members.role entries. See is_project_owner and is_project_member_with_role functions.
-CREATE POLICY "Owners can insert members"
+CREATE POLICY "Admins and owners can insert members"
   ON public.project_members FOR INSERT
   WITH CHECK (
     public.is_project_owner(project_id) OR
-    public.is_project_member_with_role(project_id, ARRAY['owner'])
+    public.is_project_member_with_role(project_id, ARRAY['owner', 'admin'])
   );
 
-CREATE POLICY "Owners can delete members"
+CREATE POLICY "Admins and owners can delete non-admin members"
   ON public.project_members FOR DELETE
   USING (
     public.is_project_owner(project_id) OR
-    public.is_project_member_with_role(project_id, ARRAY['owner'])
+    (public.is_project_member_with_role(project_id, ARRAY['owner', 'admin']) AND
+     NOT EXISTS (
+       SELECT 1 FROM public.project_members AS pm
+       WHERE pm.id = project_members.id
+       AND pm.role IN ('owner', 'admin')
+     ))
   );
 
 -- Invitees can insert themselves when they have a valid pending invitation
@@ -381,7 +386,7 @@ CREATE POLICY "Members can insert categories"
   ON public.categories FOR INSERT
   WITH CHECK (
     public.is_project_owner(project_id) OR
-    public.is_project_member_with_role(project_id, ARRAY['owner', 'member'])
+    public.is_project_member_with_role(project_id, ARRAY['owner', 'admin', 'member'])
   );
 
 -- Categories: Members can update categories
@@ -389,7 +394,7 @@ CREATE POLICY "Members can update categories"
   ON public.categories FOR UPDATE
   USING (
     public.is_project_owner(project_id) OR
-    public.is_project_member_with_role(project_id, ARRAY['owner', 'member'])
+    public.is_project_member_with_role(project_id, ARRAY['owner', 'admin', 'member'])
   );
 
 -- Categories: Members can delete categories
@@ -397,7 +402,7 @@ CREATE POLICY "Members can delete categories"
   ON public.categories FOR DELETE
   USING (
     public.is_project_owner(project_id) OR
-    public.is_project_member_with_role(project_id, ARRAY['owner', 'member'])
+    public.is_project_member_with_role(project_id, ARRAY['owner', 'admin', 'member'])
   );
 
 -- Transactions: Members can view active (non-deleted) transactions, owners can view all (including deleted)
@@ -423,18 +428,18 @@ CREATE POLICY "Members can insert transactions"
   WITH CHECK (
     deleted_at IS NULL AND (
       public.is_project_owner(project_id) OR
-      public.is_project_member_with_role(project_id, ARRAY['owner', 'member'])
+      public.is_project_member_with_role(project_id, ARRAY['owner', 'admin', 'member'])
     )
   );
 
--- Transactions: Creators and owners can update active transactions only
+-- Transactions: Creators, admins, and owners can update active transactions only
 CREATE POLICY "Creators can update own transactions"
   ON public.transactions FOR UPDATE
   USING (
     deleted_at IS NULL AND (
       created_by = auth.uid() OR
       public.is_project_owner(project_id) OR
-      public.is_project_member_with_role(project_id, ARRAY['owner'])
+      public.is_project_member_with_role(project_id, ARRAY['owner', 'admin'])
     )
   );
 
@@ -445,7 +450,7 @@ CREATE POLICY "Members can soft delete transactions"
     deleted_at IS NULL AND (
       created_by = auth.uid() OR
       public.is_project_owner(project_id) OR
-      public.is_project_member_with_role(project_id, ARRAY['owner'])
+      public.is_project_member_with_role(project_id, ARRAY['owner', 'admin'])
     )
   )
   WITH CHECK (
@@ -461,7 +466,7 @@ CREATE POLICY "Users can view project invitations"
     email = public.current_user_email() OR
     -- Project owners and members can view
     public.is_project_owner(project_id) OR
-    public.is_project_member_with_role(project_id, ARRAY['owner', 'member'])
+    public.is_project_member_with_role(project_id, ARRAY['owner', 'admin', 'member'])
   );
 
 -- Invitations: Recipient or project owners can update
@@ -477,21 +482,21 @@ CREATE POLICY "Users can update invitation status to accepted"
   WITH CHECK (status = 'accepted');
 
 -- Invitations: Project owners can create invitations
-CREATE POLICY "Owners can insert invitations"
+CREATE POLICY "Admins and owners can insert invitations"
   ON public.invitations FOR INSERT
   WITH CHECK (
     public.is_project_owner(project_id) OR
     -- Note: is_project_member_with_role check included for redundancy
     -- to handle cases where project.owner_id might differ from project_members entries
-    public.is_project_member_with_role(project_id, ARRAY['owner'])
+    public.is_project_member_with_role(project_id, ARRAY['owner', 'admin'])
   );
 
--- Invitations: Project owners can revoke pending invitations
-CREATE POLICY "Owners can delete invitations"
+-- Invitations: Project owners and admins can revoke pending invitations
+CREATE POLICY "Admins and owners can delete invitations"
   ON public.invitations FOR DELETE
   USING (
     public.is_project_owner(project_id) OR
-    public.is_project_member_with_role(project_id, ARRAY['owner'])
+    public.is_project_member_with_role(project_id, ARRAY['owner', 'admin'])
   );
 
 -- Grant necessary permissions

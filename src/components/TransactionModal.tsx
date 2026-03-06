@@ -13,7 +13,7 @@ interface TransactionModalProps {
     transaction?: Transaction | null // For editing
     onGoToSettings: () => void
     allTransactions: Transaction[] // For autocomplete values
-    userRole?: 'owner' | 'member' | 'viewer' | null
+    userRole?: 'owner' | 'admin' | 'member' | 'viewer' | null
     children?: React.ReactNode // Extra UI like bulk edit navigation
 }
 
@@ -222,7 +222,7 @@ export default function TransactionModal({
                     <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
                         {transaction ? t('transactions.editTransaction') : t('transactions.addTransaction')}
                     </h2>
-                    {userRole === 'owner' && (
+                    {userRole && ['owner', 'admin'].includes(userRole as 'owner' | 'admin') && (
                         <button
                             type="button"
                             onClick={handleGoToSettings}

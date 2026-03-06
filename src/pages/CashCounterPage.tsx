@@ -593,7 +593,7 @@ export default function CashCounterPage() {
             type="number"
             inputMode="numeric"
             min="0"
-            className={`text-center font-semibold text-sm w-full border rounded focus:outline-none focus:ring-2 py-1 px-1 ${colorClasses[color].input}`}
+            className={`text-center font-semibold text-sm w-full border rounded focus:outline-none focus:ring-2 py-1 px-2 ${colorClasses[color].input}`}
             value={count}
             onChange={(e) => onInput(parseInt(e.target.value) || 0)}
           />
@@ -656,6 +656,8 @@ export default function CashCounterPage() {
               <div className="flex gap-2 items-center">
                 <span className="text-slate-500 dark:text-slate-400">{currency}</span>
                 <input
+                  id="target-amount"
+                  name="target-amount"
                   inputMode="decimal"
                   type="number"
                   step="0.01"

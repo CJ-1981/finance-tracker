@@ -43,6 +43,7 @@
     "createProject": "프로젝트 생성",
     "viewDetails": "상세 보기 →",
     "owner": "소유자",
+    "admin": "관리자",
     "member": "구성원",
     "viewer": "조회자",
     "inviteToProjects": "프로젝트에 초대",

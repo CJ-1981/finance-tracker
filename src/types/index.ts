@@ -48,7 +48,7 @@ export interface ProjectMember {
   id: string
   project_id: string
   user_id: string
-  role: 'owner' | 'member' | 'viewer'
+  role: 'owner' | 'admin' | 'member' | 'viewer'
   joined_at: string
 }
 
@@ -115,7 +115,7 @@ export type AuthState = {
   loading: boolean
 }
 
-export type Role = 'owner' | 'member' | 'viewer'
+export type Role = 'owner' | 'admin' | 'member' | 'viewer'
 
 export interface ProjectWithMemberInfo extends Project {
   member_count?: number

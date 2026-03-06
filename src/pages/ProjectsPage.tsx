@@ -401,7 +401,7 @@ export default function ProjectsPage() {
                   <button onClick={() => setShowCreateForm(true)} className="btn btn-primary text-sm whitespace-nowrap" data-testid="create-project-button">
                     {t('projects.newProject')}
                   </button>
-                  {projects.some(p => p.userRole === 'owner') && (
+                  {projects.some(p => ['owner', 'admin'].includes(p.userRole)) && (
                     <button
                       onClick={() => setIsSelectionMode(true)}
                       className="btn btn-secondary text-sm whitespace-nowrap"
@@ -585,15 +585,15 @@ export default function ProjectsPage() {
                     onClick={(e) => {
                       if (isSelectionMode) {
                         e.preventDefault()
-                        if (project.userRole === 'owner') {
+                        if (['owner', 'admin'].includes(project.userRole)) {
                           toggleProjectSelection(project.id)
                         }
                       }
                     }}
-                    className={`card card-accent hover:-translate-y-1 block relative ${isSelectionMode && project.userRole !== 'owner' ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:border-primary-300'
+                    className={`card card-accent hover:-translate-y-1 block relative ${isSelectionMode && !['owner', 'admin'].includes(project.userRole) ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:border-primary-300'
                       } ${selectedProjectIds.includes(project.id) ? 'ring-2 ring-primary-500 border-primary-500 bg-primary-50/30' : ''}`}
                   >
-                    {isSelectionMode && project.userRole === 'owner' && (
+                    {isSelectionMode && ['owner', 'admin'].includes(project.userRole) && (
                       <div className="absolute top-4 right-4 z-10">
                         <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${selectedProjectIds.includes(project.id)
                           ? 'bg-primary-500 border-primary-500 text-white'
@@ -610,7 +610,7 @@ export default function ProjectsPage() {
                     <div className="flex justify-between items-start">
                       <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{project.name}</h3>
                       <span className="bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border border-primary-100 dark:border-primary-800">
-                        {t(`projects.${['owner', 'member', 'viewer'].includes(project.userRole || '') ? project.userRole : 'unknownRole'}`)}
+                        {t(`projects.${['owner', 'admin', 'member', 'viewer'].includes(project.userRole || '') ? project.userRole : 'unknownRole'}`)}
                       </span>
                     </div>
                     {project.description && (

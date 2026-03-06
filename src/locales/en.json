@@ -43,6 +43,7 @@
     "createProject": "Create Project",
     "viewDetails": "View Details →",
     "owner": "owner",
+    "admin": "admin",
     "member": "member",
     "viewer": "viewer",
     "inviteToProjects": "Invite to Projects",

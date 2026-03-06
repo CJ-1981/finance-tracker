@@ -438,7 +438,7 @@ export default function TransactionsPage() {
   }
 
   const fetchDeletedTransactions = async () => {
-    if (!projectId || userRole !== 'owner') return
+    if (!projectId || !['owner', 'admin'].includes(userRole)) return
 
     try {
       const supabase = getSupabaseClient()
@@ -1134,7 +1134,7 @@ export default function TransactionsPage() {
               <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">{t('transactions.transactions')}</h1>
             </div>
             <div className="flex gap-2 flex-wrap">
-              {userRole === 'owner' && (
+              {['owner', 'admin'].includes(userRole) && (
                 <button onClick={() => setShowSettings(!showSettings)} className="btn btn-secondary text-sm whitespace-nowrap">
                   {showSettings ? t('transactions.closeSettings') : `⚙️ ${t('common.settings')}`}
                 </button>
@@ -1151,7 +1151,7 @@ export default function TransactionsPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {showSettings && userRole === 'owner' && (
+        {showSettings && ['owner', 'admin'].includes(userRole) && (
           <div className="grid md:grid-cols-2 gap-6 mb-8 mt-2 overflow-x-hidden">
             <div className="card border-t-4 border-t-primary-500 overflow-hidden">
               <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 mb-6 flex items-center gap-2">
@@ -1540,7 +1540,7 @@ export default function TransactionsPage() {
                     {selectedTransactions.size > 0 && (
                       <>
                         <span className="text-sm text-gray-600 py-1">{selectedTransactions.size} selected</span>
-                        {(userRole === 'owner' || canEditSelected()) && (
+                        {(['owner', 'admin'].includes(userRole) || canEditSelected()) && (
                           <button
                             onClick={handleMultiEdit}
                             className="btn btn-primary text-sm whitespace-nowrap"
@@ -1569,7 +1569,7 @@ export default function TransactionsPage() {
                     >
                       Export CSV
                     </button>
-                    {userRole === 'owner' && (
+                    {['owner', 'admin'].includes(userRole) && (
                       <button
                         onClick={() => {
                           if (showDeleted) {
@@ -1592,8 +1592,8 @@ export default function TransactionsPage() {
               </div>
             </div>
 
-            {/* Deleted Transactions Section - Owner Only */}
-            {showDeleted && userRole === 'owner' && (
+            {/* Deleted Transactions Section - Owner and Admin Only */}
+            {showDeleted && ['owner', 'admin'].includes(userRole) && (
               <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                 <h3 className="text-lg font-semibold text-red-900 dark:text-red-100 mb-4 flex items-center gap-2">
                   <span>🗑️</span>
@@ -1742,7 +1742,7 @@ export default function TransactionsPage() {
                         </td>
                         {!isMultiSelectMode && (
                           <td className="py-3 px-4 text-right">
-                            {(userRole === 'owner' || transaction.created_by === user?.id) && (
+                            {(['owner', 'admin'].includes(userRole) || transaction.created_by === user?.id) && (
                               <>
                                 <button
                                   onClick={() => handleEdit(transaction)}
