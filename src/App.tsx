@@ -16,7 +16,10 @@ const PUBLIC_PATHS = ['/', '/login', '/config', '/invite', '/cashcounter']
 
 function App() {
   const { user, loading: authLoading } = useAuth()
-  const { loading: configLoading, error: configError } = useSupabase()
+  // Only load Supabase for authenticated routes (not cash counter)
+  const { loading: configLoading, error: configError } = useSupabase({
+    skip: location.pathname === '/cashcounter'
+  })
   const location = useLocation()
 
   // Show loading spinner during initialization

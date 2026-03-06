@@ -3,13 +3,20 @@ import { createSupabaseClient } from '../lib/supabase'
 import { getConfig, validateConfig, saveConfig } from '../lib/config'
 import type { SupabaseConfig } from '../types'
 
-export function useSupabase() {
+export function useSupabase(options?: { skip?: boolean }) {
   const [isConfigured, setIsConfigured] = useState(false)
   const [config, setConfig] = useState<SupabaseConfig | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    // Skip initialization if requested (for public routes like cash counter)
+    if (options?.skip) {
+      setLoading(false)
+      setError(null)
+      return
+    }
+
     let cancelled = false
 
     // Dead-man fallback: if initialization never completes (network issue, corrupted config, etc.),
