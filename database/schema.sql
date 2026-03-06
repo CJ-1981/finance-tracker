@@ -213,8 +213,8 @@ BEGIN
     deleted_at = NULL,
     deleted_by = NULL
   WHERE t.id = transaction_id
-  AND t.deleted_at IS NOT NULL
-  AND public.is_project_owner(t.project_id);
+    AND t.deleted_at IS NOT NULL
+    AND (public.is_project_owner(project_id) OR public.is_project_member_with_role(project_id, ARRAY['admin']))
 
   RETURN FOUND;
 END;
@@ -373,6 +373,34 @@ CREATE POLICY "Invitees can join project"
     )
   );
 
+-- Project Members: Owners can update member roles, admins can update non-owner roles
+CREATE POLICY "Owners and admins can update member roles with restrictions"
+  ON public.project_members FOR UPDATE
+  USING (
+    -- Owners can update any role
+    public.is_project_owner(project_id) OR
+    -- Admins can update roles except:
+    -- 1. Cannot promote to owner
+    -- 2. Cannot change owner members
+    -- 3. Cannot change other admins
+    (public.is_project_member_with_role(project_id, ARRAY['admin']) AND
+     NOT EXISTS (
+       -- Target member is not an owner
+       SELECT 1 FROM public.project_members AS pm
+       WHERE pm.id = project_members.id
+       AND pm.role = 'owner'
+     ) AND
+     NOT EXISTS (
+       -- Target member is not another admin
+       SELECT 1 FROM public.project_members AS pm
+       WHERE pm.id = project_members.id
+       AND pm.role = 'admin'
+       AND pm.user_id != auth.uid()
+     ) AND
+     -- Cannot promote to owner
+     role != 'owner')
+  );
+
 -- Categories: Members can view categories from their projects
 CREATE POLICY "Members can view project categories"
   ON public.categories FOR SELECT
@@ -418,8 +446,10 @@ CREATE POLICY "Members can view active transactions"
 CREATE POLICY "Owners can view deleted transactions"
   ON public.transactions FOR SELECT
   USING (
-    deleted_at IS NOT NULL AND
-    public.is_project_owner(project_id)
+    deleted_at IS NOT NULL AND (
+      public.is_project_owner(project_id) OR
+      public.is_project_member_with_role(project_id, ARRAY['admin'])
+    )
   );
 
 -- Transactions: Members can insert transactions (only active)
@@ -476,10 +506,13 @@ CREATE POLICY "Users can update invitation status to accepted"
     -- Recipient can update their own invitation
     email = public.current_user_email() OR
     -- Project owners can update
-    public.is_project_owner(project_id) OR
-    public.is_project_member_with_role(project_id, ARRAY['owner'])
+    public.is_project_owner(project_id)
   )
-  WITH CHECK (status = 'accepted');
+  WITH CHECK (
+    -- Only recipient or owner can set status to accepted
+    (email = public.current_user_email() OR public.is_project_owner(project_id)) AND
+    status = 'accepted'
+  );
 
 -- Invitations: Project owners can create invitations
 CREATE POLICY "Admins and owners can insert invitations"
