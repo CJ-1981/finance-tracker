@@ -17,13 +17,14 @@ const PUBLIC_PATHS = ['/', '/login', '/config', '/invite', '/cashcounter']
 function App() {
   const { user, loading: authLoading } = useAuth()
   const location = useLocation()
+  const isPublicRoute = PUBLIC_PATHS.some(p => location.pathname === p || location.hash === `#${p}`)
   // Only load Supabase for authenticated routes (not cash counter)
   const { loading: configLoading, error: configError } = useSupabase({
-    skip: location.pathname === '/cashcounter'
+    skip: location.pathname === '/cashcounter' || location.hash === '#/cashcounter'
   })
 
-  // Show loading spinner during initialization
-  if (authLoading || configLoading) {
+  // Show loading spinner during initialization (only for authenticated routes)
+  if (!isPublicRoute && (authLoading || configLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
