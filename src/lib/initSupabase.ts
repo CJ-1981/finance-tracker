@@ -7,9 +7,15 @@ import { createSupabaseClient } from './supabase'
 export function initializeSupabase() {
   // Skip initialization if we're on the public cash counter route
   // This check runs at module load time before React renders
-  if (typeof window !== 'undefined' && window.location.pathname === '/cashcounter') {
-    console.log('Skipping Supabase initialization for public cash counter route')
-    return false
+  // Support both path-based and hash-based routing
+  if (typeof window !== 'undefined') {
+    const isCashCounterRoute =
+      window.location.pathname === '/cashcounter' ||
+      window.location.hash === '#/cashcounter'
+    if (isCashCounterRoute) {
+      console.log('Skipping Supabase initialization for public cash counter route')
+      return false
+    }
   }
 
   try {
