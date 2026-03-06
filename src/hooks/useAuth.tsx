@@ -79,7 +79,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (session?.user) {
             await fetchUserProfileWithTimeout(session.user, supabase, cancelledRef).catch(err => {
               console.error('Error fetching user profile:', err)
-              if (!cancelledRef.current) setAuthState({ user: null, session: null, loading: false })
+              if (!cancelledRef.current) {
+                // Set minimal user profile instead of logging out - keep authenticated state
+                setAuthState({
+                  user: { id: session.user.id, email: session.user.email || '' } as AppUser,
+                  session: session.user,
+                  loading: false,
+                })
+              }
             })
           } else {
             setAuthState({ user: null, session: null, loading: false })
@@ -96,7 +103,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (session?.user) {
             await fetchUserProfileWithTimeout(session.user, supabase, cancelledRef).catch(err => {
               console.error('Error fetching user profile:', err)
-              if (!cancelledRef.current) setAuthState({ user: null, session: null, loading: false })
+              if (!cancelledRef.current) {
+                // Set minimal user profile instead of logging out - keep authenticated state
+                setAuthState({
+                  user: { id: session.user.id, email: session.user.email || '' } as AppUser,
+                  session: session.user,
+                  loading: false,
+                })
+              }
             })
           } else {
             setAuthState({ user: null, session: null, loading: false })
@@ -209,13 +223,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   // @MX:NOTE: Timeout wrapper for fetchUserProfile to prevent indefinite loading state
-  // Ensures auth loading state is always cleared within 5 seconds, preventing UI freeze
+  // Ensures auth loading state is always cleared within 10 seconds, preventing UI freeze
+  // On timeout/error, sets minimal user profile instead of logging out to preserve auth state
   const fetchUserProfileWithTimeout = async (
     user: User,
     supabase: ReturnType<typeof getSupabaseClient>,
     cancelledRef: { current: boolean }
   ) => {
-    const PROFILE_FETCH_TIMEOUT = 5000 // 5 seconds
+    const PROFILE_FETCH_TIMEOUT = 10000 // 10 seconds
     let timeoutId: ReturnType<typeof setTimeout> | undefined
 
     // Check if cancelled before starting
@@ -226,7 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Create timeout promise
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeoutId = setTimeout(() => {
-        reject(new Error('Profile fetch timed out after 5s'))
+        reject(new Error('Profile fetch timed out after 10s'))
       }, PROFILE_FETCH_TIMEOUT)
     })
 
