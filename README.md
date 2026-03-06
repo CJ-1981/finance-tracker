@@ -2,7 +2,9 @@
 
 A collaborative financial tracking web application built with React, TypeScript, and Supabase.
 
-**Live Demo:** [https://cj-1981.github.io/finance-tracker/](https://cj-1981.github.io/finance-tracker/)
+**Live Demo:**
+- [Finance Tracker](https://cj-1981.github.io/finance-tracker/)
+- [Cash Counter (No Auth Required)](https://cj-1981.github.io/finance-tracker/cashcounter)
 
 ## Features
 
@@ -15,6 +17,13 @@ A collaborative financial tracking web application built with React, TypeScript,
   - Bills/coins breakdown with color-coded match status
   - Mobile-friendly +/- buttons and direct input
   - localStorage persistence with auto-clear
+- **Standalone Cash Counter Page** - Public cash counter accessible without authentication
+  - Multi-currency support (EUR, USD, GBP, JPY, KRW, CNY, INR)
+  - Language selector (English/Korean)
+  - Target amount comparison with match/excess/shortage status
+  - Export to clipboard in Markdown format
+  - Daily data reset
+  - Accessible at `/cashcounter` route
 - **Soft Delete with Recovery** - Recover deleted transactions within 1 year
   - Soft delete instead of permanent deletion
   - Restore deleted transactions functionality
@@ -84,9 +93,9 @@ A collaborative financial tracking web application built with React, TypeScript,
 1. Go to [supabase.com](https://supabase.com) and create a new project
 2. Navigate to Project Settings → API
 3. Copy your Project URL and anon/public key
-4. Go to the SQL Editor and run the schema from `database/schema.sql`
+4. Go to SQL Editor and run schema from `database/schema.sql`
 
-**Important:** For existing databases, ensure you have the latest schema and run `database/migration_soft_delete_transactions.sql` to enable soft delete functionality.
+**Important:** For existing databases, ensure you have to latest schema and run `database/migration_soft_delete_transactions.sql` to enable soft delete functionality.
 
 ### Local Development
 
@@ -101,7 +110,7 @@ cd finance-tracker
 npm install
 ```
 
-3. Start the development server:
+3. Start development server:
 ```bash
 npm run dev
 ```
@@ -113,8 +122,8 @@ npm run dev
    - Create a new project
    - Copy your Project URL and anon key
 
-6. **Configure the app:**
-   - Click "Get Started" on the landing page
+6. **Configure** app:
+   - Click "Get Started" on landing page
    - **Option 1**: Scan QR code containing Supabase config
      - Use camera for live scanning (requires HTTPS or localhost)
      - Or upload QR code image file (no camera required)
@@ -122,7 +131,7 @@ npm run dev
    - Click "Save Configuration"
 
 7. **Sign in with your Supabase credentials:**
-   - Enter the email and password you use for Supabase
+   - Enter email and password you use for Supabase
    - Click "Sign In"
 
 ### Testing
@@ -150,7 +159,7 @@ npm run test:e2e:ci
 npm run build
 ```
 
-The built files will be in the `dist/` directory.
+The built files will be in `dist/` directory.
 
 ## Deployment
 
@@ -166,7 +175,7 @@ To deploy your own fork:
 base: '/your-repo-name/',
 ```
 
-2. Install the GitHub Pages deployment tool:
+2. Install GitHub Pages deployment tool:
 ```bash
 npm install -D gh-pages
 ```
@@ -189,7 +198,7 @@ npm run deploy
 
 5. Configure your Supabase project:
    - Go to Authentication → URL Configuration
-   - Add your GitHub Pages URL to the Redirect URLs
+   - Add your GitHub Pages URL to Redirect URLs
    - Example: `https://yourusername.github.io/finance-tracker/`
 
 ## Database Schema
@@ -210,7 +219,7 @@ The application uses the following tables:
 - Category ordering via `order` column
 - Invitation status tracking for better UX
 
-See `database/schema.sql` for the complete schema including RLS policies.
+See `database/schema.sql` for complete schema including RLS policies.
 
 ## Usage
 
@@ -223,7 +232,7 @@ See `database/schema.sql` for the complete schema including RLS policies.
    - Import known values for custom fields
 5. **Add Categories**: Create categories with colors, reorder as needed
 6. **Add Transactions**:
-   - Select transaction type (Income or Expense) using the segmented control
+   - Select transaction type (Income or Expense) using segmented control
    - Enter positive amount (no minus sign needed)
    - Choose currency
    - Select category
@@ -271,7 +280,7 @@ See [CHANGELOG.md](CHANGELOG.md) for a detailed history of changes, updates, and
 
 ## Documentation
 
-For comprehensive documentation, see the `docs/` directory:
+For comprehensive documentation, see `docs/` directory:
 - [User Guide](docs/user-guide.md) - Getting started, account setup, project management
 - [Developer Guide](docs/developer-guide.md) - Development setup, architecture, testing
 - [API Documentation](docs/api.md) - Database schema, Supabase integration, CRUD operations
@@ -291,6 +300,6 @@ ISC
 ## Contributing
 
 Contributions are welcome! Please ensure:
-- Code follows the existing style
+- Code follows existing style
 - Database changes include migration scripts
 - Features are tested before submission
