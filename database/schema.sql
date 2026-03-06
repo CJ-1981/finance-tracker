@@ -213,8 +213,8 @@ BEGIN
     deleted_at = NULL,
     deleted_by = NULL
   WHERE t.id = transaction_id
-  AND t.deleted_at IS NOT NULL
-  (AND public.is_project_owner(project_id) OR public.is_project_member_with_role(project_id, ARRAY[admin]))
+    AND t.deleted_at IS NOT NULL
+    AND (public.is_project_owner(project_id) OR public.is_project_member_with_role(project_id, ARRAY['admin']))
 
   RETURN FOUND;
 END;
@@ -446,8 +446,10 @@ CREATE POLICY "Members can view active transactions"
 CREATE POLICY "Owners can view deleted transactions"
   ON public.transactions FOR SELECT
   USING (
-    deleted_at IS NOT NULL AND
-    public.is_project_owner(project_id)
+    deleted_at IS NOT NULL AND (
+      public.is_project_owner(project_id) OR
+      public.is_project_member_with_role(project_id, ARRAY['admin'])
+    )
   );
 
 -- Transactions: Members can insert transactions (only active)
@@ -504,10 +506,13 @@ CREATE POLICY "Users can update invitation status to accepted"
     -- Recipient can update their own invitation
     email = public.current_user_email() OR
     -- Project owners can update
-    public.is_project_owner(project_id) OR
-    public.is_project_member_with_role(project_id, ARRAY['owner', 'admin'])
+    public.is_project_owner(project_id)
   )
-  WITH CHECK (status = 'accepted');
+  WITH CHECK (
+    -- Only recipient or owner can set status to accepted
+    (email = public.current_user_email() OR public.is_project_owner(project_id)) AND
+    status = 'accepted'
+  );
 
 -- Invitations: Project owners can create invitations
 CREATE POLICY "Admins and owners can insert invitations"

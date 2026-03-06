@@ -213,7 +213,7 @@ TDD (Test-Driven Development) - RED-GREEN-REFACTOR cycle
 
 ## Task Dependencies
 
-```
+```text
 TASK-001 (Database Schema - Admin Role)
   ├─> TASK-002 (Member Insert)
   ├─> TASK-003 (Member Delete)
@@ -240,7 +240,7 @@ TASK-001 (Database Schema - Admin Role)
 ## Task Statistics
 
 - Total Tasks: 19
-- Database Tasks: 9 (TASK-001 to TASK-009, TASK-017)
+- Database Tasks: 10 (TASK-001 to TASK-009, TASK-017)
 - Frontend Tasks: 5 (TASK-010 to TASK-014)
 - I18n Tasks: 2 (TASK-015, TASK-016)
 - Testing Tasks: 1 (TASK-018)
