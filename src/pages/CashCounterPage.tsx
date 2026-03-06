@@ -591,7 +591,7 @@ export default function CashCounterPage() {
         <div className={`p-1 rounded-md border ${colorClasses[color].container} w-full`}>
           <input
             type="number"
-            inputMode="numeric"
+            inputMode="decimal"
             min="0"
             max="999"
             className={`text-center font-semibold text-sm w-full border rounded focus:outline-none focus:ring-2 py-1 px-2 ${colorClasses[color].input}`}
