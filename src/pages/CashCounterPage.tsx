@@ -258,6 +258,10 @@ export default function CashCounterPage() {
   const [showConfig, setShowConfig] = useState(false)
   const saveTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
 
+  // Refs for localStorage save optimization
+  const isInitialRender = useRef(true)
+  const previousStateRef = useRef<CashCounterState>(createEmptyState())
+
   // Load config from localStorage (run once)
   useEffect(() => {
     const storedConfig = localStorage.getItem('cashcounter_config')
@@ -337,9 +341,6 @@ export default function CashCounterPage() {
   // Only save when state actually changes (prevent excessive saves)
   useEffect(() => {
     // Skip initial render to prevent unnecessary save on mount
-    const isInitialRender = useRef(true)
-    const previousStateRef = useRef<CashCounterState>(createEmptyState())
-
     if (isInitialRender.current) {
       isInitialRender.current = false
       previousStateRef.current = state
