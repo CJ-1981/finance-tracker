@@ -9,9 +9,10 @@ import ProjectsPage from './pages/ProjectsPage'
 import TransactionsPage from './pages/TransactionsPage'
 import ProjectDetailPage from './pages/ProjectDetailPage'
 import InvitePage from './pages/InvitePage'
+import CashCounterPage from './pages/CashCounterPage'
 
 // Routes that should NOT be saved as redirect targets (public/auth routes)
-const PUBLIC_PATHS = ['/', '/login', '/config', '/invite']
+const PUBLIC_PATHS = ['/', '/login', '/config', '/invite', '/cashcounter']
 
 function App() {
   const { user, loading: authLoading } = useAuth()
@@ -75,6 +76,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/config" element={<ConfigPage />} />
           <Route path="/invite" element={<InvitePage />} />
+          <Route path="/cashcounter" element={<CashCounterPage />} />
           {/* Redirect to login page so user can sign back in */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
@@ -93,6 +95,7 @@ function App() {
         <Route path="/transactions/:projectId" element={<TransactionsPage />} />
         <Route path="/invite" element={<InvitePage />} />
         <Route path="/config" element={<ConfigPage />} />
+        <Route path="/cashcounter" element={<CashCounterPage />} />
         <Route path="*" element={<Navigate to="/projects" replace />} />
       </Routes>
     </ThemeProvider>
