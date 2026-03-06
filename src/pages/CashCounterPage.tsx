@@ -258,7 +258,7 @@ export default function CashCounterPage() {
   const [showConfig, setShowConfig] = useState(false)
   const saveTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
 
-  // Load config from localStorage
+  // Load config from localStorage (run once)
   useEffect(() => {
     const storedConfig = localStorage.getItem('cashcounter_config')
     if (storedConfig) {
@@ -277,7 +277,7 @@ export default function CashCounterPage() {
     localStorage.setItem('cashcounter_config', JSON.stringify(newConfig))
   }, [])
 
-  // Load data from localStorage
+  // Load data from localStorage (run once after component mount)
   useEffect(() => {
     const storageKey = 'cashcounter_standalone'
     try {
@@ -301,14 +301,15 @@ export default function CashCounterPage() {
             namedCounts: data.namedCounts,
           })
           if (data.currency) {
-            saveConfig({ ...config, currency: data.currency })
+            // Update currency separately without triggering data reload
+            setConfig(prev => ({ ...prev, currency: data.currency }))
           }
         }
       }
     } catch (err) {
       console.error('Error loading cash counter data:', err)
     }
-  }, [config, saveConfig])
+  }, [])
 
   // Save state changes to localStorage (debounced)
   const saveToLocalStorage = useCallback((currentState: CashCounterState, currentCurrency: string) => {
@@ -333,8 +334,25 @@ export default function CashCounterPage() {
     }, 500)
   }, [])
 
+  // Only save when state actually changes (prevent excessive saves)
   useEffect(() => {
-    saveToLocalStorage(state, config.currency)
+    // Skip initial render to prevent unnecessary save on mount
+    const isInitialRender = useRef(true)
+    const previousStateRef = useRef<CashCounterState>(createEmptyState())
+
+    if (isInitialRender.current) {
+      isInitialRender.current = false
+      previousStateRef.current = state
+      return
+    }
+
+    // Check if state actually changed
+    const hasStateChanged = JSON.stringify(state) !== JSON.stringify(previousStateRef.current)
+    if (hasStateChanged) {
+      saveToLocalStorage(state, config.currency)
+      previousStateRef.current = state
+    }
+
     return () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current)
@@ -618,8 +636,8 @@ export default function CashCounterPage() {
               title="Settings"
             >
               <svg className="w-5 h-5 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573c.94 1.543-.826 3.31-.826 2.37a1.724 1.724 0 002.572c1.756-.426 1.756 2.924 1.756.335a1.724 1.724 0 002.573c1.756-.94 1.543-.826 3.31-.826 2.37a1.724 1.724 0 00-1.066c2.573c.94 1.543-.826 3.31 2.37a1.724 1.724 0 00-2.572c1.756-.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.573c1.756 1.756.2.924 1.756 3.35 0a1.724 1.724 0 002.572 1.756 1.756 3.35 0a1.724 1.724 0.001.066c2.573c.94 1.543-.826 3.31-.826 2.37a1.724 1.724 0.00-2.572 1.756.1.756 3.35 0a1.724 1.724 0 001.066c1.756.1.756.3.35 0a1.724 1.724 0 00-2.572 1.756 1.756.6.608 2.296.07 2.572 1.065c-.426 1.756.2.924 1.756 3.35 0a1.724 1.724 0 00-2.572 1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37.826a1.724 1.724 0 002.572-1.066c1.756-.426 1.756-2.924 0-3.35a1.724 1.724 0 00-1.066-2.573c1.543.94 3.31-.826 2.37-.826a1.724 1.724 0 00-2.572 1.066c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c-1.543.94-3.31.826-2.37.826a1.724 1.724 0 00-2.572-1.066c-1.756.426-1.756 2.924 0 3.35a1.724 1.724 0 001.066 2.573c-1.543-.94-3.31-.826-2.37-.826a1.724 1.724 0 002.572-1.066c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-1.543-.94-3.31-.826-2.37-.826a1.724 1.724 0 002.572 1.066z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </button>
             <LanguageSelector />
