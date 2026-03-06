@@ -406,8 +406,9 @@ export default function CashCounterPage() {
     if (confirm(t('cashCounter.confirmClearAll'))) {
       setState(createEmptyState())
       localStorage.removeItem('cashcounter_standalone')
+      saveConfig({ ...config, targetAmount: 0 })
     }
-  }, [t])
+  }, [t, config, saveConfig])
 
   const handleShare = useCallback(() => {
     const currency = config.currency
