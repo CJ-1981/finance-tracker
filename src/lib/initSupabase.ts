@@ -5,6 +5,13 @@ import { getConfig, validateConfig } from './config'
 import { createSupabaseClient } from './supabase'
 
 export function initializeSupabase() {
+  // Skip initialization if we're on the public cash counter route
+  // This check runs at module load time before React renders
+  if (typeof window !== 'undefined' && window.location.pathname === '/cashcounter') {
+    console.log('Skipping Supabase initialization for public cash counter route')
+    return false
+  }
+
   try {
     const config = getConfig()
     if (config) {
@@ -40,5 +47,5 @@ export function initializeSupabase() {
   return false
 }
 
-// Initialize immediately
+// Initialize immediately (but skip on cash counter route)
 initializeSupabase()
