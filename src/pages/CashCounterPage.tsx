@@ -570,7 +570,10 @@ export default function CashCounterPage() {
     )
   }
 
-  function DenominationControls({ count, onChange, onInput, color }: { count: number; onChange: (delta: number) => void; onInput: (value: number) => void; color: 'teal' | 'blue' }) {
+  function DenominationControls({ count, onChange, onInput, color, label }: { count: number; onChange: (delta: number) => void; onInput: (value: number) => void; color: 'teal' | 'blue'; label?: string }) {
+    // Local state for input value to prevent focus loss on each keystroke
+    const [inputValue, setInputValue] = useState(count.toString())
+    
     const colorClasses = {
       teal: {
         minus: 'bg-red-500 hover:bg-red-600 disabled:bg-red-300',
@@ -586,6 +589,11 @@ export default function CashCounterPage() {
       },
     }
 
+    // Sync local input value with parent count when it changes from outside
+    useEffect(() => {
+      setInputValue(count.toString())
+    }, [count])
+
     return (
       <div className="flex flex-col gap-1 items-center">
         <div className={`p-1 rounded-md border ${colorClasses[color].container} w-full`}>
@@ -594,9 +602,18 @@ export default function CashCounterPage() {
             inputMode="decimal"
             min="0"
             max="999"
+            id={label ? `denomination-${label}-${color}` : `denomination-${color}`}
+            name={label ? `denomination-${label}-${color}` : `denomination-${color}`}
             className={`text-center font-semibold text-sm w-full border rounded focus:outline-none focus:ring-2 py-1 px-2 ${colorClasses[color].input}`}
-            value={count}
-            onChange={(e) => onInput(parseInt(e.target.value) || 0)}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onBlur={() => onInput(parseInt(inputValue) || 0)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                onInput(parseInt(inputValue) || 0)
+                e.currentTarget.blur()
+              }
+            }}
           />
         </div>
         <div className="flex gap-1 items-center w-full justify-center">
