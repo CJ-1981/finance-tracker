@@ -276,9 +276,12 @@ export default function CashCounterPage() {
   }, [])
 
   // Save config to localStorage
-  const saveConfig = useCallback((newConfig: Config) => {
-    setConfig(newConfig)
-    localStorage.setItem('cashcounter_config', JSON.stringify(newConfig))
+  const saveConfig = useCallback((newConfig: Config | ((prev: Config) => Config)) => {
+    setConfig(prevConfig => {
+      const updatedConfig = typeof newConfig === 'function' ? newConfig(prevConfig) : newConfig
+      localStorage.setItem('cashcounter_config', JSON.stringify(updatedConfig))
+      return updatedConfig
+    })
   }, [])
 
   // Load data from localStorage (run once after component mount)
@@ -657,9 +660,14 @@ export default function CashCounterPage() {
                   type="number"
                   step="0.01"
                   min="0"
+                  placeholder="0"
                   className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  value={config.targetAmount}
-                  onChange={(e) => saveConfig({ ...config, targetAmount: parseFloat(e.target.value) || 0 })}
+                  value={config.targetAmount === 0 ? '' : config.targetAmount}
+                  onChange={(e) => {
+                    const value = e.target.value.trim()
+                    const numValue = value === '' ? 0 : parseFloat(value)
+                    saveConfig(prev => ({ ...prev, targetAmount: isNaN(numValue) ? 0 : numValue }))
+                  }}
                 />
               </div>
             </div>
