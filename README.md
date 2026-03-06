@@ -4,7 +4,7 @@ A collaborative financial tracking web application built with React, TypeScript,
 
 **Live Demo:**
 - [Finance Tracker](https://cj-1981.github.io/finance-tracker/)
-- [Cash Counter (No Auth Required)](https://cj-1981.github.io/finance-tracker/cashcounter)
+- [Cash Counter (No Auth Required)](https://cj-1981.github.io/finance-tracker/#/cashcounter)
 
 ## Features
 
@@ -95,7 +95,7 @@ A collaborative financial tracking web application built with React, TypeScript,
 3. Copy your Project URL and anon/public key
 4. Go to SQL Editor and run schema from `database/schema.sql`
 
-**Important:** For existing databases, ensure you have to latest schema and run `database/migration_soft_delete_transactions.sql` to enable soft delete functionality.
+**Important:** For existing databases, ensure you have the latest schema and run `database/migration_soft_delete_transactions.sql` to enable soft delete functionality.
 
 ### Local Development
 
