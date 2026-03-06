@@ -652,6 +652,7 @@ export default function CashCounterPage() {
               <div className="flex gap-2 items-center">
                 <span className="text-slate-500 dark:text-slate-400">{currency}</span>
                 <input
+                  inputMode="decimal"
                   type="number"
                   step="0.01"
                   min="0"
