@@ -8,7 +8,6 @@
  * - LocalStorage persistence
  * - Configurable currency
  */
-
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -123,11 +122,11 @@ const createEmptyState = (): CashCounterState => ({
 
 function LanguageSelector() {
   const { i18n } = useTranslation()
-  const [isOpen, setIsOpen] = useState(false)
+  const [isLanguageOpen, setLanguageOpen] = useState(false)
 
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng)
-    setIsOpen(false)
+    setLanguageOpen(false)
   }
 
   const getCurrentLanguageCode = () => {
@@ -138,11 +137,11 @@ function LanguageSelector() {
   const currentLangCode = getCurrentLanguageCode()
   const currentLanguage = LANGUAGES.find(l => l.code === currentLangCode) || LANGUAGES[0]
 
-  const toggleDropdown = () => setIsOpen(!isOpen)
+  const toggleDropdown = () => setLanguageOpen(!isLanguageOpen)
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
-      setIsOpen(false)
+      setLanguageOpen(false)
     } else if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
       toggleDropdown()
@@ -155,7 +154,7 @@ function LanguageSelector() {
         className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
         onClick={toggleDropdown}
         onKeyDown={handleKeyDown}
-        aria-expanded={isOpen}
+        aria-expanded={isLanguageOpen}
         aria-haspopup="true"
       >
         <span className="text-xl leading-none">{currentLanguage.flag}</span>
@@ -164,11 +163,11 @@ function LanguageSelector() {
         </span>
       </button>
 
-      {isOpen && (
+      {isLanguageOpen && (
         <>
           <div
             className="fixed inset-0 z-[199]"
-            onClick={() => setIsOpen(false)}
+            onClick={() => setLanguageOpen(false)}
             aria-hidden="true"
           />
           <div className="absolute right-0 mt-2 min-w-max bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 z-[200] overflow-hidden">
@@ -196,12 +195,16 @@ function LanguageSelector() {
 // ==================== CURRENCY SELECTOR COMPONENT ====================
 
 function CurrencySelector({ currency, onCurrencyChange }: { currency: string; onCurrencyChange: (currency: string) => void }) {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isCurrencyOpen, setCurrencyOpen] = useState(false)
 
-  const toggleDropdown = () => setIsOpen(!isOpen)
+  const toggleDropdown = () => setCurrencyOpen(!isCurrencyOpen)
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') setIsOpen(false)
-    else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleDropdown() }
+    if (e.key === 'Escape') {
+      setCurrencyOpen(false)
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      toggleDropdown()
+    }
   }
 
   const currentCurrency = CURRENCIES.find(c => c.code === currency) || CURRENCIES[0]
@@ -212,21 +215,21 @@ function CurrencySelector({ currency, onCurrencyChange }: { currency: string; on
         className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
         onClick={toggleDropdown}
         onKeyDown={handleKeyDown}
-        aria-expanded={isOpen}
+        aria-expanded={isCurrencyOpen}
         aria-haspopup="true"
       >
         <span className="text-xl">{currentCurrency.flag}</span>
         <span className="text-sm font-bold text-blue-700 dark:text-blue-300">{currency}</span>
       </button>
 
-      {isOpen && (
+      {isCurrencyOpen && (
         <>
-          <div className="fixed inset-0 z-[199]" onClick={() => setIsOpen(false)} aria-hidden="true" />
+          <div className="fixed inset-0 z-[199]" onClick={() => setCurrencyOpen(false)} aria-hidden="true" />
           <div className="absolute right-0 mt-2 min-w-max bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 z-[200] overflow-hidden max-h-60 overflow-y-auto">
             {CURRENCIES.map((c) => (
               <button
                 key={c.code}
-                onClick={() => { onCurrencyChange(c.code); setIsOpen(false) }}
+                onClick={() => { onCurrencyChange(c.code); setCurrencyOpen(false) }}
                 className={`w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${currency === c.code ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'text-slate-700 dark:text-slate-300'
                   }`}
               >
@@ -615,8 +618,8 @@ export default function CashCounterPage() {
               title="Settings"
             >
               <svg className="w-5 h-5 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573c.94 1.543-.826 3.31-.826 2.37a1.724 1.724 0 002.572c1.756-.426 1.756 2.924 1.756.335a1.724 1.724 0 002.573c1.756-.94 1.543-.826 3.31-.826 2.37a1.724 1.724 0 00-1.066c2.573c.94 1.543-.826 3.31 2.37a1.724 1.724 0 00-2.572c1.756-.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.573c1.756 1.756.2.924 1.756 3.35 0a1.724 1.724 0 002.572 1.756 1.756 3.35 0a1.724 1.724 0.001.066c2.573c.94 1.543-.826 3.31-.826 2.37a1.724 1.724 0.00-2.572 1.756.1.756 3.35 0a1.724 1.724 0 001.066c1.756.1.756.3.35 0a1.724 1.724 0 00-2.572 1.756 1.756.6.608 2.296.07 2.572 1.065c-.426 1.756.2.924 1.756 3.35 0a1.724 1.724 0 00-2.572 1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </button>
             <LanguageSelector />
