@@ -44,8 +44,8 @@ A collaborative financial tracking web application built with React, TypeScript,
 - **Dropdown list support** - Create select fields with predefined options
 - **Category management** - Create, rename, reorder categories with color coding
 - **CSV export** - Export transactions matching table structure
-- **Multi-user collaboration** - Invite members with role-based access (owner, member, viewer)
-- **Email invitations** - Send invitations with token-based acceptance flow (owner only)
+- **Multi-user collaboration** - Invite members with role-based access (owner, admin, member, viewer)
+- **Email invitations** - Send invitations with token-based acceptance flow (owner and admin)
 - **QR Code Invitations** - Generate QR codes for easy invitation sharing
   - Display QR code in invite success modal
   - Copy QR code image to clipboard for email sharing
@@ -207,7 +207,7 @@ The application uses the following tables:
 
 - `profiles`: User profiles (extends Supabase Auth)
 - `projects`: Financial tracking projects with settings and custom fields
-- `project_members`: Project membership with roles (owner, member, viewer)
+- `project_members`: Project membership with roles (owner, admin, member, viewer)
 - `categories`: Transaction categories with colors and order
 - `transactions`: Financial transactions with multi-currency support and custom data
 - `invitations`: User invitations with status tracking (pending/accepted/expired)

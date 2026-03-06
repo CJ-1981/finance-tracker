@@ -386,4 +386,44 @@
     "noQrFound": "No QR code found in the uploaded image. Please try another image.",
     "invalidImage": "Invalid image file. Please upload a valid image file (JPG, PNG, etc.)."
   }
+},
+  "roles": {
+    "owner": "Owner",
+    "admin": "Admin",
+    "member": "Member",
+    "viewer": "Viewer"
+  },
+  "roleDescriptions": {
+    "owner": "Full project access including deletion and ownership transfer",
+    "admin": "Full management access except project deletion and ownership transfer",
+    "member": "Can add and edit transactions",
+    "viewer": "Read-only access to transactions and categories"
+  },
+  "admin": {
+    "cannotManageOwners": "Admins cannot manage project owners",
+    "cannotManageOtherAdmins": "Admins cannot manage other admins",
+    "cannotPromoteSelf": "Admins cannot promote themselves to owner",
+    "lastAdminWarning": "This is the last admin. Removing them will leave the project without admin access.",
+    "inviteRestricted": "Admins can only invite members and viewers. To assign admin role, invite as member then promote."
+  }
+,
+  "roles": {
+    "owner": "Owner",
+    "admin": "Admin",
+    "member": "Member",
+    "viewer": "Viewer"
+  },
+  "roleDescriptions": {
+    "owner": "Full project access including deletion and ownership transfer",
+    "admin": "Full management access except project deletion and ownership transfer",
+    "member": "Can add and edit transactions",
+    "viewer": "Read-only access to transactions and categories"
+  },
+  "admin": {
+    "cannotManageOwners": "Admins cannot manage project owners",
+    "cannotManageOtherAdmins": "Admins cannot manage other admins",
+    "cannotPromoteSelf": "Admins cannot promote themselves to owner",
+    "lastAdminWarning": "This is the last admin. Removing them will leave the project without admin access.",
+    "inviteRestricted": "Admins can only invite members and viewers. To assign admin role, invite as member then promote."
+  }
 }
