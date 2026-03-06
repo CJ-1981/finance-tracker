@@ -113,29 +113,20 @@ export async function testConnection(config: SupabaseConfig): Promise<boolean> {
     // "Multiple GoTrueClient instances detected" warnings. A second GoTrueClient
     // shares the same localStorage key as the main client even with persistSession: false,
     // which causes the warning and can interfere with the auth state.
-    const response = await fetch(`${config.url}/rest/v1/`, {
+    //
+    // Note: Changed from /rest/v1/ to /auth/v1/health on 2026-03-06
+    // due to Supabase deprecation of OpenAPI spec access via anon key.
+    // See: https://github.com/orgs/supabase/discussions/42949
+    const response = await fetch(`${config.url}/auth/v1/health`, {
       headers: {
         'apikey': config.anonKey,
-        'Authorization': `Bearer ${config.anonKey}`
       }
     })
 
     // 200 OK          → endpoint reachable, anon key accepted
     // 401 Unauthorized → endpoint reachable, but anon access restricted (still a valid connection)
-    // 404 Not Found   → endpoint exists (edge case for some Supabase setups)
     // Anything else is likely a network or configuration error
-    if (response.ok || response.status === 401 || response.status === 404) {
-      return true
-    }
-
-    // Try the auth endpoint as a secondary check
-    const authResponse = await fetch(`${config.url}/auth/v1/health`, {
-      headers: {
-        'apikey': config.anonKey,
-      }
-    })
-
-    return authResponse.ok || authResponse.status === 401
+    return response.ok || response.status === 401
 
   } catch (err) {
     console.error('Connection test failed:', err)
