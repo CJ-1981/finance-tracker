@@ -593,6 +593,7 @@ export default function CashCounterPage() {
             type="number"
             inputMode="numeric"
             min="0"
+            max="999"
             className={`text-center font-semibold text-sm w-full border rounded focus:outline-none focus:ring-2 py-1 px-2 ${colorClasses[color].input}`}
             value={count}
             onChange={(e) => onInput(parseInt(e.target.value) || 0)}
