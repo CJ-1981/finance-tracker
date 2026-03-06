@@ -177,8 +177,8 @@ export default function TransactionsPage() {
       // while resetSupabaseClient() creates a new GoTrueClient, triggering
       // "Multiple GoTrueClient instances" warnings.
 
-      // Fetch project with generous timeout
-      addDebugMessage(`Fetching project${retryLabel} (8s timeout)...`)
+      // Fetch project with timeout
+      addDebugMessage(`Fetching project${retryLabel} (2s timeout)...`)
       const startTime = Date.now()
 
       const { data, error } = await Promise.race([
@@ -246,9 +246,9 @@ export default function TransactionsPage() {
         addDebugMessage(`Retrying in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
         setRetryCount(nextAttempt)
 
-        // No client reset — resetSupabaseClient() keeps triggering the
-        // "Multiple GoTrueClient instances" warning because useAuth holds
-        // the old client alive. Supabase fetch is stateless per-request.
+        // Reset client before retry to ensure a fresh connection state
+        addDebugMessage('Resetting Supabase client...')
+        await resetSupabaseClient(getConfig())
         await new Promise(resolve => setTimeout(resolve, backoffDelay))
         return fetchProjectWithRetry(nextAttempt)
       }
@@ -299,7 +299,8 @@ export default function TransactionsPage() {
         // Increment retry count to prevent infinite loops
         setRetryCount(1)
 
-        // No client reset — same reason as above.
+        // Reset Supabase client and retry once more
+        await resetSupabaseClient(getConfig())
         await new Promise(resolve => setTimeout(resolve, 1000))
 
         // Retry once more
