@@ -523,7 +523,7 @@ export default function CashCounterPage() {
         for (const d of billsWithData) {
           const nc = state.namedCounts[d.value] || 0
           const ac = state.anonymous[d.value] || 0
-          lines.push(`| ${d.label} | ${nc > 0 ? `${nc} × ${currency} ${d.label} = **${currency} ${(nc * d.value).toFixed(2)}**` : '—'} | ${ac > 0 ? `${ac} × ${currency} ${d.label} = **${currency} ${(ac * d.value).toFixed(2)}**` : '—'} |`)
+          lines.push(`| ${d.label} | ${nc > 0 ? nc : '—'} | ${ac > 0 ? ac : '—'} |`)
         }
         lines.push('')
       }
@@ -540,7 +540,7 @@ export default function CashCounterPage() {
         for (const d of coinsWithData) {
           const nc = state.namedCounts[d.value] || 0
           const ac = state.anonymous[d.value] || 0
-          lines.push(`| ${d.label} | ${nc > 0 ? `${nc} × ${currency} ${d.label} = **${currency} ${(nc * d.value).toFixed(2)}**` : '—'} | ${ac > 0 ? `${ac} × ${currency} ${d.label} = **${currency} ${(ac * d.value).toFixed(2)}**` : '—'} |`)
+          lines.push(`| ${d.label} | ${nc > 0 ? nc : '—'} | ${ac > 0 ? ac : '—'} |`)
         }
         lines.push('')
       }
@@ -548,6 +548,7 @@ export default function CashCounterPage() {
 
     lines.push('---')
     lines.push(`**${t('cashCounter.namedTotal')}:** ${currency} ${namedTotalLocal.toFixed(2)} (${t('cashCounter.bills')}: ${currency} ${namedBreakdownLocal.bills.toFixed(2)}, ${t('cashCounter.coins')}: ${currency} ${namedBreakdownLocal.coins.toFixed(2)})`)
+    lines.push('')
     lines.push(`**${t('cashCounter.anonymousTotal')}:** ${currency} ${anonymousTotalLocal.toFixed(2)} (${t('cashCounter.bills')}: ${currency} ${anonymousBreakdownLocal.bills.toFixed(2)}, ${t('cashCounter.coins')}: ${currency} ${anonymousBreakdownLocal.coins.toFixed(2)})`)
     lines.push('')
 
@@ -558,6 +559,7 @@ export default function CashCounterPage() {
     }
 
     lines.push(`**${t('cashCounter.grandTotal')}:** ${currency} ${grandTotalLocal.toFixed(2)} (${t('cashCounter.bills')}: ${currency} ${grandBreakdownLocal.bills.toFixed(2)}, ${t('cashCounter.coins')}: ${currency} ${grandBreakdownLocal.coins.toFixed(2)})`)
+    lines.push('')
 
     if (config.targetAmount > 0) {
       lines.push(`**${t('cashCounter.transactionsTotal')}:** ${currency} ${config.targetAmount.toFixed(2)}`)
