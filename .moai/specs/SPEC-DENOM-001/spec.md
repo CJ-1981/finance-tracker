@@ -86,7 +86,7 @@ domain: FEATURE
 | `currency_code` | string (ISO 4217) | Currency selector | Required, must be in supported list |
 | `denomination.value` | number | Currency configuration | Required, must be valid for currency |
 | `denomination.label` | string | Currency configuration | Required, display value |
-| `denomination.type` | 'bill' | 'coin' | Currency configuration | Required |
+| `denomination.type` | `'bill' | 'coin'` | Currency configuration | Required |
 
 ### Output Specifications
 

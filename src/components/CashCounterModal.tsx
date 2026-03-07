@@ -223,6 +223,15 @@ export default function CashCounterModal({
         } else if ('version' in data && data.version === 3) {
           // V3 format - validate and load directly
           const loadedCurrency = data.currency || 'EUR'
+          const projectCurrency = project.settings?.currency || 'EUR'
+
+          // Only load V3 data if currencies match, otherwise reset to ensure consistency
+          if (loadedCurrency !== projectCurrency) {
+            console.log('V3 currency mismatch with project settings, resetting to project currency')
+            setState(createEmptyState(projectCurrency))
+            return
+          }
+
           if (typeof data.anonymous === 'object' && data.anonymous !== null &&
             typeof data.namedCounts === 'object' && data.namedCounts !== null) {
             setState({

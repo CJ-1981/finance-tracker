@@ -313,8 +313,9 @@ export default function CashCounterPage() {
       const denominations = getDenominations(currentConfigCurrency)
       const currentDenominationValues = Object.keys(prev.anonymous).map(Number)
 
-      // Check if current denominations match the new currency's denominations
-      const needsReset = !denominations.every(d => currentDenominationValues.includes(d.value))
+      // Check if denomination SETS match - catches all currency changes including subset changes
+      const newDenominationValues = denominations.map(d => d.value)
+      const needsReset = JSON.stringify([...newDenominationValues].sort()) !== JSON.stringify([...currentDenominationValues].sort())
 
       if (needsReset) {
         return createEmptyState(currentConfigCurrency)
@@ -545,8 +546,8 @@ export default function CashCounterPage() {
   const matchStatus = getMatchStatus()
 
   // Denomination Row Component
-  function DenominationRow(props: { denomination: { value: number; label: string; type: 'bill' | 'coin' } }) {
-    const { denomination } = props
+  function DenominationRow(props: { denomination: { value: number; label: string; type: 'bill' | 'coin' }; currency: string }) {
+    const { denomination, currency } = props
     const emoji = getCurrencyEmoji(currency, denomination.type)
     const namedCount = state.namedCounts[denomination.value] || 0
     const anonymousCount = state.anonymous[denomination.value] || 0
@@ -729,14 +730,14 @@ export default function CashCounterPage() {
         {/* Bills Section */}
         <div className="mb-6">
           {bills.map((denom) => (
-            <DenominationRow key={denom.value} denomination={denom} />
+            <DenominationRow key={denom.value} denomination={denom} currency={config.currency} />
           ))}
         </div>
 
         {/* Coins Section */}
         <div className="mb-6">
           {coins.map((denom) => (
-            <DenominationRow key={denom.value} denomination={denom} />
+            <DenominationRow key={denom.value} denomination={denom} currency={config.currency} />
           ))}
         </div>
 

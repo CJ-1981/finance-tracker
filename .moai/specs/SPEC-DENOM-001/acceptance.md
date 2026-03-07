@@ -53,7 +53,7 @@ This document defines acceptance criteria for currency-specific denominations in
 1. Open Cash Counter Page
 2. Click currency selector
 3. Select USD
-4. Verify 10 denominations are displayed (not EUR's 14)
+4. Verify 11 denominations are displayed (not EUR's 14)
 5. Check that 200 and 2 bills are not shown
 6. Verify 0.25 quarter is shown as a coin
 7. Confirm '$' symbol appears in totals

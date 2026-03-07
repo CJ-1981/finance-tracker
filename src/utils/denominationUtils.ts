@@ -21,6 +21,25 @@ export function createEmptyDenominationState(currencyCode: string): Record<numbe
 }
 
 /**
+ * Format currency amount using Intl.NumberFormat for proper decimal places
+ * @param amount - The amount to format
+ * @param currencyCode - ISO 4217 currency code
+ * @returns Formatted string with currency symbol and correct decimal places
+ */
+export function formatCurrencyAmount(amount: number, currencyCode: string): string {
+  // JPY and KRW have zero decimal places (integers)
+  // Other currencies have 2 decimal places (EUR, USD, GBP, INR) or more
+  const zeroDecimalCurrencies = ['JPY', 'KRW']
+  const maximumFractionDigits = zeroDecimalCurrencies.includes(currencyCode) ? 0 : 2
+
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currencyCode,
+    maximumFractionDigits: maximumFractionDigits,
+  }).format(amount)
+}
+
+/**
  * Calculate total amount from denomination counts
  * @param counts - Record of denomination values to counts
  * @param currencyCode - ISO 4217 currency code for denomination values
@@ -92,6 +111,32 @@ export function filterDenominationsByType(
  * @param namedCounts - Named denomination counts
  * @returns Array of denominations with non-zero counts
  */
+/**
+ * Format currency amount using Intl.NumberFormat for proper decimal places
+ * @param amount - The amount to format
+ * @param currencyCode - ISO 4217 currency code
+ * @returns Formatted string with currency symbol and correct decimal places
+ */
+export function formatCurrencyAmount(amount: number, currencyCode: string): string {
+  // JPY and KRW have zero decimal places (integers)
+  // Other currencies have 2 decimal places (EUR, USD, GBP, INR) or more
+  const zeroDecimalCurrencies = ['JPY', 'KRW']
+  const maximumFractionDigits = zeroDecimalCurrencies.includes(currencyCode) ? 0 : 2
+
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currencyCode,
+    maximumFractionDigits: maximumFractionDigits,
+  }).format(amount)
+}
+
+/**
+ * Get denominations with data (count > 0 for either anonymous or named)
+ * @param denominations - Array of denomination objects
+ * @param anonymousCounts - Anonymous denomination counts
+ * @param namedCounts - Named denomination counts
+ * @returns Array of denominations with non-zero counts
+ */
 export function getDenominationsWithData(
   denominations: Denomination[],
   anonymousCounts: Record<number, number>,
@@ -101,3 +146,6 @@ export function getDenominationsWithData(
     d => (namedCounts[d.value] || 0) > 0 || (anonymousCounts[d.value] || 0) > 0
   )
 }
+
+export { formatCurrencyAmount }
+
