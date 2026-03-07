@@ -641,14 +641,14 @@ export default function CashCounterModal({
             <button
               type="button"
               onClick={handleClearAll}
-              className="px-6 btn btn-secondary text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+              className="px-4 sm:px-6 btn btn-secondary text-xs sm:text-sm md:text-base text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
             >
               {t('cashCounter.clearAll')}
             </button>
             <button
               type="button"
               onClick={handleShare}
-              className={`px-6 btn btn-secondary flex items-center gap-2 transition-colors ${copySuccess
+              className={`px-4 sm:px-6 btn btn-secondary flex items-center gap-2 text-xs sm:text-sm md:text-base transition-colors ${copySuccess
                   ? 'text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300'
                   : 'text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300'
                 }`}
