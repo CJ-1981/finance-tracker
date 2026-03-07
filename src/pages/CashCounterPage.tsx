@@ -836,6 +836,10 @@ export default function CashCounterPage() {
                       ? 'text-red-600 dark:text-red-400'
                       : 'text-slate-900 dark:text-slate-100'
                 }`}
+              style={{
+                marginLeft: 'auto',
+                marginRight: 'auto'
+              }}
             >
               {formatCurrencyAmount(grandTotal, currency)}
             </span>
