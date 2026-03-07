@@ -23,6 +23,15 @@ import {
   formatCurrencyAmount,
 } from '../utils/denominationUtils'
 
+// ==================== EXPORTS ====================
+
+/**
+ * @MX:NOTE: Default EUR denominations for testing (SPEC-UI-003)
+ *
+ * Exported for testability - provides access to EUR denomination structure
+ */
+export const DENOMINATIONS = getDenominations('EUR')
+
 // ==================== TYPES & INTERFACES ====================
 
 /**
@@ -154,11 +163,14 @@ export default function CashCounterModal({
 
   // ==================== LOCALSTORAGE ====================
 
+  // @MX:ANCHOR: Persisted state management with debouncing for data integrity
+  // @MX:REASON: Called from useEffect, dependency array, and cleanup - critical for preventing data loss
   const saveToLocalStorage = useCallback((currentState: CashCounterState) => {
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current)
     }
 
+    // @MX:NOTE: 500ms debounce timeout prevents excessive localStorage writes
     saveTimeoutRef.current = setTimeout(() => {
       const storageKey = `cash_counter_${project.id}`
       try {
@@ -168,13 +180,13 @@ export default function CashCounterModal({
           anonymous: currentState.anonymous,
           namedCounts: currentState.namedCounts,
           lastDate: getLocalDateString(),
-          currency: state.currency,  // Add currency field for V3 migration
+          currency: currentState.currency,
         }
         localStorage.setItem(storageKey, JSON.stringify(data))
       } catch (err) {
         console.error('Error saving cash counter data:', err)
       }
-    }, 500) // Debounce saves
+    }, 500)
   }, [project.id])
 
   // Handle currency changes - reset denomination state when project currency changes
@@ -335,6 +347,8 @@ export default function CashCounterModal({
 
   const [copySuccess, setCopySuccess] = useState(false)
 
+  // @MX:ANCHOR: Public API for exporting cash counter data as markdown
+  // @MX:REASON: User-facing functionality for sharing counts via clipboard
   const handleShare = useCallback(() => {
     const currency = project.settings?.currency || 'EUR'
     const today = getLocalDateString()
@@ -368,7 +382,7 @@ export default function CashCounterModal({
         for (const d of billsWithData) {
           const nc = state.namedCounts[d.value] || 0
           const ac = state.anonymous[d.value] || 0
-          lines.push(`| ${d.label} | ${nc > 0 ? `${nc} × ${currency} ${d.label} = **${currency} ${(nc * d.value).toFixed(2)}**` : '—'} | ${ac > 0 ? `${ac} × ${currency} ${d.label} = **${currency} ${(ac * d.value).toFixed(2)}**` : '—'} |`)
+          lines.push(`| ${d.label} | ${nc > 0 ? nc : '—'} | ${ac > 0 ? ac : '—'} |`)
         }
         lines.push('')
       }
@@ -386,7 +400,7 @@ export default function CashCounterModal({
         for (const d of coinsWithData) {
           const nc = state.namedCounts[d.value] || 0
           const ac = state.anonymous[d.value] || 0
-          lines.push(`| ${d.label} | ${nc > 0 ? `${nc} × ${currency} ${d.label} = **${currency} ${(nc * d.value).toFixed(2)}**` : '—'} | ${ac > 0 ? `${ac} × ${currency} ${d.label} = **${currency} ${(ac * d.value).toFixed(2)}**` : '—'} |`)
+          lines.push(`| ${d.label} | ${nc > 0 ? nc : '—'} | ${ac > 0 ? ac : '—'} |`)
         }
         lines.push('')
       }
@@ -395,6 +409,7 @@ export default function CashCounterModal({
     // Subtotals
     lines.push('---')
     lines.push(`**${t('cashCounter.namedTotal')}:** ${currency} ${namedTotalLocal.toFixed(2)} (${t('cashCounter.bills')}: ${currency} ${namedBreakdownLocal.bills.toFixed(2)}, ${t('cashCounter.coins')}: ${currency} ${namedBreakdownLocal.coins.toFixed(2)})`)
+    lines.push('')
     lines.push(`**${t('cashCounter.anonymousTotal')}:** ${currency} ${anonymousTotalLocal.toFixed(2)} (${t('cashCounter.bills')}: ${currency} ${anonymousBreakdownLocal.bills.toFixed(2)}, ${t('cashCounter.coins')}: ${currency} ${anonymousBreakdownLocal.coins.toFixed(2)})`)
     lines.push('')
 
@@ -405,11 +420,13 @@ export default function CashCounterModal({
     }
 
     lines.push(`**${t('cashCounter.grandTotal')}:** ${currency} ${grandTotalLocal.toFixed(2)} (${t('cashCounter.bills')}: ${currency} ${grandBreakdownLocal.bills.toFixed(2)}, ${t('cashCounter.coins')}: ${currency} ${grandBreakdownLocal.coins.toFixed(2)})`)
+    lines.push('')
     lines.push(`**${t('cashCounter.transactionsTotal')}:** ${currency} ${totalTransactionsAmount.toFixed(2)}`)
     lines.push('')
 
     const diff = grandTotalLocal - totalTransactionsAmount
     const absDiff = Math.abs(diff)
+    // @MX:NOTE: 0.01 tolerance accounts for floating point precision in currency calculations
     const tolerance = 0.01
     if (absDiff <= tolerance) {
       lines.push(`✅ **${t('cashCounter.match')}** — ${currency} ${absDiff.toFixed(2)}`)
@@ -422,6 +439,7 @@ export default function CashCounterModal({
     const markdown = lines.join('\n')
     navigator.clipboard.writeText(markdown).then(() => {
       setCopySuccess(true)
+      // @MX:NOTE: 2000ms success feedback timeout for user visibility
       setTimeout(() => setCopySuccess(false), 2000)
     }).catch(() => {
       // Fallback for environments without navigator.clipboard
@@ -432,6 +450,7 @@ export default function CashCounterModal({
       document.execCommand('copy')
       document.body.removeChild(textarea)
       setCopySuccess(true)
+      // @MX:NOTE: 2000ms success feedback timeout for user visibility
       setTimeout(() => setCopySuccess(false), 2000)
     })
   }, [state, project, totalTransactionsAmount, t])
@@ -455,6 +474,7 @@ export default function CashCounterModal({
   // Match status
   const getMatchStatus = (): 'match' | 'excess' | 'shortage' => {
     const difference = Math.abs(grandTotal - totalTransactionsAmount)
+    // @MX:NOTE: 0.01 tolerance accounts for floating point precision in currency calculations
     const tolerance = 0.01
 
     if (difference <= tolerance) return 'match'
@@ -545,7 +565,7 @@ export default function CashCounterModal({
 
           {/* Section Totals - Swapped: Named first, Anonymous second */}
           <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800/50">
+            <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800/50 text-center">
               <div className="text-[10px] font-medium text-blue-700 dark:text-blue-400 mb-1">
                 {t('cashCounter.namedTotal')}
               </div>
@@ -554,7 +574,7 @@ export default function CashCounterModal({
               </div>
             </div>
 
-            <div className="p-2 bg-teal-50 dark:bg-teal-900/20 rounded-md border border-teal-200 dark:border-teal-800/50">
+            <div className="p-2 bg-teal-50 dark:bg-teal-900/20 rounded-md border border-teal-200 dark:border-teal-800/50 text-center">
               <div className="text-[10px] font-medium text-teal-700 dark:text-teal-400 mb-1">
                 {t('cashCounter.anonymousTotal')}
               </div>
@@ -568,25 +588,9 @@ export default function CashCounterModal({
         {/* Grand Total & Match Status */}
         <div className="px-6 pb-6 border-t border-gray-200 dark:border-slate-700">
           <div className="py-4">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                {t('cashCounter.grandTotal')}:
-              </span>
-              <span
-                className={`text-3xl font-black dark:text-white ${matchStatus === 'match'
-                    ? 'text-green-600 dark:text-green-400'
-                    : matchStatus === 'excess'
-                      ? 'text-blue-600 dark:text-blue-400'
-                      : 'text-red-600 dark:text-red-400'
-                  }`}
-              >
-                {formatCurrencyAmount(grandTotal, currency)}
-              </span>
-            </div>
-
             {/* Grand Total Breakdown - Stacked Labels */}
             <div className="grid grid-cols-2 gap-2 mb-3">
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded-md border border-yellow-200 dark:border-yellow-800/50">
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded-md border border-yellow-200 dark:border-yellow-800/50 text-center">
                 <div className="text-[9px] font-medium text-gray-700 dark:text-gray-300 mb-0.5">
                   💵 {t('cashCounter.bills')}
                 </div>
@@ -594,7 +598,7 @@ export default function CashCounterModal({
                   {formatCurrencyAmount(grandBreakdown.bills, currency)}
                 </div>
               </div>
-              <div className="bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded-md border border-gray-200 dark:border-slate-600">
+              <div className="bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded-md border border-gray-200 dark:border-slate-600 text-center">
                 <div className="text-[9px] font-medium text-gray-700 dark:text-gray-300 mb-0.5">
                   ⚪ {t('cashCounter.coins')}
                 </div>
@@ -604,35 +608,46 @@ export default function CashCounterModal({
               </div>
             </div>
 
-            {/* Transaction Total */}
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                {t('cashCounter.transactionsTotal')}:
-              </span>
-              <span className="text-xl font-semibold text-gray-600 dark:text-gray-400">
-                {currency} {totalTransactionsAmount.toFixed(2)}
-              </span>
+            {/* Grand Total */}
+            <div className="text-right mb-4">
+              <div className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
+                {t('cashCounter.grandTotal')}:
+              </div>
+              <div
+                className={`text-3xl font-black dark:text-white ${matchStatus === 'match'
+                    ? 'text-green-600 dark:text-green-400'
+                    : matchStatus === 'excess'
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-red-600 dark:text-red-400'
+                  }`}
+              >
+                {formatCurrencyAmount(grandTotal, currency)}
+              </div>
             </div>
 
             {/* Difference */}
             <div
-              className={`flex justify-between items-center p-3 rounded-lg ${matchStatus === 'match'
+              className={`text-right p-3 rounded-lg ${matchStatus === 'match'
                   ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
                   : matchStatus === 'excess'
                     ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400'
                     : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'
                 }`}
             >
-              <span className="font-semibold">
+              <div className="text-lg font-bold mb-2">
+                {t('cashCounter.transactionsTotal')}: {currency} {totalTransactionsAmount.toFixed(2)}
+              </div>
+              <div className="border-t border-black/20 dark:border-white/20 my-2"></div>
+              <div className="font-semibold mb-1">
                 {matchStatus === 'match'
                   ? '✓ ' + t('cashCounter.match')
                   : matchStatus === 'excess'
                     ? '↑ ' + t('cashCounter.excess')
-                    : '↓ ' + t('cashCounter.shortage')}:
-              </span>
-              <span className="font-bold text-lg dark:text-white">
+                    : '↓ ' + t('cashCounter.shortage')}
+              </div>
+              <div className="font-bold text-lg">
                 {currency} {Math.abs(grandTotal - totalTransactionsAmount).toFixed(2)}
-              </span>
+              </div>
             </div>
           </div>
 
@@ -778,9 +793,12 @@ function DenominationControls({ count, onChange, onInput, color, increaseLabel, 
           inputMode="numeric"
           min="0"
           className={`text-center font-semibold text-sm w-full border rounded focus:outline-none focus:ring-2 py-1 px-1 ${colorClasses[color].input}`}
-          value={count > 0 ? count : ''}
+          value={count === 0 ? '' : count.toString()}
           placeholder="0"
-          onChange={(e) => onInput(parseInt(e.target.value) || 0)}
+          onChange={(e) => {
+            const newValue = parseInt(e.target.value) || 0
+            onInput(newValue)
+          }}
           aria-label={inputLabel}
         />
       </div>

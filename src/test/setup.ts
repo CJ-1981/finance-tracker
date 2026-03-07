@@ -24,3 +24,30 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: vi.fn(),
   })),
 })
+
+// Mock window.URL.createObjectURL for jsdom environment
+if (!window.URL.createObjectURL) {
+  const blobUrls = new Map<Blob, string>()
+  let counter = 0
+
+  Object.defineProperty(window.URL, 'createObjectURL', {
+    writable: true,
+    value: vi.fn((blob: Blob) => {
+      const id = `blob:${counter++}`
+      blobUrls.set(blob, id)
+      return id
+    }),
+  })
+
+  Object.defineProperty(window.URL, 'revokeObjectURL', {
+    writable: true,
+    value: vi.fn((url: string) => {
+      for (const [blob, id] of blobUrls.entries()) {
+        if (id === url) {
+          blobUrls.delete(blob)
+          break
+        }
+      }
+    }),
+  })
+}

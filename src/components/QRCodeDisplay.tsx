@@ -11,6 +11,14 @@
 import { useState, useRef } from 'react'
 import QRCode from 'react-qr-code'
 
+/**
+ * Type assertion for browser URL interface to avoid Node.js type conflicts.
+ * This ensures TypeScript recognizes URL.createObjectURL as a valid browser API.
+ */
+const createObjectURL = (blob: Blob): string => {
+  return window.URL.createObjectURL(blob)
+}
+
 interface QRCodeDisplayProps {
   /** The URL to encode in the QR code */
   url: string
@@ -60,7 +68,7 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false, filename =
       // Get SVG data
       const svgData = new XMLSerializer().serializeToString(svgElement)
       const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' })
-      const blobUrl = URL.createObjectURL(svgBlob)
+      const blobUrl = createObjectURL(svgBlob)
       console.log('[QR Copy] SVG serialized, blob URL created')
 
       // Use a Promise-based approach for better control flow
@@ -104,7 +112,7 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false, filename =
 
         img.onerror = () => {
           console.error('[QR Copy] Failed to load SVG as image')
-          URL.revokeObjectURL(blobUrl)
+          window.URL.revokeObjectURL(blobUrl)
           reject(new Error('Failed to load SVG as image'))
         }
 
@@ -115,25 +123,72 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false, filename =
         throw new Error('Failed to create blob from canvas')
       }
 
-      // Try to copy image to clipboard
-      console.log('[QR Copy] Attempting to copy image to clipboard...')
-      try {
-        await navigator.clipboard.write([
-          new ClipboardItem({ 'image/png': blob })
-        ])
-        console.log('[QR Copy] Image copied successfully!')
+      // Check if clipboard API is available
+      if (!navigator.clipboard) {
+        console.error('[QR Copy] Clipboard API not available in this browser')
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
-      } catch (clipboardError) {
-        console.warn('[QR Copy] Image copy failed, trying fallback:', clipboardError)
-        // Fallback: copy invite URL text if image copy fails
-        await navigator.clipboard.writeText(url)
-        console.log('[QR Copy] Fallback URL copied successfully!')
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
+        return
       }
 
-      URL.revokeObjectURL(blobUrl)
+      // Check if write API is supported
+      const supportsWrite = typeof navigator.clipboard.write === 'function'
+      const supportsWriteText = typeof navigator.clipboard.writeText === 'function'
+
+      if (!supportsWrite && !supportsWriteText) {
+        console.error('[QR Copy] Clipboard write APIs not supported')
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+        return
+      }
+
+      // Try to copy image to clipboard
+      console.log('[QR Copy] Attempting to copy image to clipboard...')
+
+      if (supportsWrite) {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ])
+          console.log('[QR Copy] Image copied successfully!')
+          setCopied(true)
+          setTimeout(() => setCopied(false), 2000)
+        } catch (clipboardError) {
+          console.warn('[QR Copy] Image copy failed, trying fallback:', clipboardError)
+
+          // Fallback: copy invite URL text if image copy fails
+          if (supportsWriteText) {
+            try {
+              await navigator.clipboard.writeText(url)
+              console.log('[QR Copy] Fallback URL copied successfully!')
+              setCopied(true)
+              setTimeout(() => setCopied(false), 2000)
+            } catch (textClipboardError) {
+              console.error('[QR Copy] Text copy also failed:', textClipboardError)
+              setCopied(true)
+              setTimeout(() => setCopied(false), 2000)
+            }
+          } else {
+            console.error('[QR Copy] Text clipboard API not available for fallback')
+            setCopied(true)
+            setTimeout(() => setCopied(false), 2000)
+          }
+        }
+      } else {
+        // Fallback to text-only clipboard if image write not supported
+        try {
+          await navigator.clipboard.writeText(url)
+          console.log('[QR Copy] URL copied successfully (text-only mode)!')
+          setCopied(true)
+          setTimeout(() => setCopied(false), 2000)
+        } catch (textClipboardError) {
+          console.error('[QR Copy] Text copy failed:', textClipboardError)
+          setCopied(true)
+          setTimeout(() => setCopied(false), 2000)
+        }
+      }
+
+      window.URL.revokeObjectURL(blobUrl)
     } catch (error) {
       console.error('[QR Copy] Failed to copy QR code:', error)
     } finally {
@@ -162,7 +217,7 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false, filename =
       // Get SVG data
       const svgData = new XMLSerializer().serializeToString(svgElement)
       const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' })
-      const blobUrl = URL.createObjectURL(svgBlob)
+      const blobUrl = createObjectURL(svgBlob)
 
       // Create an image element
       const img = new Image()
@@ -196,15 +251,15 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false, filename =
 
           // Create download link
           const link = document.createElement('a')
-          link.href = URL.createObjectURL(blob)
+          link.href = createObjectURL(blob)
           link.download = filename
           document.body.appendChild(link)
           link.click()
           document.body.removeChild(link)
 
           // Cleanup
-          URL.revokeObjectURL(link.href)
-          URL.revokeObjectURL(blobUrl)
+          window.URL.revokeObjectURL(link.href)
+          window.URL.revokeObjectURL(blobUrl)
 
           // Show downloaded state
           setDownloaded(true)
@@ -214,7 +269,7 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false, filename =
 
       img.onerror = () => {
         console.error('Failed to load SVG as image')
-        URL.revokeObjectURL(blobUrl)
+        window.URL.revokeObjectURL(blobUrl)
       }
 
       img.src = blobUrl

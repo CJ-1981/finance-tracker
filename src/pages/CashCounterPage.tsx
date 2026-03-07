@@ -8,6 +8,9 @@
  * - LocalStorage persistence
  * - Configurable currency
  */
+// @MX:TODO: No test file exists - CashCounterPage.test.tsx or CashCounterPage.spec.tsx needed
+// @MX:PRIORITY: High - Public route component requires test coverage
+
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -234,7 +237,8 @@ export default function CashCounterPage() {
     }
   }, [])
 
-  // Save config to localStorage
+  // @MX:ANCHOR: Config state management with localStorage persistence
+  // @MX:REASON: Called from 8+ locations - critical config management across component lifecycle
   const saveConfig = useCallback((newConfig: Config | ((prev: Config) => Config)) => {
     setConfig(prevConfig => {
       const updatedConfig = typeof newConfig === 'function' ? newConfig(prevConfig) : newConfig
@@ -340,6 +344,7 @@ export default function CashCounterPage() {
       clearTimeout(saveTimeoutRef.current)
     }
 
+    // @MX:NOTE: 500ms debounce timeout prevents excessive localStorage writes
     saveTimeoutRef.current = setTimeout(() => {
       const storageKey = 'cashcounter_standalone'
       try {
@@ -372,13 +377,32 @@ export default function CashCounterPage() {
       saveToLocalStorage(state, config.currency)
       previousStateRef.current = state
     }
+  }, [state, config.currency, saveToLocalStorage])
 
+  // Cleanup on unmount - ensure pending saves are completed
+  useEffect(() => {
     return () => {
+      // @MX:NOTE: Flush pending save on component unmount to prevent data loss
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current)
+        // Save the most recent state immediately
+        const storageKey = 'cashcounter_standalone'
+        try {
+          const data: StoredCashData = {
+            version: 3,
+            anonymous: previousStateRef.current.anonymous,
+            namedCounts: previousStateRef.current.namedCounts,
+            lastDate: getLocalDateString(),
+            currency: config.currency,
+          }
+          localStorage.setItem(storageKey, JSON.stringify(data))
+        } catch (err) {
+          console.error('Error flushing cash counter data on unmount:', err)
+        }
+        saveTimeoutRef.current = undefined
       }
     }
-  }, [state, config.currency, saveToLocalStorage])
+  }, [config.currency])
 
   // Handlers
   const handleAnonymousCountChange = useCallback((denomination: number, delta: number) => {
@@ -435,6 +459,8 @@ export default function CashCounterPage() {
     return totalAnonymous === 0 && totalNamed === 0
   }, [])
 
+  // @MX:ANCHOR: Public API for currency changes with confirmation dialog
+  // @MX:REASON: Called from CurrencySelector - user-facing critical functionality
   const handleCurrencyChangeRequest = useCallback((newCurrency: string) => {
     if (isStateEmpty(state)) {
       // State is empty, proceed with currency change
@@ -465,6 +491,8 @@ export default function CashCounterPage() {
     })
   }, [])
 
+  // @MX:ANCHOR: Public API for exporting cash counter data as markdown
+  // @MX:REASON: User-facing functionality for sharing counts via clipboard
   const handleShare = useCallback(() => {
     const currency = config.currency
     const today = getLocalDateString()
@@ -495,7 +523,7 @@ export default function CashCounterPage() {
         for (const d of billsWithData) {
           const nc = state.namedCounts[d.value] || 0
           const ac = state.anonymous[d.value] || 0
-          lines.push(`| ${d.label} | ${nc > 0 ? `${nc} × ${currency} ${d.label} = **${currency} ${(nc * d.value).toFixed(2)}**` : '—'} | ${ac > 0 ? `${ac} × ${currency} ${d.label} = **${currency} ${(ac * d.value).toFixed(2)}**` : '—'} |`)
+          lines.push(`| ${d.label} | ${nc > 0 ? nc : '—'} | ${ac > 0 ? ac : '—'} |`)
         }
         lines.push('')
       }
@@ -512,7 +540,7 @@ export default function CashCounterPage() {
         for (const d of coinsWithData) {
           const nc = state.namedCounts[d.value] || 0
           const ac = state.anonymous[d.value] || 0
-          lines.push(`| ${d.label} | ${nc > 0 ? `${nc} × ${currency} ${d.label} = **${currency} ${(nc * d.value).toFixed(2)}**` : '—'} | ${ac > 0 ? `${ac} × ${currency} ${d.label} = **${currency} ${(ac * d.value).toFixed(2)}**` : '—'} |`)
+          lines.push(`| ${d.label} | ${nc > 0 ? nc : '—'} | ${ac > 0 ? ac : '—'} |`)
         }
         lines.push('')
       }
@@ -520,6 +548,7 @@ export default function CashCounterPage() {
 
     lines.push('---')
     lines.push(`**${t('cashCounter.namedTotal')}:** ${currency} ${namedTotalLocal.toFixed(2)} (${t('cashCounter.bills')}: ${currency} ${namedBreakdownLocal.bills.toFixed(2)}, ${t('cashCounter.coins')}: ${currency} ${namedBreakdownLocal.coins.toFixed(2)})`)
+    lines.push('')
     lines.push(`**${t('cashCounter.anonymousTotal')}:** ${currency} ${anonymousTotalLocal.toFixed(2)} (${t('cashCounter.bills')}: ${currency} ${anonymousBreakdownLocal.bills.toFixed(2)}, ${t('cashCounter.coins')}: ${currency} ${anonymousBreakdownLocal.coins.toFixed(2)})`)
     lines.push('')
 
@@ -530,6 +559,7 @@ export default function CashCounterPage() {
     }
 
     lines.push(`**${t('cashCounter.grandTotal')}:** ${currency} ${grandTotalLocal.toFixed(2)} (${t('cashCounter.bills')}: ${currency} ${grandBreakdownLocal.bills.toFixed(2)}, ${t('cashCounter.coins')}: ${currency} ${grandBreakdownLocal.coins.toFixed(2)})`)
+    lines.push('')
 
     if (config.targetAmount > 0) {
       lines.push(`**${t('cashCounter.transactionsTotal')}:** ${currency} ${config.targetAmount.toFixed(2)}`)
@@ -537,6 +567,7 @@ export default function CashCounterPage() {
 
       const diff = grandTotalLocal - config.targetAmount
       const absDiff = Math.abs(diff)
+      // @MX:NOTE: 0.01 tolerance accounts for floating point precision in currency calculations
       const tolerance = 0.01
       if (absDiff <= tolerance) {
         lines.push(`✅ **${t('cashCounter.match')}** — ${currency} ${absDiff.toFixed(2)}`)
@@ -550,6 +581,7 @@ export default function CashCounterPage() {
     const markdown = lines.join('\n')
     navigator.clipboard.writeText(markdown).then(() => {
       setCopySuccess(true)
+      // @MX:NOTE: 2000ms success feedback timeout for user visibility
       setTimeout(() => setCopySuccess(false), 2000)
     }).catch(() => {
       const textarea = document.createElement('textarea')
@@ -559,6 +591,7 @@ export default function CashCounterPage() {
       document.execCommand('copy')
       document.body.removeChild(textarea)
       setCopySuccess(true)
+      // @MX:NOTE: 2000ms success feedback timeout for user visibility
       setTimeout(() => setCopySuccess(false), 2000)
     })
   }, [state, config, t])
@@ -579,6 +612,7 @@ export default function CashCounterPage() {
   const getMatchStatus = (): 'match' | 'excess' | 'shortage' | 'none' => {
     if (config.targetAmount === 0) return 'none'
     const difference = Math.abs(grandTotal - config.targetAmount)
+    // @MX:NOTE: 0.01 tolerance accounts for floating point precision in currency calculations
     const tolerance = 0.01
     if (difference <= tolerance) return 'match'
     if (grandTotal > config.targetAmount) return 'excess'
@@ -650,7 +684,7 @@ export default function CashCounterPage() {
 
     // Sync local input value with parent count when it changes from outside
     useEffect(() => {
-      setInputValue(count.toString())
+      setInputValue(count === 0 ? '' : count.toString())
     }, [count])
 
     return (
@@ -660,11 +694,12 @@ export default function CashCounterPage() {
             type="number"
             inputMode="decimal"
             min="0"
+            // @MX:NOTE: 999 max value prevents overflow and limits input to reasonable denomination counts
             max="999"
             id={label ? `denomination-${label}-${color}` : `denomination-${color}`}
             name={label ? `denomination-${label}-${color}` : `denomination-${color}`}
             className={`text-center font-semibold text-sm w-full border rounded focus:outline-none focus:ring-2 py-1 px-2 ${colorClasses[color].input}`}
-            value={count > 0 ? inputValue : ''}
+            value={inputValue}
             placeholder="0"
             onChange={(e) => setInputValue(e.target.value)}
             onBlur={() => onInput(parseInt(inputValue) || 0)}
@@ -789,7 +824,7 @@ export default function CashCounterPage() {
 
         {/* Section Totals */}
         <div className="grid grid-cols-2 gap-3 mb-6">
-          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800/50">
+          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800/50 text-center">
             <div className="text-xs font-medium text-blue-700 dark:text-blue-400 mb-1">
               {t('cashCounter.namedTotal')}
             </div>
@@ -797,7 +832,7 @@ export default function CashCounterPage() {
               {formatCurrencyAmount(namedTotal, currency)}
             </div>
           </div>
-          <div className="p-3 bg-teal-50 dark:bg-teal-900/20 rounded-lg border border-teal-200 dark:border-teal-800/50">
+          <div className="p-3 bg-teal-50 dark:bg-teal-900/20 rounded-lg border border-teal-200 dark:border-teal-800/50 text-center">
             <div className="text-xs font-medium text-teal-700 dark:text-teal-400 mb-1">
               {t('cashCounter.anonymousTotal')}
             </div>
@@ -809,11 +844,31 @@ export default function CashCounterPage() {
 
         {/* Grand Total & Match Status */}
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-          <div className="flex justify-between items-center mb-6">
-            <span className="text-xl font-bold text-slate-900 dark:text-slate-100">
+          {/* Grand Total Breakdown */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 px-4 py-3 rounded-lg border border-yellow-200 dark:border-yellow-800/50 text-center">
+              <div className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                💵 {t('cashCounter.bills')}
+              </div>
+              <div className="text-lg font-bold dark:text-white">
+                {formatCurrencyAmount(grandBreakdown.bills, currency)}
+              </div>
+            </div>
+            <div className="bg-gray-100 dark:bg-slate-700 px-4 py-3 rounded-lg border border-gray-200 dark:border-slate-600 text-center">
+              <div className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                ⚪ {t('cashCounter.coins')}
+              </div>
+              <div className="text-lg font-bold dark:text-white">
+                {formatCurrencyAmount(grandBreakdown.coins, currency)}
+              </div>
+            </div>
+          </div>
+
+          <div className="text-right mb-6">
+            <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-1">
               {t('cashCounter.grandTotal')}:
-            </span>
-            <span
+            </div>
+            <div
               className={`text-4xl font-black dark:text-white ${matchStatus === 'match'
                   ? 'text-green-600 dark:text-green-400'
                   : matchStatus === 'excess'
@@ -824,62 +879,34 @@ export default function CashCounterPage() {
                 }`}
             >
               {formatCurrencyAmount(grandTotal, currency)}
-            </span>
-          </div>
-
-          {/* Grand Total Breakdown */}
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 px-4 py-3 rounded-lg border border-yellow-200 dark:border-yellow-800/50">
-              <div className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                💵 {t('cashCounter.bills')}
-              </div>
-              <div className="text-lg font-bold dark:text-white">
-                {formatCurrencyAmount(grandBreakdown.bills, currency)}
-              </div>
-            </div>
-            <div className="bg-gray-100 dark:bg-slate-700 px-4 py-3 rounded-lg border border-gray-200 dark:border-slate-600">
-              <div className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                ⚪ {t('cashCounter.coins')}
-              </div>
-              <div className="text-lg font-bold dark:text-white">
-                {formatCurrencyAmount(grandBreakdown.coins, currency)}
-              </div>
             </div>
           </div>
 
           {/* Target Amount */}
           {config.targetAmount > 0 && (
-            <>
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                  Target:
-                </span>
-                <span className="text-xl font-semibold text-slate-600 dark:text-slate-400">
-                  {formatCurrencyAmount(config.targetAmount, currency)}
-                </span>
+            <div
+              className={`text-right p-4 rounded-lg ${matchStatus === 'match'
+                  ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
+                  : matchStatus === 'excess'
+                    ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400'
+                    : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'
+                }`}
+            >
+              <div className="text-lg font-bold mb-2">
+                Target: {formatCurrencyAmount(config.targetAmount, currency)}
               </div>
-
-              {/* Difference */}
-              <div
-                className={`flex justify-between items-center p-4 rounded-lg ${matchStatus === 'match'
-                    ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
-                    : matchStatus === 'excess'
-                      ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400'
-                      : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'
-                  }`}
-              >
-                <span className="font-semibold">
-                  {matchStatus === 'match'
-                    ? '✓ ' + t('cashCounter.match')
-                    : matchStatus === 'excess'
-                      ? '↑ ' + t('cashCounter.excess')
-                      : '↓ ' + t('cashCounter.shortage')}:
-                </span>
-                <span className="font-bold text-xl dark:text-white">
-                  {formatCurrencyAmount(Math.abs(grandTotal - config.targetAmount), currency)}
-                </span>
+              <div className="border-t border-black/20 dark:border-white/20 my-2"></div>
+              <div className="font-semibold mb-1">
+                {matchStatus === 'match'
+                  ? '✓ ' + t('cashCounter.match')
+                  : matchStatus === 'excess'
+                    ? '↑ ' + t('cashCounter.excess')
+                    : '↓ ' + t('cashCounter.shortage')}
               </div>
-            </>
+              <div className="font-bold text-xl">
+                {formatCurrencyAmount(Math.abs(grandTotal - config.targetAmount), currency)}
+              </div>
+            </div>
           )}
 
           {/* Action Buttons */}
