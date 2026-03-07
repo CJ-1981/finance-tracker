@@ -626,24 +626,24 @@ export default function CashCounterModal({
             {/* Difference */}
             <div
               className={`text-right p-3 rounded-lg ${matchStatus === 'match'
-                  ? 'bg-green-100 dark:bg-green-900/20'
+                  ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
                   : matchStatus === 'excess'
-                    ? 'bg-blue-100 dark:bg-blue-900/20'
-                    : 'bg-red-100 dark:bg-red-900/20'
+                    ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400'
+                    : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'
                 }`}
             >
-              <div className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
+              <div className="text-lg font-bold mb-2">
                 {t('cashCounter.transactionsTotal')}: {currency} {totalTransactionsAmount.toFixed(2)}
               </div>
               <div className="border-t border-black/20 dark:border-white/20 my-2"></div>
-              <div className="font-semibold mb-1 text-gray-800 dark:text-gray-200">
+              <div className="font-semibold mb-1">
                 {matchStatus === 'match'
                   ? '✓ ' + t('cashCounter.match')
                   : matchStatus === 'excess'
                     ? '↑ ' + t('cashCounter.excess')
-                    : '↓ ' + t('cashCounter.shortage')}:
+                    : '↓ ' + t('cashCounter.shortage')}
               </div>
-              <div className="font-bold text-lg text-gray-900 dark:text-white">
+              <div className="font-bold text-lg">
                 {currency} {Math.abs(grandTotal - totalTransactionsAmount).toFixed(2)}
               </div>
             </div>
