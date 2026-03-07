@@ -168,7 +168,7 @@ export default function CashCounterModal({
           anonymous: currentState.anonymous,
           namedCounts: currentState.namedCounts,
           lastDate: getLocalDateString(),
-          currency: state.currency,  // Add currency field for V3 migration
+          currency: currentState.currency,  // Add currency field for V3 migration
         }
         localStorage.setItem(storageKey, JSON.stringify(data))
       } catch (err) {
