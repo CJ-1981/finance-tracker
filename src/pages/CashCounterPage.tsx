@@ -370,6 +370,22 @@ export default function CashCounterPage() {
       previousStateRef.current = state
       return
     }
+  }, [])
+
+  // Cleanup on unmount or navigation - ensure pending saves are completed
+  useEffect(() => {
+    const cleanup = () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
+        saveToLocalStorage(previousStateRef.current, config.currency)
+        saveTimeoutRef.current = undefined
+      }
+    }
+    return cleanup
+  }, [state, config.currency, saveToLocalStorage, previousStateRef])
+      previousStateRef.current = state
+      return
+    }
 
     // Check if state actually changed
     const hasStateChanged = JSON.stringify(state) !== JSON.stringify(previousStateRef.current)
