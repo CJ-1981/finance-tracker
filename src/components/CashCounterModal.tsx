@@ -164,11 +164,11 @@ export default function CashCounterModal({
       try {
         const data: StoredCashDataV2 = {
           projectId: project.id,
-          version: 2,
+          version: 3,
           anonymous: currentState.anonymous,
           namedCounts: currentState.namedCounts,
           lastDate: getLocalDateString(),
-          currency: currentState.currency,  // Add currency field for V3 migration
+          currency: currentState.currency,
         }
         localStorage.setItem(storageKey, JSON.stringify(data))
       } catch (err) {
