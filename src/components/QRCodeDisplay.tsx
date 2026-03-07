@@ -126,8 +126,8 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false, filename =
       // Check if clipboard API is available
       if (!navigator.clipboard) {
         console.error('[QR Copy] Clipboard API not available in this browser')
-        setCopySuccess(true)
-        setTimeout(() => setCopySuccess(false), 2000)
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
         return
       }
 
@@ -137,8 +137,8 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false, filename =
 
       if (!supportsWrite && !supportsWriteText) {
         console.error('[QR Copy] Clipboard write APIs not supported')
-        setCopySuccess(true)
-        setTimeout(() => setCopySuccess(false), 2000)
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
         return
       }
 
@@ -151,8 +151,8 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false, filename =
             new ClipboardItem({ 'image/png': blob })
           ])
           console.log('[QR Copy] Image copied successfully!')
-          setCopySuccess(true)
-          setTimeout(() => setCopySuccess(false), 2000)
+          setCopied(true)
+          setTimeout(() => setCopied(false), 2000)
         } catch (clipboardError) {
           console.warn('[QR Copy] Image copy failed, trying fallback:', clipboardError)
 
@@ -161,17 +161,17 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false, filename =
             try {
               await navigator.clipboard.writeText(url)
               console.log('[QR Copy] Fallback URL copied successfully!')
-              setCopySuccess(true)
-              setTimeout(() => setCopySuccess(false), 2000)
+              setCopied(true)
+              setTimeout(() => setCopied(false), 2000)
             } catch (textClipboardError) {
               console.error('[QR Copy] Text copy also failed:', textClipboardError)
-              setCopySuccess(true)
-              setTimeout(() => setCopySuccess(false), 2000)
+              setCopied(true)
+              setTimeout(() => setCopied(false), 2000)
             }
           } else {
             console.error('[QR Copy] Text clipboard API not available for fallback')
-            setCopySuccess(true)
-            setTimeout(() => setCopySuccess(false), 2000)
+            setCopied(true)
+            setTimeout(() => setCopied(false), 2000)
           }
         }
       } else {
@@ -179,12 +179,12 @@ export function QRCodeDisplay({ url, t, size = 128, darkMode = false, filename =
         try {
           await navigator.clipboard.writeText(url)
           console.log('[QR Copy] URL copied successfully (text-only mode)!')
-          setCopySuccess(true)
-          setTimeout(() => setCopySuccess(false), 2000)
+          setCopied(true)
+          setTimeout(() => setCopied(false), 2000)
         } catch (textClipboardError) {
           console.error('[QR Copy] Text copy failed:', textClipboardError)
-          setCopySuccess(true)
-          setTimeout(() => setCopySuccess(false), 2000)
+          setCopied(true)
+          setTimeout(() => setCopied(false), 2000)
         }
       }
 
