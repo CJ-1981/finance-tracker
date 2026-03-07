@@ -796,9 +796,12 @@ function DenominationControls({ count, onChange, onInput, color, increaseLabel, 
           inputMode="numeric"
           min="0"
           className={`text-center font-semibold text-sm w-full border rounded focus:outline-none focus:ring-2 py-1 px-1 ${colorClasses[color].input}`}
-          value={count.toString()}
+          value={count === 0 ? '' : count.toString()}
           placeholder="0"
-          onChange={(e) => onInput(parseInt(e.target.value) || 0)}
+          onChange={(e) => {
+            const newValue = parseInt(e.target.value) || 0
+            onInput(newValue)
+          }}
           aria-label={inputLabel}
         />
       </div>

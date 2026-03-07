@@ -678,7 +678,7 @@ export default function CashCounterPage() {
             id={label ? `denomination-${label}-${color}` : `denomination-${color}`}
             name={label ? `denomination-${label}-${color}` : `denomination-${color}`}
             className={`text-center font-semibold text-sm w-full border rounded focus:outline-none focus:ring-2 py-1 px-2 ${colorClasses[color].input}`}
-            value={count > 0 ? inputValue : ''}
+            value={inputValue}
             placeholder="0"
             onChange={(e) => setInputValue(e.target.value)}
             onBlur={() => onInput(parseInt(inputValue) || 0)}
