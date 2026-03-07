@@ -9,9 +9,10 @@ This guide helps you get started with the Finance Tracker application and use al
 3. [Project Management](#project-management)
 4. [Transaction Management](#transaction-management)
 5. [Analytics Dashboard](#analytics-dashboard)
-6. [Collaboration](#collaboration)
-7. [Data Export](#data-export)
-8. [Troubleshooting](#troubleshooting)
+6. [Cash Counter Tool](#cash-counter-tool)
+7. [Collaboration](#collaboration)
+8. [Data Export](#data-export)
+9. [Troubleshooting](#troubleshooting)
 
 ## Getting Started
 
@@ -229,6 +230,104 @@ The Dashboard provides insights into your financial data with interactive charts
 - **Last 30 Days**: Rolling 30-day period
 - **This Year**: Year-to-date information
 - **Custom**: Select specific date ranges
+
+## Cash Counter Tool
+
+### Overview
+
+The Cash Counter is a standalone tool for counting cash bills and coins, comparing against transaction records, and managing physical cash counts. It's accessible without authentication and supports multiple currencies.
+
+### Accessing the Cash Counter
+
+1. **Direct Access**: Visit `/cashcounter` in your browser
+2. **No Authentication Required**: Can be used without signing in
+3. **Public Access**: Perfect for shared devices or quick cash counting
+
+### Supported Features
+
+#### Currency Support
+- **Multi-Currency**: EUR, USD, GBP, JPY, KRW, CNY, INR
+- **Automatic Formatting**: Displays amounts in appropriate currency format
+- **Currency Symbols**: Shows proper currency symbols and emojis
+- **Target Amounts**: Set target amounts for specific savings goals
+
+#### Language Support
+- **English/Korean**: Full bilingual interface
+- **Auto-Detection**: Browser language detection
+- **Manual Override**: Language selector in the interface
+
+#### Cash Counting Features
+- **Bill/Coin Selection**: Interactive buttons for each denomination
+- **Direct Input**: Type amounts directly for faster entry
+- **Mobile-Friendly**: Large touch targets for mobile devices
+- **Real-Time Calculation**: Updates totals instantly
+
+#### Data Management
+- **LocalStorage Persistence**: Saves data between sessions
+- **Daily Reset**: Automatically clears data at midnight
+- **Export Functionality**: Copy results to clipboard in Markdown format
+- **Version Migration**: Automatic upgrade from V1 to V2/V3
+
+### Using the Cash Counter
+
+#### Basic Counting
+
+1. **Select Currency**: Choose your currency from the dropdown
+2. **Enter Target Amount**: Set your target amount (optional)
+3. **Add Denominations**: Use + buttons or type amounts
+4. **View Results**: See total, match status, and breakdown
+
+#### Denomination Categories
+
+**Anonymous Entries**
+- Quick counting without specific categories
+- Uses anonymous denomination tracking
+- Perfect for general cash counting
+
+**Named Entries**
+- Assign specific names to denomination counts
+- Useful for tracking specific people or purposes
+- Maintains separate counts for different entities
+
+#### Match Status
+
+The system shows three states based on your target amount:
+
+- **Match**: Exact amount reached ✅
+- **Excess**: More than target amount 🟢
+- **Shortage**: Less than target amount 🔴
+
+#### Data Export
+
+1. **Click Export Button**: Copy results to clipboard
+2. **Markdown Format**: Results formatted for easy sharing
+3. **Include Details**: Shows all denominations and totals
+
+#### Currency Changes
+
+When changing currency:
+- **Confirmation Dialog**: Warns about data loss
+- **Empty State**: Bypass confirmation if no data exists
+- **Reset Options**: Choose between reset or cancel
+
+### Tips for Best Results
+
+#### Mobile Usage
+- Use large + and - buttons for accuracy
+- Enable responsive design for optimal viewing
+- Use direct input for faster data entry
+
+#### Accuracy
+- Double-check amounts before saving
+- Use named entries for specific tracking
+- Regular exports for record-keeping
+
+### Troubleshooting
+
+#### Common Issues
+- **Data Not Saving**: Check localStorage permissions
+- **Currency Not Supported**: Contact administrator for additional currencies
+- **Mobile Display Issues**: Ensure browser supports modern CSS
 
 ## Collaboration
 

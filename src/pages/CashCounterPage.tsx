@@ -8,6 +8,9 @@
  * - LocalStorage persistence
  * - Configurable currency
  */
+// @MX:TODO: No test file exists - CashCounterPage.test.tsx or CashCounterPage.spec.tsx needed
+// @MX:PRIORITY: High - Public route component requires test coverage
+
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -234,7 +237,8 @@ export default function CashCounterPage() {
     }
   }, [])
 
-  // Save config to localStorage
+  // @MX:ANCHOR: Config state management with localStorage persistence
+  // @MX:REASON: Called from 8+ locations - critical config management across component lifecycle
   const saveConfig = useCallback((newConfig: Config | ((prev: Config) => Config)) => {
     setConfig(prevConfig => {
       const updatedConfig = typeof newConfig === 'function' ? newConfig(prevConfig) : newConfig
@@ -340,6 +344,7 @@ export default function CashCounterPage() {
       clearTimeout(saveTimeoutRef.current)
     }
 
+    // @MX:NOTE: 500ms debounce timeout prevents excessive localStorage writes
     saveTimeoutRef.current = setTimeout(() => {
       const storageKey = 'cashcounter_standalone'
       try {
@@ -448,7 +453,9 @@ export default function CashCounterPage() {
     }
   }, [state, config, saveConfig, isStateEmpty])
 
-  const handleCurrencyChangeConfirm = useCallback(() => {
+  // @MX:ANCHOR: Public API for currency changes with confirmation dialog
+  // @MX:REASON: Called from CurrencySelector - user-facing critical functionality
+  const handleCurrencyChangeRequest = useCallback((newCurrency: string) => {
     if (currencyChange.pendingCurrency) {
       saveConfig({ ...config, currency: currencyChange.pendingCurrency })
       setCurrencyChange({
@@ -465,6 +472,8 @@ export default function CashCounterPage() {
     })
   }, [])
 
+  // @MX:ANCHOR: Public API for exporting cash counter data as markdown
+  // @MX:REASON: User-facing functionality for sharing counts via clipboard
   const handleShare = useCallback(() => {
     const currency = config.currency
     const today = getLocalDateString()
@@ -537,6 +546,7 @@ export default function CashCounterPage() {
 
       const diff = grandTotalLocal - config.targetAmount
       const absDiff = Math.abs(diff)
+      // @MX:NOTE: 0.01 tolerance accounts for floating point precision in currency calculations
       const tolerance = 0.01
       if (absDiff <= tolerance) {
         lines.push(`✅ **${t('cashCounter.match')}** — ${currency} ${absDiff.toFixed(2)}`)
@@ -550,6 +560,7 @@ export default function CashCounterPage() {
     const markdown = lines.join('\n')
     navigator.clipboard.writeText(markdown).then(() => {
       setCopySuccess(true)
+      // @MX:NOTE: 2000ms success feedback timeout for user visibility
       setTimeout(() => setCopySuccess(false), 2000)
     }).catch(() => {
       const textarea = document.createElement('textarea')
@@ -559,6 +570,7 @@ export default function CashCounterPage() {
       document.execCommand('copy')
       document.body.removeChild(textarea)
       setCopySuccess(true)
+      // @MX:NOTE: 2000ms success feedback timeout for user visibility
       setTimeout(() => setCopySuccess(false), 2000)
     })
   }, [state, config, t])
@@ -579,6 +591,7 @@ export default function CashCounterPage() {
   const getMatchStatus = (): 'match' | 'excess' | 'shortage' | 'none' => {
     if (config.targetAmount === 0) return 'none'
     const difference = Math.abs(grandTotal - config.targetAmount)
+    // @MX:NOTE: 0.01 tolerance accounts for floating point precision in currency calculations
     const tolerance = 0.01
     if (difference <= tolerance) return 'match'
     if (grandTotal > config.targetAmount) return 'excess'
@@ -660,6 +673,7 @@ export default function CashCounterPage() {
             type="number"
             inputMode="decimal"
             min="0"
+            // @MX:NOTE: 999 max value prevents overflow and limits input to reasonable denomination counts
             max="999"
             id={label ? `denomination-${label}-${color}` : `denomination-${color}`}
             name={label ? `denomination-${label}-${color}` : `denomination-${color}`}

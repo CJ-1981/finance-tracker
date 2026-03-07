@@ -41,12 +41,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added English translations for admin role, descriptions, and error messages
   - Added Korean translations for admin role, descriptions, and error messages
 
-- **Currency-Change Confirmation Dialog** (Cash Counter)
-  - Added confirmation dialog when changing currency with non-zero denomination counts
-  - Empty state bypasses confirmation for faster workflow
-  - Modal with warning about data loss before currency change
-  - Cancel and "Change Currency & Reset" options for user control
-  - Prevents accidental data loss during currency switches
+- **Currency Denominations V2 Implementation** (Cash Counter)
+  - Enhanced currency support with comprehensive denomination systems
+  - Multi-currency support (EUR, USD, GBP, JPY, KRW, CNY, INR)
+  - Target amount comparison with match/excess/shortage status
+  - Currency-change confirmation dialog prevents data loss
+  - UI overflow fixes for optimal mobile experience
+  - Version migration from V1 to V2/V3 with localStorage persistence
+  - Anonymous and named denomination entry categories
+  - Bills/coins breakdown with color-coded match status
+  - Mobile-friendly +/- buttons and direct input
+  - Daily data reset functionality
 
 - **Database Migration** - Created safe migration script at `database/migrations/20260306_add_admin_role.sql`
   - Migration adds 'admin' role without data loss

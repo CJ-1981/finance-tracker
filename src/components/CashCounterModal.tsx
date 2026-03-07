@@ -154,11 +154,14 @@ export default function CashCounterModal({
 
   // ==================== LOCALSTORAGE ====================
 
+  // @MX:ANCHOR: Persisted state management with debouncing for data integrity
+  // @MX:REASON: Called from useEffect, dependency array, and cleanup - critical for preventing data loss
   const saveToLocalStorage = useCallback((currentState: CashCounterState) => {
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current)
     }
 
+    // @MX:NOTE: 500ms debounce timeout prevents excessive localStorage writes
     saveTimeoutRef.current = setTimeout(() => {
       const storageKey = `cash_counter_${project.id}`
       try {
@@ -174,7 +177,7 @@ export default function CashCounterModal({
       } catch (err) {
         console.error('Error saving cash counter data:', err)
       }
-    }, 500) // Debounce saves
+    }, 500)
   }, [project.id])
 
   // Handle currency changes - reset denomination state when project currency changes
@@ -335,6 +338,8 @@ export default function CashCounterModal({
 
   const [copySuccess, setCopySuccess] = useState(false)
 
+  // @MX:ANCHOR: Public API for exporting cash counter data as markdown
+  // @MX:REASON: User-facing functionality for sharing counts via clipboard
   const handleShare = useCallback(() => {
     const currency = project.settings?.currency || 'EUR'
     const today = getLocalDateString()
@@ -410,6 +415,7 @@ export default function CashCounterModal({
 
     const diff = grandTotalLocal - totalTransactionsAmount
     const absDiff = Math.abs(diff)
+    // @MX:NOTE: 0.01 tolerance accounts for floating point precision in currency calculations
     const tolerance = 0.01
     if (absDiff <= tolerance) {
       lines.push(`✅ **${t('cashCounter.match')}** — ${currency} ${absDiff.toFixed(2)}`)
@@ -422,6 +428,7 @@ export default function CashCounterModal({
     const markdown = lines.join('\n')
     navigator.clipboard.writeText(markdown).then(() => {
       setCopySuccess(true)
+      // @MX:NOTE: 2000ms success feedback timeout for user visibility
       setTimeout(() => setCopySuccess(false), 2000)
     }).catch(() => {
       // Fallback for environments without navigator.clipboard
@@ -432,6 +439,7 @@ export default function CashCounterModal({
       document.execCommand('copy')
       document.body.removeChild(textarea)
       setCopySuccess(true)
+      // @MX:NOTE: 2000ms success feedback timeout for user visibility
       setTimeout(() => setCopySuccess(false), 2000)
     })
   }, [state, project, totalTransactionsAmount, t])
@@ -455,6 +463,7 @@ export default function CashCounterModal({
   // Match status
   const getMatchStatus = (): 'match' | 'excess' | 'shortage' => {
     const difference = Math.abs(grandTotal - totalTransactionsAmount)
+    // @MX:NOTE: 0.01 tolerance accounts for floating point precision in currency calculations
     const tolerance = 0.01
 
     if (difference <= tolerance) return 'match'

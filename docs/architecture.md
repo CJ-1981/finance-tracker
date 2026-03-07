@@ -48,6 +48,21 @@ graph TB
 - **React 19**: Latest version with concurrent features
 - **TypeScript 5.3**: Type-safe development
 - **Tailwind CSS 3.4**: Utility-first CSS framework
+- **Chart.js**: Data visualization for analytics
+- **i18next**: Internationalization (English/Korean)
+
+### Core Systems
+
+#### Currency Management System
+- **Multi-Currency Support**: Dynamic denomination systems for EUR, USD, GBP, JPY, KRW, CNY, INR
+- **Currency Configuration**: Centralized currency definitions with symbols and formatting
+- **Version Migration**: localStorage migration from V1 to V2/V3 with data preservation
+- **Cash Counter Tool**: Standalone public interface for cash counting and denomination management
+
+#### Data Storage
+- **LocalStorage**: Client-side persistence for cash counter data
+- **Supabase**: Backend database with real-time synchronization
+- **Version Control**: Data structure versioning for backward compatibility
 - **Vite 5.1**: Fast build tool and development server
 - **React Router v7**: Declarative routing
 - **Chart.js 4.5**: Data visualization

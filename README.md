@@ -17,13 +17,15 @@ A collaborative financial tracking web application built with React, TypeScript,
   - Bills/coins breakdown with color-coded match status
   - Mobile-friendly +/- buttons and direct input
   - localStorage persistence with auto-clear
-- **Standalone Cash Counter Page** - Public cash counter accessible without authentication
+- **Standalone Cash Counter Page** - Public cash counter accessible without authentication (Version 3)
   - Multi-currency support (EUR, USD, GBP, JPY, KRW, CNY, INR)
   - Language selector (English/Korean)
   - Target amount comparison with match/excess/shortage status
   - Export to clipboard in Markdown format
   - Daily data reset
   - Accessible at `/cashcounter` route
+  - Currency-change confirmation dialog prevents data loss
+  - UI overflow fixes for optimal mobile experience
 - **Soft Delete with Recovery** - Recover deleted transactions within 1 year
   - Soft delete instead of permanent deletion
   - Restore deleted transactions functionality
@@ -66,6 +68,7 @@ A collaborative financial tracking web application built with React, TypeScript,
   - Touch targets ≥44px meeting WCAG 2.1 AA standards
   - E2E testing with Playwright for mobile interactions
   - Icon-only buttons for space optimization on small screens
+  - Currency denomination UI optimized for mobile touch interactions
 
 ## Tech Stack
 
