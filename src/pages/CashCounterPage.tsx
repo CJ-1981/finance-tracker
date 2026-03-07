@@ -370,22 +370,6 @@ export default function CashCounterPage() {
       previousStateRef.current = state
       return
     }
-  }, [])
-
-  // Cleanup on unmount or navigation - ensure pending saves are completed
-  useEffect(() => {
-    const cleanup = () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current)
-        saveToLocalStorage(previousStateRef.current, config.currency)
-        saveTimeoutRef.current = undefined
-      }
-    }
-    return cleanup
-  }, [state, config.currency, saveToLocalStorage, previousStateRef])
-      previousStateRef.current = state
-      return
-    }
 
     // Check if state actually changed
     const hasStateChanged = JSON.stringify(state) !== JSON.stringify(previousStateRef.current)
@@ -393,13 +377,32 @@ export default function CashCounterPage() {
       saveToLocalStorage(state, config.currency)
       previousStateRef.current = state
     }
+  }, [state, config.currency, saveToLocalStorage])
 
+  // Cleanup on unmount - ensure pending saves are completed
+  useEffect(() => {
     return () => {
+      // @MX:NOTE: Flush pending save on component unmount to prevent data loss
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current)
+        // Save the most recent state immediately
+        const storageKey = 'cashcounter_standalone'
+        try {
+          const data: StoredCashData = {
+            version: 3,
+            anonymous: previousStateRef.current.anonymous,
+            namedCounts: previousStateRef.current.namedCounts,
+            lastDate: getLocalDateString(),
+            currency: config.currency,
+          }
+          localStorage.setItem(storageKey, JSON.stringify(data))
+        } catch (err) {
+          console.error('Error flushing cash counter data on unmount:', err)
+        }
+        saveTimeoutRef.current = undefined
       }
     }
-  }, [state, config.currency, saveToLocalStorage])
+  }, [config.currency])
 
   // Handlers
   const handleAnonymousCountChange = useCallback((denomination: number, delta: number) => {
