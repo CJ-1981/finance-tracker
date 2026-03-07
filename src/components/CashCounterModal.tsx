@@ -586,22 +586,6 @@ export default function CashCounterModal({
         {/* Grand Total & Match Status */}
         <div className="px-6 pb-6 border-t border-gray-200 dark:border-slate-700">
           <div className="py-4">
-            <div className="text-right mb-4">
-              <div className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
-                {t('cashCounter.grandTotal')}:
-              </div>
-              <div
-                className={`text-3xl font-black dark:text-white ${matchStatus === 'match'
-                    ? 'text-green-600 dark:text-green-400'
-                    : matchStatus === 'excess'
-                      ? 'text-blue-600 dark:text-blue-400'
-                      : 'text-red-600 dark:text-red-400'
-                  }`}
-              >
-                {formatCurrencyAmount(grandTotal, currency)}
-              </div>
-            </div>
-
             {/* Grand Total Breakdown - Stacked Labels */}
             <div className="grid grid-cols-2 gap-2 mb-3">
               <div className="bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded-md border border-yellow-200 dark:border-yellow-800/50 text-center">
@@ -622,25 +606,40 @@ export default function CashCounterModal({
               </div>
             </div>
 
-            {/* Transaction Total */}
+            {/* Grand Total */}
             <div className="text-right mb-4">
               <div className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
-                {t('cashCounter.transactionsTotal')}:
+                {t('cashCounter.grandTotal')}:
               </div>
-              <div className="text-xl font-semibold text-gray-600 dark:text-gray-400">
-                {currency} {totalTransactionsAmount.toFixed(2)}
+              <div
+                className={`text-3xl font-black dark:text-white ${matchStatus === 'match'
+                    ? 'text-green-600 dark:text-green-400'
+                    : matchStatus === 'excess'
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-red-600 dark:text-red-400'
+                  }`}
+              >
+                {formatCurrencyAmount(grandTotal, currency)}
               </div>
             </div>
 
             {/* Difference */}
             <div
-              className={`text-right p-3 rounded-lg ${matchStatus === 'match'
+              className={`p-3 rounded-lg ${matchStatus === 'match'
                   ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
                   : matchStatus === 'excess'
                     ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400'
                     : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'
                 }`}
             >
+              <div className="flex justify-between items-start mb-2">
+                <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                  {t('cashCounter.transactionsTotal')}:
+                </div>
+                <div className="text-xl font-semibold text-gray-600 dark:text-gray-400">
+                  {currency} {totalTransactionsAmount.toFixed(2)}
+                </div>
+              </div>
               <div className="font-semibold mb-1">
                 {matchStatus === 'match'
                   ? '✓ ' + t('cashCounter.match')

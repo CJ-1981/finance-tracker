@@ -842,24 +842,6 @@ export default function CashCounterPage() {
 
         {/* Grand Total & Match Status */}
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-          <div className="text-right mb-6">
-            <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-1">
-              {t('cashCounter.grandTotal')}:
-            </div>
-            <div
-              className={`text-4xl font-black dark:text-white ${matchStatus === 'match'
-                  ? 'text-green-600 dark:text-green-400'
-                  : matchStatus === 'excess'
-                    ? 'text-blue-600 dark:text-blue-400'
-                    : matchStatus === 'shortage'
-                      ? 'text-red-600 dark:text-red-400'
-                      : 'text-slate-900 dark:text-slate-100'
-                }`}
-            >
-              {formatCurrencyAmount(grandTotal, currency)}
-            </div>
-          </div>
-
           {/* Grand Total Breakdown */}
           <div className="grid grid-cols-2 gap-3 mb-6">
             <div className="bg-yellow-50 dark:bg-yellow-900/20 px-4 py-3 rounded-lg border border-yellow-200 dark:border-yellow-800/50 text-center">
@@ -880,39 +862,53 @@ export default function CashCounterPage() {
             </div>
           </div>
 
+          <div className="text-right mb-6">
+            <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-1">
+              {t('cashCounter.grandTotal')}:
+            </div>
+            <div
+              className={`text-4xl font-black dark:text-white ${matchStatus === 'match'
+                  ? 'text-green-600 dark:text-green-400'
+                  : matchStatus === 'excess'
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : matchStatus === 'shortage'
+                      ? 'text-red-600 dark:text-red-400'
+                      : 'text-slate-900 dark:text-slate-100'
+                }`}
+            >
+              {formatCurrencyAmount(grandTotal, currency)}
+            </div>
+          </div>
+
           {/* Target Amount */}
           {config.targetAmount > 0 && (
-            <>
-              <div className="text-right mb-4">
-                <div className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1">
+            <div
+              className={`text-right p-4 rounded-lg ${matchStatus === 'match'
+                  ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
+                  : matchStatus === 'excess'
+                    ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400'
+                    : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'
+                }`}
+            >
+              <div className="flex justify-between items-start mb-2">
+                <div className="text-lg font-bold text-slate-900 dark:text-slate-100">
                   Target:
                 </div>
                 <div className="text-xl font-semibold text-slate-600 dark:text-slate-400">
                   {formatCurrencyAmount(config.targetAmount, currency)}
                 </div>
               </div>
-
-              {/* Difference */}
-              <div
-                className={`text-right p-4 rounded-lg ${matchStatus === 'match'
-                    ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
-                    : matchStatus === 'excess'
-                      ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400'
-                      : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'
-                  }`}
-              >
-                <div className="font-semibold mb-1">
-                  {matchStatus === 'match'
-                    ? '✓ ' + t('cashCounter.match')
-                    : matchStatus === 'excess'
-                      ? '↑ ' + t('cashCounter.excess')
-                      : '↓ ' + t('cashCounter.shortage')}:
-                </div>
-                <div className="font-bold text-xl dark:text-white">
-                  {formatCurrencyAmount(Math.abs(grandTotal - config.targetAmount), currency)}
-                </div>
+              <div className="font-semibold mb-1">
+                {matchStatus === 'match'
+                  ? '✓ ' + t('cashCounter.match')
+                  : matchStatus === 'excess'
+                    ? '↑ ' + t('cashCounter.excess')
+                    : '↓ ' + t('cashCounter.shortage')}:
               </div>
-            </>
+              <div className="font-bold text-xl dark:text-white">
+                {formatCurrencyAmount(Math.abs(grandTotal - config.targetAmount), currency)}
+              </div>
+            </div>
           )}
 
           {/* Action Buttons */}
