@@ -31,6 +31,11 @@ interface Config {
   targetAmount: number
 }
 
+interface CurrencyChangeState {
+  showCurrencyConfirm: boolean
+  pendingCurrency: string | null
+}
+
 // ==================== IMPORTS ====================
 
 import {
@@ -204,6 +209,10 @@ export default function CashCounterPage() {
 
   // State
   const [state, setState] = useState<CashCounterState>(() => createEmptyState('EUR'))
+  const [currencyChange, setCurrencyChange] = useState<CurrencyChangeState>({
+    showCurrencyConfirm: false,
+    pendingCurrency: null
+  })
   const [config, setConfig] = useState<Config>({ currency: 'EUR', targetAmount: 0 })
   const [copySuccess, setCopySuccess] = useState(false)
   const [showConfig, setShowConfig] = useState(false)
