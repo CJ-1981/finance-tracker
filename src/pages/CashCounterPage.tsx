@@ -842,11 +842,11 @@ export default function CashCounterPage() {
 
         {/* Grand Total & Match Status */}
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-          <div className="flex justify-between items-center mb-6">
-            <span className="text-xl font-bold text-slate-900 dark:text-slate-100">
+          <div className="text-right mb-6">
+            <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-1">
               {t('cashCounter.grandTotal')}:
-            </span>
-            <span
+            </div>
+            <div
               className={`text-4xl font-black dark:text-white ${matchStatus === 'match'
                   ? 'text-green-600 dark:text-green-400'
                   : matchStatus === 'excess'
@@ -855,13 +855,9 @@ export default function CashCounterPage() {
                       ? 'text-red-600 dark:text-red-400'
                       : 'text-slate-900 dark:text-slate-100'
                 }`}
-              style={{
-                marginLeft: 'auto',
-                marginRight: 'auto'
-              }}
             >
               {formatCurrencyAmount(grandTotal, currency)}
-            </span>
+            </div>
           </div>
 
           {/* Grand Total Breakdown */}
@@ -887,34 +883,34 @@ export default function CashCounterPage() {
           {/* Target Amount */}
           {config.targetAmount > 0 && (
             <>
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-lg font-bold text-slate-900 dark:text-slate-100">
+              <div className="text-right mb-4">
+                <div className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1">
                   Target:
-                </span>
-                <span className="text-xl font-semibold text-slate-600 dark:text-slate-400">
+                </div>
+                <div className="text-xl font-semibold text-slate-600 dark:text-slate-400">
                   {formatCurrencyAmount(config.targetAmount, currency)}
-                </span>
+                </div>
               </div>
 
               {/* Difference */}
               <div
-                className={`flex justify-between items-center p-4 rounded-lg ${matchStatus === 'match'
+                className={`text-right p-4 rounded-lg ${matchStatus === 'match'
                     ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
                     : matchStatus === 'excess'
                       ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400'
                       : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'
                   }`}
               >
-                <span className="font-semibold">
+                <div className="font-semibold mb-1">
                   {matchStatus === 'match'
                     ? '✓ ' + t('cashCounter.match')
                     : matchStatus === 'excess'
                       ? '↑ ' + t('cashCounter.excess')
                       : '↓ ' + t('cashCounter.shortage')}:
-                </span>
-                <span className="font-bold text-xl dark:text-white">
+                </div>
+                <div className="font-bold text-xl dark:text-white">
                   {formatCurrencyAmount(Math.abs(grandTotal - config.targetAmount), currency)}
-                </span>
+                </div>
               </div>
             </>
           )}
