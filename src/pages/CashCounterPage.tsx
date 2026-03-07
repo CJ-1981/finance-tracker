@@ -682,7 +682,7 @@ export default function CashCounterPage() {
 
     // Sync local input value with parent count when it changes from outside
     useEffect(() => {
-      setInputValue(count.toString())
+      setInputValue(count === 0 ? '' : count.toString())
     }, [count])
 
     return (
@@ -697,7 +697,7 @@ export default function CashCounterPage() {
             id={label ? `denomination-${label}-${color}` : `denomination-${color}`}
             name={label ? `denomination-${label}-${color}` : `denomination-${color}`}
             className={`text-center font-semibold text-sm w-full border rounded focus:outline-none focus:ring-2 py-1 px-2 ${colorClasses[color].input}`}
-            value={inputValue === '' ? '' : inputValue}
+            value={inputValue}
             placeholder="0"
             onChange={(e) => setInputValue(e.target.value)}
             onBlur={() => onInput(parseInt(inputValue) || 0)}
