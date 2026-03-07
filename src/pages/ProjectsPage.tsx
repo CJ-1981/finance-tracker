@@ -6,11 +6,11 @@ import { getSupabaseClient, resetSupabaseClient } from '../lib/supabase'
 import { getConfig } from '../lib/config'
 import { getPendingInvitation } from '../lib/invitations'
 import type { Project } from '../types'
-import LanguageSelector from '../components/LanguageSelector'
+import { QRCodeDisplay } from '../components/QRCodeDisplay'
 
 export default function ProjectsPage() {
   const { t } = useTranslation()
-  const { user, signOut } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [projects, setProjects] = useState<(Project & { userRole: string })[]>([])
   const [showCreateForm, setShowCreateForm] = useState(false)
@@ -26,13 +26,16 @@ export default function ProjectsPage() {
   const [retryCount, setRetryCount] = useState(0)
   const maxRetries = 3
 
-  // Safety check: Track previous data count to detect suspicious "0" results
+  // Enhanced safety check with localStorage persistence
   const [previousDataCount, setPreviousDataCount] = useState(0)
-  const [lastValidHash, setLastValidHash] = useState<string>('')
 
-  // Simple hash function for data validation
+  // Enhanced hash function for better detection
   const createDataHash = (data: any[]): string => {
-    return `${data.length}-${JSON.stringify(data.map((p: any) => p.id)).slice(0, 100)}`
+    if (data.length === 0) return 'empty-array'
+    // Include length, sorted IDs, and sample data
+    const ids = data.map((p: any) => p.id).sort().join(',')
+    const sample = JSON.stringify(data.slice(0, 3))
+    return `projects-${data.length}-${ids}-${sample}`
   }
 
   const [formData, setFormData] = useState({
@@ -45,11 +48,12 @@ export default function ProjectsPage() {
   const [isSelectionMode, setIsSelectionMode] = useState(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState<'member' | 'viewer'>('member')
+  const [inviteRole, setInviteRole] = useState<'admin' | 'member' | 'viewer'>('member')
   const [inviteLink, setInviteLink] = useState('')
   const [showInviteLink, setShowInviteLink] = useState(false)
   const [inviteRecipientEmail, setInviteRecipientEmail] = useState('')
   const [inviteProjectCount, setInviteProjectCount] = useState(0)
+  const [showQRCode, setShowQRCode] = useState(false) // QR code toggle state
 
   useEffect(() => {
     fetchProjects()
@@ -66,6 +70,13 @@ export default function ProjectsPage() {
     window.addEventListener('storage', handleStorageChange)
     return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
+
+  // Reset QR code state when invite link modal closes
+  useEffect(() => {
+    if (!showInviteLink) {
+      setShowQRCode(false)
+    }
+  }, [showInviteLink])
 
   // Debug logger helper
   const addDebugMessage = (message: string) => {
@@ -116,28 +127,12 @@ export default function ProjectsPage() {
 
     try {
       const supabase = getSupabaseClient()
-      addDebugMessage(`Session check${retryLabel} (2s timeout)...`)
 
-      // Check session validity before making queries (with timeout)
-      const { data: { session }, error: sessionError } = await Promise.race([
-        supabase.auth.getSession(),
-        new Promise<any>((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 2000)
-        )
-      ])
-
-      if (sessionError || !session) {
-        console.error('Session invalid or expired:', sessionError)
-        addDebugMessage(`Session failed: ${sessionError?.message || 'No session'}`)
-        // Only clear projects on initial attempt
-        if (attemptNumber === 0) {
-          setProjects([])
-        }
-        // Throw error to trigger retry logic instead of returning false
-        throw new Error(sessionError?.message || 'Session not available')
-      }
-
-      addDebugMessage(`Session OK${retryLabel}`)
+      // NOTE: No getSession() call here — useAuth already validates the session
+      // via onAuthStateChange before fetchProjects() is invoked. Calling
+      // getSession() again with a short timeout causes the old promise to keep the
+      // GoTrueClient alive while resetSupabaseClient() creates a new one, which
+      // triggers the "Multiple GoTrueClient instances" warning.
 
       // Fetch projects with timeout
       addDebugMessage(`Fetching projects${retryLabel} (2s timeout)...`)
@@ -169,10 +164,12 @@ export default function ProjectsPage() {
       }).filter((p: any) => p.id !== undefined) || []
 
       // Safety check: Detect suspicious "0" results when we previously had data
+      // Only suspicious if: 0 results AND we previously had non-zero results
       const newHash = createDataHash(projectsWithRoles)
-      const suspiciousZeroResult = projectsWithRoles.length === 0 && previousDataCount > 0 && newHash !== lastValidHash
+      const previousHadData = previousDataCount > 0
+      const suspiciousZeroResult = projectsWithRoles.length === 0 && previousHadData && !isSafetyRetry
 
-      if (suspiciousZeroResult && !isSafetyRetry) {
+      if (suspiciousZeroResult) {
         addDebugMessage(`⚠️ Suspicious: Got 0 projects when we previously had ${previousDataCount}`)
         addDebugMessage('Triggering safety check retry...')
 
@@ -190,12 +187,17 @@ export default function ProjectsPage() {
           // Safety retry also failed, accept the 0 result but update state
           addDebugMessage('⚠️ Safety retry also failed, accepting 0 projects')
           setPreviousDataCount(0)
-          setLastValidHash(newHash)
+          // Persist to localStorage
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('projects-hash', newHash)
+          }
         }
       } else {
-        // Normal path: update the tracking state
+        // Normal path: update the tracking state and persist to localStorage
         setPreviousDataCount(projectsWithRoles.length)
-        setLastValidHash(newHash)
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('projects-hash', newHash)
+        }
       }
 
       setProjects(projectsWithRoles)
@@ -209,8 +211,8 @@ export default function ProjectsPage() {
       const isTimeout = errorMsg === 'Request timeout'
       // Retry on both timeout errors and session/network errors
       const isRetryable = isTimeout || errorMsg.includes('Session') || errorMsg.includes('session') ||
-                          errorMsg.includes('Network') || errorMsg.includes('network') ||
-                          errorMsg.includes('fetch')
+        errorMsg.includes('Network') || errorMsg.includes('network') ||
+        errorMsg.includes('fetch')
 
       addDebugMessage(`ERROR${retryLabel}: ${errorMsg}`)
 
@@ -221,10 +223,9 @@ export default function ProjectsPage() {
         addDebugMessage(`Retrying in ${backoffDelay / 1000}s... (attempt ${nextAttempt}/${maxRetries})`)
         setRetryCount(nextAttempt)
 
-        // Reset Supabase client before retry to fix stale connections
+        // Reset client before retry to ensure a fresh connection state
         addDebugMessage('Resetting Supabase client...')
         await resetSupabaseClient(getConfig())
-
         await new Promise(resolve => setTimeout(resolve, backoffDelay))
         return fetchProjectsWithRetry(nextAttempt)
       }
@@ -374,19 +375,6 @@ export default function ProjectsPage() {
     }
   }
 
-  const handleLogout = async () => {
-    try {
-      console.log('Logging out...')
-      await signOut()
-      console.log('Logged out successfully, reloading...')
-      window.location.href = import.meta.env.BASE_URL || '/'
-    } catch (error) {
-      console.error('Logout error:', error)
-      // Force redirect to landing page even if signOut fails
-      window.location.href = import.meta.env.BASE_URL || '/'
-    }
-  }
-
   const toggleProjectSelection = (projectId: string) => {
     setSelectedProjectIds(prev =>
       prev.includes(projectId)
@@ -396,23 +384,22 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20 md:pb-0" data-testid="projects-page">
-      <header className="bg-white border-b border-slate-200 shadow-sm relative">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 md:pb-0" data-testid="projects-page">
+      <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm relative">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-primary"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{t('projects.title')}</h1>
-              <p className="text-slate-500 text-sm mt-1">{t('projects.subtitle')}</p>
+              <h1 className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">{t('projects.title')}</h1>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">{t('projects.subtitle')}</p>
             </div>
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-              <LanguageSelector />
               {!isSelectionMode ? (
                 <>
                   <button onClick={() => setShowCreateForm(true)} className="btn btn-primary text-sm whitespace-nowrap" data-testid="create-project-button">
                     {t('projects.newProject')}
                   </button>
-                  {projects.some(p => p.userRole === 'owner') && (
+                  {projects.some(p => ['owner', 'admin'].includes(p.userRole)) && (
                     <button
                       onClick={() => setIsSelectionMode(true)}
                       className="btn btn-secondary text-sm whitespace-nowrap"
@@ -451,10 +438,6 @@ export default function ProjectsPage() {
               </button>
               <button onClick={() => { navigate('/config') }} className="btn btn-secondary text-sm whitespace-nowrap hidden sm:inline-flex" title={t('projects.reconfigure')}>
                 ⚙️ {t('common.settings')}
-              </button>
-              <button onClick={handleLogout} className="btn border border-red-200 text-red-600 hover:bg-red-50 text-sm whitespace-nowrap px-4 py-2 rounded-xl font-semibold transition-all">
-                <span className="hidden sm:inline">{t('common.logout')}</span>
-                <span className="sm:hidden">{t('common.logout')}</span>
               </button>
             </div>
           </div>
@@ -500,13 +483,13 @@ export default function ProjectsPage() {
           </div>
         ) : projectsError ? (
           <div className="card text-center py-12">
-            <div className="text-red-500 mb-4">
+            <div className="text-red-500 dark:text-red-400 mb-4">
               <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">Unable to Load Projects</h2>
-              <p className="text-gray-600 mb-2">Failed to fetch your projects. Please check your connection and try again.</p>
-              <p className="text-xs text-gray-500 font-mono bg-gray-100 p-2 rounded mb-4">{projectsError}</p>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Unable to Load Projects</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-2">Failed to fetch your projects. Please check your connection and try again.</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-mono bg-gray-100 dark:bg-slate-800 p-2 rounded mb-4">{projectsError}</p>
             </div>
             <button onClick={() => { setProjectsError(null); fetchProjects() }} className="btn btn-primary">
               Try Again
@@ -539,113 +522,113 @@ export default function ProjectsPage() {
           <>
             {showCreateForm && (
               <div className="card mb-6" data-testid="create-project-form">
-            <h2 className="text-lg font-semibold mb-4">{t('projects.createNewProject')}</h2>
-            <form onSubmit={handleCreateProject} className="space-y-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('projects.projectName')}
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  className="input"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
+                <h2 className="text-lg font-semibold mb-4">{t('projects.createNewProject')}</h2>
+                <form onSubmit={handleCreateProject} className="space-y-4">
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      {t('projects.projectName')}
+                    </label>
+                    <input
+                      id="name"
+                      type="text"
+                      className="input"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      {t('projects.description')}
+                    </label>
+                    <textarea
+                      id="description"
+                      className="input"
+                      rows={3}
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="submit" className="btn btn-primary">
+                      {t('common.create')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowCreateForm(false)}
+                      className="btn btn-secondary"
+                    >
+                      {t('common.cancel')}
+                    </button>
+                  </div>
+                </form>
               </div>
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('projects.description')}
-                </label>
-                <textarea
-                  id="description"
-                  className="input"
-                  rows={3}
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
-              <div className="flex gap-2">
-                <button type="submit" className="btn btn-primary">
-                  {t('common.create')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowCreateForm(false)}
-                  className="btn btn-secondary"
-                >
-                  {t('common.cancel')}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
+            )}
 
-        {projects.length === 0 ? (
-          <div className="text-center py-12" data-testid="empty-state">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('projects.noProjectsYet')}</h2>
-            <p className="text-gray-600 mb-6">{t('projects.createFirstProject')}</p>
-            <button onClick={() => setShowCreateForm(true)} className="btn btn-primary">
-              {t('projects.createProject')}
-            </button>
-          </div>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3" data-testid="projects-grid">
-            {projects.map((project) => (
-              <Link
-                key={project.id}
-                to={isSelectionMode ? '#' : `/projects/${project.id}`}
-                data-testid={`project-card-${project.id}`}
-                onClick={(e) => {
-                  if (isSelectionMode) {
-                    e.preventDefault()
-                    if (project.userRole === 'owner') {
-                      toggleProjectSelection(project.id)
-                    }
-                  }
-                }}
-                className={`card card-accent hover:-translate-y-1 block relative ${isSelectionMode && project.userRole !== 'owner' ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:border-primary-300'
-                  } ${selectedProjectIds.includes(project.id) ? 'ring-2 ring-primary-500 border-primary-500 bg-primary-50/30' : ''}`}
-              >
-                {isSelectionMode && project.userRole === 'owner' && (
-                  <div className="absolute top-4 right-4 z-10">
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${selectedProjectIds.includes(project.id)
-                      ? 'bg-primary-500 border-primary-500 text-white'
-                      : 'bg-white border-slate-300'
-                      }`}>
-                      {selectedProjectIds.includes(project.id) && (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
+            {projects.length === 0 ? (
+              <div className="text-center py-12" data-testid="empty-state">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{t('projects.noProjectsYet')}</h2>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">{t('projects.createFirstProject')}</p>
+                <button onClick={() => setShowCreateForm(true)} className="btn btn-primary">
+                  {t('projects.createProject')}
+                </button>
+              </div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3" data-testid="projects-grid">
+                {projects.map((project) => (
+                  <Link
+                    key={project.id}
+                    to={isSelectionMode ? '#' : `/projects/${project.id}`}
+                    data-testid={`project-card-${project.id}`}
+                    onClick={(e) => {
+                      if (isSelectionMode) {
+                        e.preventDefault()
+                        if (['owner', 'admin'].includes(project.userRole)) {
+                          toggleProjectSelection(project.id)
+                        }
+                      }
+                    }}
+                    className={`card card-accent hover:-translate-y-1 block relative ${isSelectionMode && !['owner', 'admin'].includes(project.userRole) ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:border-primary-300'
+                      } ${selectedProjectIds.includes(project.id) ? 'ring-2 ring-primary-500 border-primary-500 bg-primary-50/30' : ''}`}
+                  >
+                    {isSelectionMode && ['owner', 'admin'].includes(project.userRole) && (
+                      <div className="absolute top-4 right-4 z-10">
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${selectedProjectIds.includes(project.id)
+                          ? 'bg-primary-500 border-primary-500 text-white'
+                          : 'bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600'
+                          }`}>
+                          {selectedProjectIds.includes(project.id) && (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-start">
+                      <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{project.name}</h3>
+                      <span className="bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border border-primary-100 dark:border-primary-800">
+                        {t(`projects.${['owner', 'admin', 'member', 'viewer'].includes(project.userRole || '') ? project.userRole : 'unknownRole'}`)}
+                      </span>
+                    </div>
+                    {project.description && (
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-2">{project.description}</p>
+                    )}
+                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50 dark:border-slate-700">
+                      <span className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-teal-500"></span>
+                        {project.settings?.currency || 'USD'}
+                      </span>
+                      {!isSelectionMode && (
+                        <span className="text-primary-600 dark:text-primary-400 text-xs font-semibold group-hover:translate-x-1 transition-transform">
+                          {t('projects.viewDetails')}
+                        </span>
                       )}
                     </div>
-                  </div>
-                )}
-                <div className="flex justify-between items-start">
-                  <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-primary-600 transition-colors">{project.name}</h3>
-                  <span className="bg-primary-50 text-primary-700 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border border-primary-100">
-                    {t(`projects.${['owner', 'member', 'viewer'].includes(project.userRole || '') ? project.userRole : 'unknownRole'}`)}
-                  </span>
-                </div>
-                {project.description && (
-                  <p className="text-sm text-slate-600 mb-4 line-clamp-2">{project.description}</p>
-                )}
-                <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50">
-                  <span className="text-xs font-medium text-slate-500 flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-teal-500"></span>
-                    {project.settings?.currency || 'USD'}
-                  </span>
-                  {!isSelectionMode && (
-                    <span className="text-primary-600 text-xs font-semibold group-hover:translate-x-1 transition-transform">
-                      {t('projects.viewDetails')}
-                    </span>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
+                  </Link>
+                ))}
+              </div>
+            )}
           </>
         )}
       </main>
@@ -653,30 +636,31 @@ export default function ProjectsPage() {
       {/* Multi-Project Invite Modal */}
       {showInviteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">{t('projects.inviteToProjects')}</h2>
-            <p className="text-slate-500 text-sm mb-6">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">{t('projects.inviteToProjects')}</h2>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
               {t('projects.invitingProjects', { count: selectedProjectIds.length })}
             </p>
             <form onSubmit={handleMultiInvite} className="space-y-5">
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">{t('projects.emailAddress')}</label>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">{t('projects.emailAddress')}</label>
                 <input
                   type="email"
                   required
-                  className="input bg-slate-50 focus:bg-white"
+                  className="input bg-slate-50 dark:bg-slate-700 focus:bg-white dark:focus:bg-slate-600"
                   value={inviteEmail}
                   onChange={e => setInviteEmail(e.target.value)}
                   placeholder="colleague@example.com"
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">{t('projects.role')}</label>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wider">{t('projects.role')}</label>
                 <select
-                  className="input bg-slate-50 focus:bg-white"
+                  className="input bg-slate-50 dark:bg-slate-700 focus:bg-white dark:focus:bg-slate-600"
                   value={inviteRole}
                   onChange={e => setInviteRole(e.target.value as any)}
                 >
+                  <option value="admin">{t('projects.roleAdmin')}</option>
                   <option value="member">{t('projects.roleMember')}</option>
                   <option value="viewer">{t('projects.roleViewer')}</option>
                 </select>
@@ -699,14 +683,14 @@ export default function ProjectsPage() {
       {/* Invite Success Modal */}
       {showInviteLink && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
-              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-6">
+              <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">{t('projects.invitationsCreated')}</h2>
-            <p className="text-slate-600 mb-6">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">{t('projects.invitationsCreated')}</h2>
+            <p className="text-slate-600 dark:text-slate-400 mb-6">
               {t('projects.invitationLinkGenerated', { count: inviteProjectCount })}
             </p>
 
@@ -717,10 +701,34 @@ export default function ProjectsPage() {
               {t('projects.openEmailClient')}
             </a>
 
-            <div className="bg-slate-50 p-4 rounded-xl mb-6 border border-slate-100">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{t('projects.combinedInviteLink')}</p>
-              <p className="text-sm text-primary-600 break-all font-medium">{inviteLink}</p>
+            <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl mb-6 border border-slate-100 dark:border-slate-700">
+              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">{t('projects.combinedInviteLink')}</p>
+              <p className="text-sm text-primary-600 dark:text-primary-400 break-all font-medium">{inviteLink}</p>
             </div>
+
+            {/* QR Code Toggle Button */}
+            <button
+              onClick={() => setShowQRCode(!showQRCode)}
+              className="w-full btn btn-secondary mb-4 flex items-center justify-center gap-2"
+              aria-label={showQRCode ? t('qr.hide') : t('qr.show')}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+              </svg>
+              {showQRCode ? t('qr.hide') : t('qr.show')}
+            </button>
+
+            {/* QR Code Display */}
+            {showQRCode && (
+              <div className="mb-6">
+                <QRCodeDisplay
+                  url={inviteLink}
+                  t={t}
+                  size={200}
+                  darkMode={document.documentElement.classList.contains('dark')}
+                />
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3 mb-6">
               <button
@@ -748,7 +756,7 @@ export default function ProjectsPage() {
 
             <button
               onClick={() => setShowInviteLink(false)}
-              className="w-full text-slate-400 font-bold text-sm hover:text-slate-600 transition-colors"
+              className="w-full text-slate-400 dark:text-slate-500 font-bold text-sm hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
             >
               {t('common.close')}
             </button>

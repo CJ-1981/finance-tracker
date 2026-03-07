@@ -697,7 +697,7 @@ export default function CashCounterPage() {
             id={label ? `denomination-${label}-${color}` : `denomination-${color}`}
             name={label ? `denomination-${label}-${color}` : `denomination-${color}`}
             className={`text-center font-semibold text-sm w-full border rounded focus:outline-none focus:ring-2 py-1 px-2 ${colorClasses[color].input}`}
-            value={inputValue}
+            value={count === 0 ? '' : inputValue}
             placeholder="0"
             onChange={(e) => setInputValue(e.target.value)}
             onBlur={() => onInput(parseInt(inputValue) || 0)}
@@ -822,7 +822,7 @@ export default function CashCounterPage() {
 
         {/* Section Totals */}
         <div className="grid grid-cols-2 gap-3 mb-6">
-          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800/50">
+          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800/50 text-center">
             <div className="text-xs font-medium text-blue-700 dark:text-blue-400 mb-1">
               {t('cashCounter.namedTotal')}
             </div>
@@ -830,7 +830,7 @@ export default function CashCounterPage() {
               {formatCurrencyAmount(namedTotal, currency)}
             </div>
           </div>
-          <div className="p-3 bg-teal-50 dark:bg-teal-900/20 rounded-lg border border-teal-200 dark:border-teal-800/50">
+          <div className="p-3 bg-teal-50 dark:bg-teal-900/20 rounded-lg border border-teal-200 dark:border-teal-800/50 text-center">
             <div className="text-xs font-medium text-teal-700 dark:text-teal-400 mb-1">
               {t('cashCounter.anonymousTotal')}
             </div>
@@ -866,7 +866,7 @@ export default function CashCounterPage() {
 
           {/* Grand Total Breakdown */}
           <div className="grid grid-cols-2 gap-3 mb-6">
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 px-4 py-3 rounded-lg border border-yellow-200 dark:border-yellow-800/50">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 px-4 py-3 rounded-lg border border-yellow-200 dark:border-yellow-800/50 text-center">
               <div className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                 💵 {t('cashCounter.bills')}
               </div>
@@ -874,7 +874,7 @@ export default function CashCounterPage() {
                 {formatCurrencyAmount(grandBreakdown.bills, currency)}
               </div>
             </div>
-            <div className="bg-gray-100 dark:bg-slate-700 px-4 py-3 rounded-lg border border-gray-200 dark:border-slate-600">
+            <div className="bg-gray-100 dark:bg-slate-700 px-4 py-3 rounded-lg border border-gray-200 dark:border-slate-600 text-center">
               <div className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                 ⚪ {t('cashCounter.coins')}
               </div>

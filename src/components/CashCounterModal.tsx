@@ -563,7 +563,7 @@ export default function CashCounterModal({
 
           {/* Section Totals - Swapped: Named first, Anonymous second */}
           <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800/50">
+            <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800/50 text-center">
               <div className="text-[10px] font-medium text-blue-700 dark:text-blue-400 mb-1">
                 {t('cashCounter.namedTotal')}
               </div>
@@ -572,7 +572,7 @@ export default function CashCounterModal({
               </div>
             </div>
 
-            <div className="p-2 bg-teal-50 dark:bg-teal-900/20 rounded-md border border-teal-200 dark:border-teal-800/50">
+            <div className="p-2 bg-teal-50 dark:bg-teal-900/20 rounded-md border border-teal-200 dark:border-teal-800/50 text-center">
               <div className="text-[10px] font-medium text-teal-700 dark:text-teal-400 mb-1">
                 {t('cashCounter.anonymousTotal')}
               </div>
@@ -604,7 +604,7 @@ export default function CashCounterModal({
 
             {/* Grand Total Breakdown - Stacked Labels */}
             <div className="grid grid-cols-2 gap-2 mb-3">
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded-md border border-yellow-200 dark:border-yellow-800/50">
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded-md border border-yellow-200 dark:border-yellow-800/50 text-center">
                 <div className="text-[9px] font-medium text-gray-700 dark:text-gray-300 mb-0.5">
                   💵 {t('cashCounter.bills')}
                 </div>
@@ -612,7 +612,7 @@ export default function CashCounterModal({
                   {formatCurrencyAmount(grandBreakdown.bills, currency)}
                 </div>
               </div>
-              <div className="bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded-md border border-gray-200 dark:border-slate-600">
+              <div className="bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded-md border border-gray-200 dark:border-slate-600 text-center">
                 <div className="text-[9px] font-medium text-gray-700 dark:text-gray-300 mb-0.5">
                   ⚪ {t('cashCounter.coins')}
                 </div>
