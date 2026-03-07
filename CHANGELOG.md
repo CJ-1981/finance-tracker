@@ -5,6 +5,26 @@ All notable changes to the Finance Tracker application will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] - 2026-03-07
+
+### Changed
+
+- **Cash Counter UX Refinements**
+  - Simplified markdown export format and fixed line spacing
+  - Removed newline from status text and restored proper color coding
+  - Restored color coding and improved target section layout
+  - Reordered cash counter sections and consolidated target display
+  - Right-aligned grand total sections in cash counter
+  - Fixed input field logic to prevent placeholder persistence
+  - Display typed digits immediately in denomination fields
+  - Improved UX with empty placeholders and centered alignment
+  - Properly structured useEffect hooks for debounced save cleanup
+  - Added cleanup logic for debounced save operations
+
+### Fixed
+
+- Fixed localStorage persistence test failure
+
 ## [2.6.0] - 2026-03-06
 
 ### Added
