@@ -45,6 +45,7 @@ import {
   calculateDenominationBreakdown,
   filterDenominationsByType,
   getDenominationsWithData,
+  formatCurrencyAmount,
 } from '../utils/denominationUtils'
 
 const LANGUAGES = [
@@ -573,10 +574,10 @@ export default function CashCounterPage() {
         </div>
         <div className="grid grid-cols-[1fr_1fr] gap-2 mt-1">
           <div className="text-[9px] font-medium text-blue-600 dark:text-blue-400 text-center">
-            {currency} {(namedCount * props.denomination.value).toFixed(2)}
+            {formatCurrencyAmount(namedCount * props.denomination.value, currency)}
           </div>
           <div className="text-[9px] font-medium text-teal-600 dark:text-teal-400 text-center">
-            {currency} {(anonymousCount * props.denomination.value).toFixed(2)}
+            {formatCurrencyAmount(anonymousCount * props.denomination.value, currency)}
           </div>
         </div>
       </div>
@@ -748,7 +749,7 @@ export default function CashCounterPage() {
               {t('cashCounter.namedTotal')}
             </div>
             <div className="text-xl font-bold text-blue-900 dark:text-blue-100">
-              {currency} {namedTotal.toFixed(2)}
+              {formatCurrencyAmount(namedTotal, currency)}
             </div>
           </div>
           <div className="p-3 bg-teal-50 dark:bg-teal-900/20 rounded-lg border border-teal-200 dark:border-teal-800/50">
@@ -756,7 +757,7 @@ export default function CashCounterPage() {
               {t('cashCounter.anonymousTotal')}
             </div>
             <div className="text-xl font-bold text-teal-900 dark:text-teal-100">
-              {currency} {anonymousTotal.toFixed(2)}
+              {formatCurrencyAmount(anonymousTotal, currency)}
             </div>
           </div>
         </div>
@@ -777,7 +778,7 @@ export default function CashCounterPage() {
                       : 'text-slate-900 dark:text-slate-100'
                 }`}
             >
-              {currency} {grandTotal.toFixed(2)}
+              {formatCurrencyAmount(grandTotal, currency)}
             </span>
           </div>
 
@@ -788,7 +789,7 @@ export default function CashCounterPage() {
                 💵 {t('cashCounter.bills')}
               </div>
               <div className="text-lg font-bold dark:text-white">
-                {currency} {grandBreakdown.bills.toFixed(2)}
+                {formatCurrencyAmount(grandBreakdown.bills, currency)}
               </div>
             </div>
             <div className="bg-gray-100 dark:bg-slate-700 px-4 py-3 rounded-lg border border-gray-200 dark:border-slate-600">
@@ -796,7 +797,7 @@ export default function CashCounterPage() {
                 ⚪ {t('cashCounter.coins')}
               </div>
               <div className="text-lg font-bold dark:text-white">
-                {currency} {grandBreakdown.coins.toFixed(2)}
+                {formatCurrencyAmount(grandBreakdown.coins, currency)}
               </div>
             </div>
           </div>
@@ -809,7 +810,7 @@ export default function CashCounterPage() {
                   Target:
                 </span>
                 <span className="text-xl font-semibold text-slate-600 dark:text-slate-400">
-                  {currency} {config.targetAmount.toFixed(2)}
+                  {formatCurrencyAmount(config.targetAmount, currency)}
                 </span>
               </div>
 
@@ -830,7 +831,7 @@ export default function CashCounterPage() {
                       : '↓ ' + t('cashCounter.shortage')}:
                 </span>
                 <span className="font-bold text-xl dark:text-white">
-                  {currency} {Math.abs(grandTotal - config.targetAmount).toFixed(2)}
+                  {formatCurrencyAmount(Math.abs(grandTotal - config.targetAmount), currency)}
                 </span>
               </div>
             </>

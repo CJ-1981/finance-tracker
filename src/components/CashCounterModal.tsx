@@ -20,6 +20,7 @@ import {
   calculateDenominationBreakdown,
   filterDenominationsByType,
   getDenominationsWithData,
+  formatCurrencyAmount,
 } from '../utils/denominationUtils'
 
 // ==================== TYPES & INTERFACES ====================
@@ -549,7 +550,7 @@ export default function CashCounterModal({
                 {t('cashCounter.namedTotal')}
               </div>
               <div className="text-lg font-bold text-blue-900 dark:text-blue-100">
-                {currency} {namedTotal.toFixed(2)}
+                {formatCurrencyAmount(namedTotal, currency)}
               </div>
             </div>
 
@@ -558,7 +559,7 @@ export default function CashCounterModal({
                 {t('cashCounter.anonymousTotal')}
               </div>
               <div className="text-lg font-bold text-teal-900 dark:text-teal-100">
-                {currency} {anonymousTotal.toFixed(2)}
+                {formatCurrencyAmount(anonymousTotal, currency)}
               </div>
             </div>
           </div>
@@ -579,7 +580,7 @@ export default function CashCounterModal({
                       : 'text-red-600 dark:text-red-400'
                   }`}
               >
-                {currency} {grandTotal.toFixed(2)}
+                {formatCurrencyAmount(grandTotal, currency)}
               </span>
             </div>
 
@@ -590,7 +591,7 @@ export default function CashCounterModal({
                   💵 {t('cashCounter.bills')}
                 </div>
                 <div className="text-base font-bold dark:text-white">
-                  {currency} {grandBreakdown.bills.toFixed(2)}
+                  {formatCurrencyAmount(grandBreakdown.bills, currency)}
                 </div>
               </div>
               <div className="bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded-md border border-gray-200 dark:border-slate-600">
@@ -598,7 +599,7 @@ export default function CashCounterModal({
                   ⚪ {t('cashCounter.coins')}
                 </div>
                 <div className="text-base font-bold dark:text-white">
-                  {currency} {grandBreakdown.coins.toFixed(2)}
+                  {formatCurrencyAmount(grandBreakdown.coins, currency)}
                 </div>
               </div>
             </div>
@@ -730,10 +731,10 @@ function DenominationRow({
       {/* Row 3: Running totals */}
       <div className="grid grid-cols-[1fr_1fr] gap-2 mt-1">
         <div className="text-[9px] font-medium text-blue-600 dark:text-blue-400 text-center">
-          {currency} {namedAmount.toFixed(2)}
+          {formatCurrencyAmount(namedAmount, currency)}
         </div>
         <div className="text-[9px] font-medium text-teal-600 dark:text-teal-400 text-center">
-          {currency} {anonymousAmount.toFixed(2)}
+          {formatCurrencyAmount(anonymousAmount, currency)}
         </div>
       </div>
     </div>
