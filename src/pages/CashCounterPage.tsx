@@ -289,6 +289,15 @@ export default function CashCounterPage() {
           // V1 or unknown format - reset
           console.log('Unknown or legacy format, resetting to empty state')
           setState(createEmptyState('EUR'))
+          return // Early return to avoid unnecessary state updates when V3 branch already handled
+        }
+        if (typeof data.anonymous === 'object' && data.anonymous !== null &&
+          typeof data.namedCounts === 'object' && data.namedCounts !== null) {
+          const loadedCurrency = data.currency || 'EUR'
+          setState({
+            anonymous: data.anonymous,
+            namedCounts: data.namedCounts,
+          })
         }
         if (typeof data.anonymous === 'object' && data.anonymous !== null &&
           typeof data.namedCounts === 'object' && data.namedCounts !== null) {

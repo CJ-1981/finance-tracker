@@ -225,6 +225,7 @@ This document defines acceptance criteria for currency-specific denominations in
 5. Verify currency selector shows JPY
 6. Verify denomination inputs have saved values
 7. Verify total matches previous value
+8. Verify storage key includes currency code (e.g., "cashcounter_standalone_jpy" not "cashcounter_standalone")
 
 ---
 
@@ -276,6 +277,7 @@ This document defines acceptance criteria for currency-specific denominations in
 **When** performing calculations
 **Then** totals are displayed without decimal places
 **And** denomination values are integers
+**And** currency symbols display correctly (¥ for JPY, 원 for KRW)
 
 ### Edge Case 2: Currency with Quarter Coin (USD)
 
@@ -294,7 +296,7 @@ This document defines acceptance criteria for currency-specific denominations in
 ### Edge Case 4: Large Minimum Value (KRW)
 
 **Given** the user has selected KRW currency
-**When** the system displays denominations
+**When** the system displays KRW denominations
 **Then** the smallest coin is 10 won
 **And** the smallest bill is 1000 won
 
