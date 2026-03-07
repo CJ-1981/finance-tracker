@@ -10,18 +10,30 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Project } from '../types'
+import {
+  getDenominations,
+  getCurrencyEmoji,
+} from '../config/currencyDenominations'
+import {
+  createEmptyDenominationState,
+  calculateDenominationTotal,
+  calculateDenominationBreakdown,
+  filterDenominationsByType,
+  getDenominationsWithData,
+} from '../utils/denominationUtils'
 
 // ==================== TYPES & INTERFACES ====================
 
 /**
- * V2 localStorage data structure with version flag for migration
+ * V2/V3 localStorage data structure with version flag for migration
  */
 interface StoredCashDataV2 {
   projectId: string
-  version: 2
+  version: 2 | 3  // Supports both V2 and V3
   anonymous: Record<number, number>
   namedCounts: Record<number, number>
   lastDate: string
+  currency?: string  // Added in V3, optional for V2 backwards compatibility
 }
 
 /**
@@ -47,51 +59,10 @@ type StoredCashData = StoredCashDataV1 | StoredCashDataV2
 export interface CashCounterState {
   anonymous: Record<number, number>
   namedCounts: Record<number, number>
+  currency: string  // NEW: Track currency for denomination-specific data
 }
-
-// ==================== CONSTANTS ====================
-
-/**
- * All supported denominations for EUR currency
- */
-export const DENOMINATIONS: Array<{
-  value: number
-  label: string
-  type: 'bill' | 'coin'
-}> = [
-    { value: 200, label: '200', type: 'bill' },
-    { value: 100, label: '100', type: 'bill' },
-    { value: 50, label: '50', type: 'bill' },
-    { value: 20, label: '20', type: 'bill' },
-    { value: 10, label: '10', type: 'bill' },
-    { value: 5, label: '5', type: 'bill' },
-    { value: 2, label: '2', type: 'coin' },
-    { value: 1, label: '1', type: 'coin' },
-    { value: 0.50, label: '0.50', type: 'coin' },
-    { value: 0.20, label: '0.20', type: 'coin' },
-    { value: 0.10, label: '0.10', type: 'coin' },
-    { value: 0.05, label: '0.05', type: 'coin' },
-    { value: 0.02, label: '0.02', type: 'coin' },
-    { value: 0.01, label: '0.01', type: 'coin' },
-  ]
 
 // ==================== UTILITY FUNCTIONS ====================
-
-/**
- * Get emoji for currency and denomination type
- */
-const getCurrencyEmoji = (currency: string, type: 'bill' | 'coin'): string => {
-  const currencyEmojis: Record<string, { bill: string; coin: string }> = {
-    'EUR': { bill: '💶', coin: '⚪' },
-    'USD': { bill: '💵', coin: '⚪' },
-    'GBP': { bill: '💷', coin: '⚪' },
-    'JPY': { bill: '💴', coin: '⚪' },
-    'KRW': { bill: '💴', coin: '⚪' },
-    'CNY': { bill: '💴', coin: '⚪' },
-    'INR': { bill: '💵', coin: '⚪' },
-  }
-  return currencyEmojis[currency]?.[type] || (type === 'bill' ? '💵' : '⚪')
-}
 
 /**
  * Get local date string in YYYY-MM-DD format
@@ -104,32 +75,6 @@ const getLocalDateString = (): string => {
   return `${year}-${month}-${day}`
 }
 
-/**
- * Calculate total amount from denomination counts
- */
-const calculateTotal = (denominations: Record<number, number>): number => {
-  return DENOMINATIONS.reduce((sum, denom) => {
-    return sum + (denominations[denom.value] || 0) * denom.value
-  }, 0)
-}
-
-/**
- * Calculate bills and coins breakdown
- */
-const calculateBreakdown = (denominations: Record<number, number>) => {
-  return DENOMINATIONS.reduce(
-    (acc, denom) => {
-      const amount = (denominations[denom.value] || 0) * denom.value
-      if (denom.type === 'bill') {
-        acc.bills += amount
-      } else {
-        acc.coins += amount
-      }
-      return acc
-    },
-    { bills: 0, coins: 0 }
-  )
-}
 
 /**
  * Migrate V1 data format to V2
@@ -167,9 +112,10 @@ const migrateV1ToV2 = (v1Data: StoredCashDataV1): StoredCashDataV2 => {
 /**
  * Create empty cash counter state with all denominations initialized to 0
  */
-const createEmptyState = (): CashCounterState => ({
-  anonymous: DENOMINATIONS.reduce((acc, d) => ({ ...acc, [d.value]: 0 }), {} as Record<number, number>),
-  namedCounts: DENOMINATIONS.reduce((acc, d) => ({ ...acc, [d.value]: 0 }), {} as Record<number, number>),
+const createEmptyState = (currency: string): CashCounterState => ({
+  anonymous: createEmptyDenominationState(currency),
+  namedCounts: createEmptyDenominationState(currency),
+  currency,
 })
 
 // ==================== MAIN MODAL COMPONENT ====================
@@ -200,7 +146,9 @@ export default function CashCounterModal({
 
   // ==================== STATE ====================
 
-  const [state, setState] = useState<CashCounterState>(createEmptyState)
+  const [state, setState] = useState<CashCounterState>(() =>
+    createEmptyState(project.settings?.currency || 'EUR')
+  )
   const saveTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
 
   // ==================== LOCALSTORAGE ====================
@@ -219,6 +167,7 @@ export default function CashCounterModal({
           anonymous: currentState.anonymous,
           namedCounts: currentState.namedCounts,
           lastDate: getLocalDateString(),
+          currency: state.currency,  // Add currency field for V3 migration
         }
         localStorage.setItem(storageKey, JSON.stringify(data))
       } catch (err) {
@@ -226,6 +175,15 @@ export default function CashCounterModal({
       }
     }, 500) // Debounce saves
   }, [project.id])
+
+  // Handle currency changes - reset denomination state when project currency changes
+  useEffect(() => {
+    const projectCurrency = project.settings?.currency || 'EUR'
+    if (state.currency !== projectCurrency) {
+      // Reset state with new currency
+      setState(createEmptyState(projectCurrency))
+    }
+  }, [project.settings?.currency])
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -242,43 +200,66 @@ export default function CashCounterModal({
         if (data.lastDate !== today) {
           // Clear old data and reset state
           localStorage.removeItem(storageKey)
-          setState(createEmptyState())
+          setState(createEmptyState(project.settings?.currency || 'EUR'))
           return
         }
 
         // Check version and migrate if needed
         if ('version' in data && data.version === 2) {
           // V2 format - validate and load directly
+          const loadedCurrency = data.currency || 'EUR'  // Default to EUR for V2
           if (typeof data.anonymous === 'object' && data.anonymous !== null &&
             typeof data.namedCounts === 'object' && data.namedCounts !== null) {
             setState({
               anonymous: data.anonymous,
               namedCounts: data.namedCounts,
+              currency: loadedCurrency,
             })
           } else {
             // Invalid V2 payload - reset to empty state
             console.error('Invalid V2 payload structure, resetting to empty state')
-            setState(createEmptyState())
+            setState(createEmptyState(project.settings?.currency || 'EUR'))
+          }
+        } else if ('version' in data && data.version === 3) {
+          // V3 format - validate and load directly
+          const loadedCurrency = data.currency || 'EUR'
+          if (typeof data.anonymous === 'object' && data.anonymous !== null &&
+            typeof data.namedCounts === 'object' && data.namedCounts !== null) {
+            setState({
+              anonymous: data.anonymous,
+              namedCounts: data.namedCounts,
+              currency: loadedCurrency,
+            })
+          } else {
+            // Invalid V3 payload - reset to empty state
+            console.error('Invalid V3 payload structure, resetting to empty state')
+            setState(createEmptyState(project.settings?.currency || 'EUR'))
           }
         } else {
-          // V1 format - migrate
+          // V1 format - migrate to V3
           const v2Data = migrateV1ToV2(data as StoredCashDataV1)
+          const loadedCurrency = 'EUR'  // Default to EUR for V1
           setState({
             anonymous: v2Data.anonymous,
             namedCounts: v2Data.namedCounts,
+            currency: loadedCurrency,
           })
-          // Save migrated data
-          localStorage.setItem(storageKey, JSON.stringify(v2Data))
+          // Save migrated data in V3 format
+          const v3Data: StoredCashDataV2 = {
+            ...v2Data,
+            currency: loadedCurrency,
+          }
+          localStorage.setItem(storageKey, JSON.stringify(v3Data))
         }
       } else {
         // No localStorage data exists - start fresh
-        setState(createEmptyState())
+        setState(createEmptyState(project.settings?.currency || 'EUR'))
       }
     } catch (err) {
       console.error('Error loading cash counter data:', err)
-      setState(createEmptyState())
+      setState(createEmptyState(project.settings?.currency || 'EUR'))
     }
-  }, [isOpen, project?.id])
+  }, [isOpen, project?.id, project.settings?.currency])
 
   // Save state changes to localStorage (debounced)
   useEffect(() => {
@@ -337,10 +318,10 @@ export default function CashCounterModal({
 
   const handleClearAll = useCallback(() => {
     if (confirm(t('cashCounter.confirmClearAll'))) {
-      setState(createEmptyState())
+      setState(createEmptyState(project.settings?.currency || 'EUR'))
       localStorage.removeItem(`cash_counter_${project.id}`)
     }
-  }, [project.id, t])
+  }, [project.id, project.settings?.currency, t])
 
   const [copySuccess, setCopySuccess] = useState(false)
 
@@ -353,19 +334,22 @@ export default function CashCounterModal({
     lines.push('')
 
     // Named column
-    const namedTotalLocal = calculateTotal(state.namedCounts)
-    const namedBreakdownLocal = calculateBreakdown(state.namedCounts)
+    const namedTotalLocal = calculateDenominationTotal(state.namedCounts, currency)
+    const namedBreakdownLocal = calculateDenominationBreakdown(state.namedCounts, currency)
     const namedHasData = namedTotalLocal > 0
 
     // Anonymous column
-    const anonymousTotalLocal = calculateTotal(state.anonymous)
-    const anonymousBreakdownLocal = calculateBreakdown(state.anonymous)
+    const anonymousTotalLocal = calculateDenominationTotal(state.anonymous, currency)
+    const anonymousBreakdownLocal = calculateDenominationBreakdown(state.anonymous, currency)
     const anonymousHasData = anonymousTotalLocal > 0
 
     if (namedHasData || anonymousHasData) {
+      const denominations = getDenominations(currency)
       // Bills
-      const billsWithData = DENOMINATIONS.filter(
-        d => d.type === 'bill' && ((state.namedCounts[d.value] || 0) > 0 || (state.anonymous[d.value] || 0) > 0)
+      const billsWithData = getDenominationsWithData(
+        filterDenominationsByType(denominations, 'bill'),
+        state.anonymous,
+        state.namedCounts
       )
       if (billsWithData.length > 0) {
         lines.push(`### 💵 ${t('cashCounter.bills')}`)
@@ -380,8 +364,10 @@ export default function CashCounterModal({
       }
 
       // Coins
-      const coinsWithData = DENOMINATIONS.filter(
-        d => d.type === 'coin' && ((state.namedCounts[d.value] || 0) > 0 || (state.anonymous[d.value] || 0) > 0)
+      const coinsWithData = getDenominationsWithData(
+        filterDenominationsByType(denominations, 'coin'),
+        state.anonymous,
+        state.namedCounts
       )
       if (coinsWithData.length > 0) {
         lines.push(`### ⚪ ${t('cashCounter.coins')}`)
@@ -441,12 +427,13 @@ export default function CashCounterModal({
   }, [state, project, totalTransactionsAmount, t])
 
   // ==================== CALCULATIONS ====================
+  const currency = project.settings?.currency || 'EUR'
 
-  const anonymousTotal = calculateTotal(state.anonymous)
-  const anonymousBreakdown = calculateBreakdown(state.anonymous)
+  const anonymousTotal = calculateDenominationTotal(state.anonymous, currency)
+  const anonymousBreakdown = calculateDenominationBreakdown(state.anonymous, currency)
 
-  const namedTotal = calculateTotal(state.namedCounts)
-  const namedBreakdown = calculateBreakdown(state.namedCounts)
+  const namedTotal = calculateDenominationTotal(state.namedCounts, currency)
+  const namedBreakdown = calculateDenominationBreakdown(state.namedCounts, currency)
 
   // Grand total
   const grandTotal = anonymousTotal + namedTotal
@@ -470,9 +457,9 @@ export default function CashCounterModal({
   if (!isOpen) return null
 
   const matchStatus = getMatchStatus()
-  const currency = project.settings?.currency || 'EUR'
-  const bills = DENOMINATIONS.filter(d => d.type === 'bill')
-  const coins = DENOMINATIONS.filter(d => d.type === 'coin')
+  const denominations = getDenominations(currency)
+  const bills = filterDenominationsByType(denominations, 'bill')
+  const coins = filterDenominationsByType(denominations, 'coin')
 
   return (
     <div className="fixed inset-0 bg-black dark:bg-slate-900/80 bg-opacity-50 dark:bg-opacity-80 flex items-center justify-center p-4 z-50 pointer-events-none">
