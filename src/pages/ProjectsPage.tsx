@@ -48,7 +48,7 @@ export default function ProjectsPage() {
   const [isSelectionMode, setIsSelectionMode] = useState(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState<'member' | 'viewer'>('member')
+  const [inviteRole, setInviteRole] = useState<'admin' | 'member' | 'viewer'>('member')
   const [inviteLink, setInviteLink] = useState('')
   const [showInviteLink, setShowInviteLink] = useState(false)
   const [inviteRecipientEmail, setInviteRecipientEmail] = useState('')
@@ -660,6 +660,7 @@ export default function ProjectsPage() {
                   value={inviteRole}
                   onChange={e => setInviteRole(e.target.value as any)}
                 >
+                  <option value="admin">{t('projects.roleAdmin')}</option>
                   <option value="member">{t('projects.roleMember')}</option>
                   <option value="viewer">{t('projects.roleViewer')}</option>
                 </select>

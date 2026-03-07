@@ -52,6 +52,7 @@
     "invitingProjects_other": "사용자를 {{count}}개 프로젝트에 초대합니다.",
     "emailAddress": "이메일 주소",
     "role": "역할",
+    "roleAdmin": "관리자 (관리 가능)",
     "roleMember": "구성원 (추가/편집 가능)",
     "roleViewer": "조회자 (읽기 전용)",
     "sendBundleInvite": "일괄 초대 보내기",

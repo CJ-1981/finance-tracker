@@ -52,6 +52,7 @@
     "invitingProjects_other": "You are inviting someone to join {{count}} projects.",
     "emailAddress": "Email Address",
     "role": "Role",
+    "roleAdmin": "Admin (Can manage)",
     "roleMember": "Member (Can add/edit)",
     "roleViewer": "Viewer (Read-only)",
     "sendBundleInvite": "Send Bundle Invite",

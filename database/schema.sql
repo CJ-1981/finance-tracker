@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS public.invitations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID REFERENCES public.projects(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
-  role TEXT NOT NULL CHECK (role IN ('member', 'viewer')),
+  role TEXT NOT NULL CHECK (role IN ('admin', 'member', 'viewer')),
   invited_by UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
   token TEXT UNIQUE NOT NULL,
   expires_at TIMESTAMP WITH TIME ZONE,
