@@ -41,7 +41,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added English translations for admin role, descriptions, and error messages
   - Added Korean translations for admin role, descriptions, and error messages
 
-### Changed
+- **Currency-Change Confirmation Dialog** (Cash Counter)
+  - Added confirmation dialog when changing currency with non-zero denomination counts
+  - Empty state bypasses confirmation for faster workflow
+  - Modal with warning about data loss before currency change
+  - Cancel and "Change Currency & Reset" options for user control
+  - Prevents accidental data loss during currency switches
 
 - **Database Migration** - Created safe migration script at `database/migrations/20260306_add_admin_role.sql`
   - Migration adds 'admin' role without data loss
