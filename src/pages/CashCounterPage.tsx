@@ -793,7 +793,7 @@ export default function CashCounterPage() {
             <div className="text-xs font-medium text-blue-700 dark:text-blue-400 mb-1">
               {t('cashCounter.namedTotal')}
             </div>
-            <div className="text-xl font-bold text-blue-900 dark:text-blue-100">
+            <div className="text-xl font-bold text-blue-900 dark:text-blue-100 text-center">
               {formatCurrencyAmount(namedTotal, currency)}
             </div>
           </div>
@@ -801,7 +801,7 @@ export default function CashCounterPage() {
             <div className="text-xs font-medium text-teal-700 dark:text-teal-400 mb-1">
               {t('cashCounter.anonymousTotal')}
             </div>
-            <div className="text-xl font-bold text-teal-900 dark:text-teal-100">
+            <div className="text-xl font-bold text-teal-900 dark:text-teal-100 text-center">
               {formatCurrencyAmount(anonymousTotal, currency)}
             </div>
           </div>
