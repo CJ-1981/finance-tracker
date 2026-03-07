@@ -884,28 +884,24 @@ export default function CashCounterPage() {
           {config.targetAmount > 0 && (
             <div
               className={`text-right p-4 rounded-lg ${matchStatus === 'match'
-                  ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
+                  ? 'bg-green-100 dark:bg-green-900/20'
                   : matchStatus === 'excess'
-                    ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400'
-                    : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'
+                    ? 'bg-blue-100 dark:bg-blue-900/20'
+                    : 'bg-red-100 dark:bg-red-900/20'
                 }`}
             >
-              <div className="flex justify-between items-start mb-2">
-                <div className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                  Target:
-                </div>
-                <div className="text-xl font-semibold text-slate-600 dark:text-slate-400">
-                  {formatCurrencyAmount(config.targetAmount, currency)}
-                </div>
+              <div className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
+                Target: {formatCurrencyAmount(config.targetAmount, currency)}
               </div>
-              <div className="font-semibold mb-1">
+              <div className="border-t border-black/20 dark:border-white/20 my-2"></div>
+              <div className="font-semibold mb-1 text-slate-800 dark:text-slate-200">
                 {matchStatus === 'match'
                   ? '✓ ' + t('cashCounter.match')
                   : matchStatus === 'excess'
                     ? '↑ ' + t('cashCounter.excess')
                     : '↓ ' + t('cashCounter.shortage')}:
               </div>
-              <div className="font-bold text-xl dark:text-white">
+              <div className="font-bold text-xl text-slate-900 dark:text-white">
                 {formatCurrencyAmount(Math.abs(grandTotal - config.targetAmount), currency)}
               </div>
             </div>

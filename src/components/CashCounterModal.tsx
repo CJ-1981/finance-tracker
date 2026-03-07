@@ -625,29 +625,25 @@ export default function CashCounterModal({
 
             {/* Difference */}
             <div
-              className={`p-3 rounded-lg ${matchStatus === 'match'
-                  ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
+              className={`text-right p-3 rounded-lg ${matchStatus === 'match'
+                  ? 'bg-green-100 dark:bg-green-900/20'
                   : matchStatus === 'excess'
-                    ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400'
-                    : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400'
+                    ? 'bg-blue-100 dark:bg-blue-900/20'
+                    : 'bg-red-100 dark:bg-red-900/20'
                 }`}
             >
-              <div className="flex justify-between items-start mb-2">
-                <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                  {t('cashCounter.transactionsTotal')}:
-                </div>
-                <div className="text-xl font-semibold text-gray-600 dark:text-gray-400">
-                  {currency} {totalTransactionsAmount.toFixed(2)}
-                </div>
+              <div className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
+                {t('cashCounter.transactionsTotal')}: {currency} {totalTransactionsAmount.toFixed(2)}
               </div>
-              <div className="font-semibold mb-1">
+              <div className="border-t border-black/20 dark:border-white/20 my-2"></div>
+              <div className="font-semibold mb-1 text-gray-800 dark:text-gray-200">
                 {matchStatus === 'match'
                   ? '✓ ' + t('cashCounter.match')
                   : matchStatus === 'excess'
                     ? '↑ ' + t('cashCounter.excess')
                     : '↓ ' + t('cashCounter.shortage')}:
               </div>
-              <div className="font-bold text-lg dark:text-white">
+              <div className="font-bold text-lg text-gray-900 dark:text-white">
                 {currency} {Math.abs(grandTotal - totalTransactionsAmount).toFixed(2)}
               </div>
             </div>
