@@ -440,6 +440,8 @@ export default function CashCounterPage() {
     return totalAnonymous === 0 && totalNamed === 0
   }, [])
 
+  // @MX:ANCHOR: Public API for currency changes with confirmation dialog
+  // @MX:REASON: Called from CurrencySelector - user-facing critical functionality
   const handleCurrencyChangeRequest = useCallback((newCurrency: string) => {
     if (isStateEmpty(state)) {
       // State is empty, proceed with currency change
@@ -453,9 +455,7 @@ export default function CashCounterPage() {
     }
   }, [state, config, saveConfig, isStateEmpty])
 
-  // @MX:ANCHOR: Public API for currency changes with confirmation dialog
-  // @MX:REASON: Called from CurrencySelector - user-facing critical functionality
-  const handleCurrencyChangeRequest = useCallback((newCurrency: string) => {
+  const handleCurrencyChangeConfirm = useCallback(() => {
     if (currencyChange.pendingCurrency) {
       saveConfig({ ...config, currency: currencyChange.pendingCurrency })
       setCurrencyChange({
