@@ -174,8 +174,7 @@ function CurrencySelector({ currency, onCurrencyChange }: { currency: string; on
         aria-haspopup="true"
       >
         <span className="text-xl">{currentCurrency.flag}</span>
-        <span className="text-sm font-bold text-blue-700 dark:text-blue-300">{currentCurrency.name}</span>
-        <span className="text-xs text-slate-500 dark:text-slate-400 ml-1">{currency}</span>
+        <span className="text-sm font-bold text-blue-700 dark:text-blue-300 whitespace-nowrap">{currentCurrency.name}</span>
       </button>
 
       {isCurrencyOpen && (
@@ -888,14 +887,14 @@ export default function CashCounterPage() {
             <button
               type="button"
               onClick={handleClearAll}
-              className="px-6 py-2 rounded-lg text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-medium"
+              className="px-6 py-2 rounded-lg text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-medium whitespace-nowrap"
             >
               {t('cashCounter.clearAll')}
             </button>
             <button
               type="button"
               onClick={handleShare}
-              className={`px-6 py-2 rounded-lg flex items-center gap-2 transition-colors font-medium ${copySuccess
+              className={`px-6 py-2 rounded-lg flex items-center gap-2 transition-colors font-medium whitespace-nowrap ${copySuccess
                   ? 'bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400'
                   : 'bg-indigo-100 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-900/30'
                 }`}
