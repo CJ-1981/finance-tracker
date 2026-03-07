@@ -23,6 +23,15 @@ import {
   formatCurrencyAmount,
 } from '../utils/denominationUtils'
 
+// ==================== EXPORTS ====================
+
+/**
+ * @MX:NOTE: Default EUR denominations for testing (SPEC-UI-003)
+ *
+ * Exported for testability - provides access to EUR denomination structure
+ */
+export const DENOMINATIONS = getDenominations('EUR')
+
 // ==================== TYPES & INTERFACES ====================
 
 /**
@@ -167,7 +176,7 @@ export default function CashCounterModal({
       try {
         const data: StoredCashDataV2 = {
           projectId: project.id,
-          version: 3,
+          version: 2,
           anonymous: currentState.anonymous,
           namedCounts: currentState.namedCounts,
           lastDate: getLocalDateString(),
@@ -787,7 +796,7 @@ function DenominationControls({ count, onChange, onInput, color, increaseLabel, 
           inputMode="numeric"
           min="0"
           className={`text-center font-semibold text-sm w-full border rounded focus:outline-none focus:ring-2 py-1 px-1 ${colorClasses[color].input}`}
-          value={count > 0 ? count : ''}
+          value={count.toString()}
           placeholder="0"
           onChange={(e) => onInput(parseInt(e.target.value) || 0)}
           aria-label={inputLabel}

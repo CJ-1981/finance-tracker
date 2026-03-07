@@ -107,11 +107,10 @@ describe('QRCodeDisplay', () => {
     })
 
     it('should handle clipboard errors gracefully', async () => {
-      // Mock URL.createObjectURL to throw error
+      // Mock window.URL.createObjectURL to throw error
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-      // @ts-ignore
-      global.URL.createObjectURL = vi.fn(() => {
+      vi.spyOn(window.URL, 'createObjectURL').mockImplementation(() => {
         throw new Error('URL.createObjectURL not supported')
       })
 

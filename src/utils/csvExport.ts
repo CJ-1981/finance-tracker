@@ -48,7 +48,7 @@ export function exportToCSV({ transactions, project, categories }: ExportOptions
 
   const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
   const link = document.createElement('a')
-  const url = URL.createObjectURL(blob)
+  const url = window.URL.createObjectURL(blob)
 
   const date = new Date().toISOString().split('T')[0]
   link.setAttribute('href', url)

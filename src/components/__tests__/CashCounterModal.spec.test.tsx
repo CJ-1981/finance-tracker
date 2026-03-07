@@ -8,7 +8,7 @@
  * 4. V1 to V2 localStorage migration
  */
 
-import { render, screen, fireEvent, within } from '@testing-library/react'
+import { render, screen, fireEvent, within, waitFor } from '@testing-library/react'
 import { I18nextProvider } from 'react-i18next'
 import { describe, it, expect, beforeEach, afterEach, afterAll, vi } from 'vitest'
 import i18n from '../../lib/i18n'
@@ -37,13 +37,17 @@ Object.defineProperty(window, 'localStorage', {
 })
 
 // Mock date utilities - fixed date for predictable testing
-const mockDate = new Date('2026-03-05T10:00:00.000Z')
+const mockDate = new Date('2026-03-05T00:00:00.000Z')
 const originalDate = global.Date
 
+// Set up Date mock BEFORE fake timers
 vi.spyOn(global, 'Date').mockImplementation((...args) => {
   if (args.length === 0) return mockDate as any
   return new originalDate(...args) as any
 })
+
+// Store the mockDate on global so it can be accessed later
+;(global as any).__MOCK_DATE__ = mockDate
 
 // Mock window.confirm
 const mockConfirm = vi.fn()
@@ -82,6 +86,12 @@ describe('CashCounterModal - Simplified Implementation (SPEC-UI-003)', () => {
     localStorageMock.clear()
     mockConfirm.mockReturnValue(true)
   })
+
+  // Helper to advance timers and allow effects to run
+  const advanceTimersAndFlushEffects = () => {
+    vi.advanceTimersByTime(0)
+    vi.advanceTimersByTime(1)
+  }
 
   afterEach(() => {
     vi.useRealTimers()
@@ -435,6 +445,9 @@ describe('CashCounterModal - Simplified Implementation (SPEC-UI-003)', () => {
           totalTransactionsAmount={236.01}
         />
       )
+
+      // Advance timers to allow useEffect to run
+      vi.advanceTimersByTime(0)
 
       // Find the match status text
       const matchText = screen.getAllByText(/Match/).find(el => {
