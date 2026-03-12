@@ -668,25 +668,31 @@ export default function CashCounterPage() {
   function DenominationControls({ count, onChange, onInput, color, denomination }: { count: number; onChange: (delta: number) => void; onInput: (value: number) => void; color: 'teal' | 'blue'; denomination: number }) {
     // Local state for input value to prevent focus loss on each keystroke
     const [inputValue, setInputValue] = useState(count.toString())
-    
+
     const colorClasses = {
       teal: {
         minus: 'bg-red-500 hover:bg-red-600 disabled:bg-red-300',
         plus: 'bg-green-500 hover:bg-green-600',
         container: 'bg-teal-50 dark:bg-teal-900/20 border-teal-200 dark:border-teal-800/50',
-        input: 'border-gray-300 dark:border-slate-600 focus:ring-teal-500 dark:bg-slate-700 dark:text-white',
+        input: 'border-gray-300 dark:border-slate-600 focus:ring-teal-500 dark:bg-slate-700 dark:text-white transition-all duration-75',
       },
       blue: {
         minus: 'bg-red-500 hover:bg-red-600 disabled:bg-red-300',
         plus: 'bg-green-500 hover:bg-green-600',
         container: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/50',
-        input: 'border-gray-300 dark:border-slate-600 focus:ring-blue-500 dark:bg-slate-700 dark:text-white',
+        input: 'border-gray-300 dark:border-slate-600 focus:ring-blue-500 dark:bg-slate-700 dark:text-white transition-all duration-75',
       },
     }
 
     // Sync local input value with parent count when it changes from outside
+    // Use ref to track previous count and only update when actually different
+    const prevCountRef = useRef(count)
     useEffect(() => {
-      setInputValue(count === 0 ? '' : count.toString())
+      if (prevCountRef.current !== count) {
+        const newValue = count === 0 ? '' : count.toString()
+        setInputValue(newValue)
+        prevCountRef.current = count
+      }
     }, [count])
 
     return (

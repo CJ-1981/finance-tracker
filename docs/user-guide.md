@@ -242,6 +242,7 @@ The Cash Counter is a standalone tool for counting cash bills and coins, compari
 1. **Direct Access**: Visit `/cashcounter` in your browser
 2. **No Authentication Required**: Can be used without signing in
 3. **Public Access**: Perfect for shared devices or quick cash counting
+4. **Mobile Optimized**: Zoom locked and scrollbars hidden for better mobile experience
 
 ### Supported Features
 
@@ -316,6 +317,8 @@ When changing currency:
 - Use large + and - buttons for accuracy
 - Enable responsive design for optimal viewing
 - Use direct input for faster data entry
+- Zoom is locked to prevent accidental magnification
+- Scrollbars are hidden for cleaner interface
 
 #### Accuracy
 - Double-check amounts before saving

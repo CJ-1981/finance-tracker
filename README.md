@@ -26,6 +26,7 @@ A collaborative financial tracking web application built with React, TypeScript,
   - Accessible at `/cashcounter` route
   - Currency-change confirmation dialog prevents data loss
   - UI overflow fixes for optimal mobile experience
+  - Locked zoom level and hidden scrollbars on mobile for better usability
 - **Soft Delete with Recovery** - Recover deleted transactions within 1 year
   - Soft delete instead of permanent deletion
   - Restore deleted transactions functionality

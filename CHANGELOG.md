@@ -5,6 +5,28 @@ All notable changes to the Finance Tracker application will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0] - 2026-03-12
+
+### Changed
+
+- **Mobile Experience Improvements** (Cash Counter)
+  - Lock zoom level on mobile devices to prevent accidental zooming
+  - Hide scrollbars on all elements with !important rules for cleaner UI
+  - Add touch-action: manipulation to disable double-tap zoom on iOS
+  - Support for Firefox, IE/Edge, Chrome, Safari, and Opera browsers
+
+### Fixed
+
+- **Authentication Timeout on Public Pages**
+  - Skip auth initialization on /cashcounter route to prevent unnecessary Supabase client initialization
+  - Resolves "Profile fetch timed out after 10s" error on public cash counter page
+  - Improves performance for public-access pages
+
+- **HTML Validation Warnings**
+  - Fix duplicate ID attributes in cash counter denomination inputs
+  - Generate unique IDs using denomination value and color (e.g., denomination-5-blue)
+  - Ensures proper form accessibility and browser autofill behavior
+
 ## [2.7.0] - 2026-03-07
 
 ### Changed
