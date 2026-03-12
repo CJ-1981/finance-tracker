@@ -3,10 +3,36 @@
 @tailwind utilities;
 
 @layer base {
-  body {
+  html, body {
     overflow-x: hidden;
     max-width: 100%;
     @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100;
+
+    /* Hide scrollbar for mobile while maintaining scroll functionality */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+
+    /* Prevent zoom on iOS mobile browsers */
+    touch-action: manipulation; /* Disable double-tap zoom */
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+    width: 0;
+    height: 0;
+  }
+
+  /* Hide scrollbar on all elements for mobile */
+  * {
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE and Edge */
+  }
+
+  *::-webkit-scrollbar {
+    display: none !important; /* Chrome, Safari, Opera */
+    width: 0 !important;
+    height: 0 !important;
   }
 
   /* Ensure touch targets are accessible on mobile */
