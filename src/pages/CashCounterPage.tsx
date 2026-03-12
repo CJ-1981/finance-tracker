@@ -643,12 +643,14 @@ export default function CashCounterPage() {
             onChange={(delta) => handleNamedCountChange(denomination.value, delta)}
             onInput={(value) => handleNamedDirectInput(denomination.value, value)}
             color="blue"
+            denomination={denomination.value}
           />
           <DenominationControls
             count={anonymousCount}
             onChange={(delta) => handleAnonymousCountChange(denomination.value, delta)}
             onInput={(value) => handleAnonymousDirectInput(denomination.value, value)}
             color="teal"
+            denomination={denomination.value}
           />
         </div>
         <div className="grid grid-cols-[1fr_1fr] gap-2 mt-1">
@@ -663,7 +665,7 @@ export default function CashCounterPage() {
     )
   }
 
-  function DenominationControls({ count, onChange, onInput, color, label }: { count: number; onChange: (delta: number) => void; onInput: (value: number) => void; color: 'teal' | 'blue'; label?: string }) {
+  function DenominationControls({ count, onChange, onInput, color, denomination }: { count: number; onChange: (delta: number) => void; onInput: (value: number) => void; color: 'teal' | 'blue'; denomination: number }) {
     // Local state for input value to prevent focus loss on each keystroke
     const [inputValue, setInputValue] = useState(count.toString())
     
@@ -696,8 +698,8 @@ export default function CashCounterPage() {
             min="0"
             // @MX:NOTE: 999 max value prevents overflow and limits input to reasonable denomination counts
             max="999"
-            id={label ? `denomination-${label}-${color}` : `denomination-${color}`}
-            name={label ? `denomination-${label}-${color}` : `denomination-${color}`}
+            id={`denomination-${denomination}-${color}`}
+            name={`denomination-${denomination}-${color}`}
             className={`text-center font-semibold text-sm w-full border rounded focus:outline-none focus:ring-2 py-1 px-2 ${colorClasses[color].input}`}
             value={inputValue}
             placeholder="0"
