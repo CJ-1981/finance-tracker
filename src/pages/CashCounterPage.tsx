@@ -666,10 +666,6 @@ export default function CashCounterPage() {
   }
 
   function DenominationControls({ count, onChange, onInput, color, denomination }: { count: number; onChange: (delta: number) => void; onInput: (value: number) => void; color: 'teal' | 'blue'; denomination: number }) {
-    // Use ref to track focused state - prevents updates during user input
-    const isFocusedRef = useRef(false)
-    const prevCountRef = useRef(count)
-
     // Local state for input value to prevent focus loss on each keystroke
     const [inputValue, setInputValue] = useState(count.toString())
 
@@ -678,21 +674,23 @@ export default function CashCounterPage() {
         minus: 'bg-red-500 hover:bg-red-600 disabled:bg-red-300',
         plus: 'bg-green-500 hover:bg-green-600',
         container: 'bg-teal-50 dark:bg-teal-900/20 border-teal-200 dark:border-teal-800/50',
-        input: 'border-gray-300 dark:border-slate-600 focus:ring-teal-500 dark:bg-slate-700 dark:text-white',
+        input: 'border-gray-300 dark:border-slate-600 focus:ring-teal-500 dark:bg-slate-700 dark:text-white transition-all duration-75',
       },
       blue: {
         minus: 'bg-red-500 hover:bg-red-600 disabled:bg-red-300',
         plus: 'bg-green-500 hover:bg-green-600',
         container: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/50',
-        input: 'border-gray-300 dark:border-slate-600 focus:ring-blue-500 dark:bg-slate-700 dark:text-white',
+        input: 'border-gray-300 dark:border-slate-600 focus:ring-blue-500 dark:bg-slate-700 dark:text-white transition-all duration-75',
       },
     }
 
     // Sync local input value with parent count when it changes from outside
-    // Only update when not focused and count actually changes
+    // Use ref to track previous count and only update when actually different
+    const prevCountRef = useRef(count)
     useEffect(() => {
-      if (!isFocusedRef.current && prevCountRef.current !== count) {
-        setInputValue(count.toString())
+      if (prevCountRef.current !== count) {
+        const newValue = count === 0 ? '' : count.toString()
+        setInputValue(newValue)
         prevCountRef.current = count
       }
     }, [count])
@@ -710,13 +708,9 @@ export default function CashCounterPage() {
             name={`denomination-${denomination}-${color}`}
             className={`text-center font-semibold text-sm w-full border rounded focus:outline-none focus:ring-2 py-1 px-2 ${colorClasses[color].input}`}
             value={inputValue}
-            placeholder=""
+            
             onChange={(e) => setInputValue(e.target.value)}
-            onFocus={() => isFocusedRef.current = true}
-            onBlur={() => {
-              isFocusedRef.current = false
-              onInput(parseInt(inputValue) || 0)
-            }}
+            onBlur={() => onInput(parseInt(inputValue) || 0)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 onInput(parseInt(inputValue) || 0)
@@ -789,7 +783,7 @@ export default function CashCounterPage() {
                   type="number"
                   step="0.01"
                   min="0"
-                  placeholder="0"
+                  
                   className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   value={config.targetAmount === 0 ? '' : config.targetAmount}
                   onChange={(e) => {
