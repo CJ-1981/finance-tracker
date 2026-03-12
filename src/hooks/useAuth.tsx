@@ -33,6 +33,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     cancelledRef.current = false
 
+    // Skip auth initialization for public cash counter route
+    // This prevents unnecessary Supabase client initialization and profile fetch timeouts
+    if (typeof window !== 'undefined') {
+      const isCashCounterRoute =
+        window.location.pathname === '/cashcounter' ||
+        window.location.hash === '#/cashcounter'
+      if (isCashCounterRoute) {
+        console.log('Skipping auth initialization for public cash counter route')
+        setAuthState({ user: null, session: null, loading: false })
+        return
+      }
+    }
+
     // Try to get Supabase client - it might not be initialized yet
     let supabase
     try {
