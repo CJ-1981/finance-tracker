@@ -1,5 +1,6 @@
 statusline:
-    preset: full
+    mode: default
+    preset: compact
     segments:
         claude_version: true
         context: true
@@ -9,3 +10,4 @@ statusline:
         moai_version: true
         model: true
         output_style: true
+    theme: default

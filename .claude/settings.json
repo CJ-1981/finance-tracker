@@ -190,7 +190,7 @@
     "CLAUDE_CODE_FILE_READ_MAX_OUTPUT_TOKENS": "64000",
     "ENABLE_TOOL_SEARCH": "1",
     "MOAI_CONFIG_SOURCE": "sections",
-    "PATH": "/Users/chimin/.antigravity/antigravity/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Library/Frameworks/Python.framework/Versions/3.12/bin:/Library/Frameworks/Python.framework/Versions/3.11/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/opt/libtool/libexec/gnubin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/opt/pmk/env/global/bin:/Users/chimin/go/bin:/Users/chimin/.local/bin:/Users/chimin/.lmstudio/bin:/Applications/Warp.app/Contents/Resources/bin"
+    "PATH": "/Users/chimin/.local/bin:/Users/chimin/go/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin"
   },
   "permissions": {
     "defaultMode": "acceptEdits",
