@@ -666,6 +666,10 @@ export default function CashCounterPage() {
   }
 
   function DenominationControls({ count, onChange, onInput, color, denomination }: { count: number; onChange: (delta: number) => void; onInput: (value: number) => void; color: 'teal' | 'blue'; denomination: number }) {
+    // Use ref to track focused state - prevents updates during user input
+    const isFocusedRef = useRef(false)
+    const prevCountRef = useRef(count)
+
     // Local state for input value to prevent focus loss on each keystroke
     const [inputValue, setInputValue] = useState(count.toString())
 
@@ -674,23 +678,21 @@ export default function CashCounterPage() {
         minus: 'bg-red-500 hover:bg-red-600 disabled:bg-red-300',
         plus: 'bg-green-500 hover:bg-green-600',
         container: 'bg-teal-50 dark:bg-teal-900/20 border-teal-200 dark:border-teal-800/50',
-        input: 'border-gray-300 dark:border-slate-600 focus:ring-teal-500 dark:bg-slate-700 dark:text-white transition-all duration-75',
+        input: 'border-gray-300 dark:border-slate-600 focus:ring-teal-500 dark:bg-slate-700 dark:text-white',
       },
       blue: {
         minus: 'bg-red-500 hover:bg-red-600 disabled:bg-red-300',
         plus: 'bg-green-500 hover:bg-green-600',
         container: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/50',
-        input: 'border-gray-300 dark:border-slate-600 focus:ring-blue-500 dark:bg-slate-700 dark:text-white transition-all duration-75',
+        input: 'border-gray-300 dark:border-slate-600 focus:ring-blue-500 dark:bg-slate-700 dark:text-white',
       },
     }
 
     // Sync local input value with parent count when it changes from outside
-    // Use ref to track previous count and only update when actually different
-    const prevCountRef = useRef(count)
+    // Only update when not focused and count actually changes
     useEffect(() => {
-      if (prevCountRef.current !== count) {
-        const newValue = count === 0 ? '' : count.toString()
-        setInputValue(newValue)
+      if (!isFocusedRef.current && prevCountRef.current !== count) {
+        setInputValue(count.toString())
         prevCountRef.current = count
       }
     }, [count])
@@ -708,9 +710,13 @@ export default function CashCounterPage() {
             name={`denomination-${denomination}-${color}`}
             className={`text-center font-semibold text-sm w-full border rounded focus:outline-none focus:ring-2 py-1 px-2 ${colorClasses[color].input}`}
             value={inputValue}
-            placeholder="0"
+            placeholder=""
             onChange={(e) => setInputValue(e.target.value)}
-            onBlur={() => onInput(parseInt(inputValue) || 0)}
+            onFocus={() => isFocusedRef.current = true}
+            onBlur={() => {
+              isFocusedRef.current = false
+              onInput(parseInt(inputValue) || 0)
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 onInput(parseInt(inputValue) || 0)
