@@ -36,7 +36,7 @@
     font-size: calc(1rem * var(--font-scale));
 
     /* Override fixed pixel classes in Tailwind */
-    span, div, p, h1, h2, h3, h4, h5, h6 {
+    span, div, p, h1, h2, h3, h4, h5, h6, input {
       font-size: inherit !important;
     }
   }
