@@ -3,6 +3,14 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    /* Font size scaling for accessibility - default value */
+    --font-scale: 1;
+
+    /* Apply font scale to root element for Tailwind compatibility */
+    font-size: calc(1rem * var(--font-scale));
+  }
+
   html, body {
     overflow-x: hidden;
     max-width: 100%;
@@ -14,13 +22,6 @@
 
     /* Prevent zoom on iOS mobile browsers */
     touch-action: manipulation; /* Disable double-tap zoom */
-
-    /* Font size scaling for accessibility */
-    --font-scale: 1;
-  }
-
-  body {
-    font-size: calc(1rem * var(--font-scale));
   }
 
   html::-webkit-scrollbar,
