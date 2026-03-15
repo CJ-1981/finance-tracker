@@ -960,9 +960,9 @@ export default function CashCounterPage() {
                 }`}
             >
               {copySuccess ? (
-                <>✓ {t('cashCounter.copied')}</>
+                {t('cashCounter.copied')}
               ) : (
-                <>{t('cashCounter.share')}</>
+                {t('cashCounter.share')}
               )}
             </button>
           </div>
