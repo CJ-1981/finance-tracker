@@ -445,9 +445,9 @@ export default function ConfigPage() {
                         onClick={() => setFontSize(size)}
                         className={`btn btn-secondary ${fontSize === size ? 'btn-primary' : ''}`}
                       >
-                        {size === 'normal' && '🔤 Normal'}
-                        {size === 'large' && '🔤🔤 Large'}
-                        {size === 'extraLarge' && '🔤🔤🔤 XL'}
+                        {size === 'normal' && 'Normal'}
+                        {size === 'large' && 'Large'}
+                        {size === 'extraLarge' && 'XL'}
                       </button>
                     ))}
                   </div>

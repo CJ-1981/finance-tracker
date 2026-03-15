@@ -811,9 +811,9 @@ export default function CashCounterPage() {
                           : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
                         }`}
                     >
-                      {size === 'normal' && '🔤 Normal'}
-                      {size === 'large' && '🔤🔤 Large'}
-                      {size === 'extraLarge' && '🔤🔤🔤 XL'}
+                      {size === 'normal' && 'Normal'}
+                      {size === 'large' && 'Large'}
+                      {size === 'extraLarge' && 'XL'}
                     </button>
                   ))}
                 </div>
@@ -949,11 +949,7 @@ export default function CashCounterPage() {
               onClick={handleClearAll}
               className="min-w-[100px] px-6 py-2 rounded-lg flex items-center text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-medium text-nowrap"
             >
-              {t('cashCounter.clearAll').includes('모두') || t('cashCounter.clearAll').includes('All') ? (
-                <>
-                  {t('cashCounter.clearAll').split('모두')[0]}<br />{t('cashCounter.clearAll').split('모두')[1]}
-                </>
-              ) : t('cashCounter.clearAll')}
+              {t('cashCounter.clearAll')}
             </button>
             <button
               type="button"
