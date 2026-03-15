@@ -708,7 +708,7 @@ export default function CashCounterPage() {
             max="999"
             id={`denomination-${denomination}-${color}`}
             name={`denomination-${denomination}-${color}`}
-            className={`text-center font-semibold text-sm w-full border rounded focus:outline-none focus:ring-2 py-1 px-2 ${colorClasses[color].input}`}
+            className={`text-center font-semibold w-full border rounded focus:outline-none focus:ring-2 py-1 px-2 ${colorClasses[color].input}`}
             value={inputValue}
             
             onChange={(e) => setInputValue(e.target.value)}
