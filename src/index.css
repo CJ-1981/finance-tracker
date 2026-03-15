@@ -21,9 +21,19 @@
     touch-action: manipulation; /* Disable double-tap zoom */
   }
 
+  /* Prevent scaling in no-scale areas */
+  .no-scale {
+    font-size: 1rem !important;
+  }
+
   /* Scalable content class for font size adjustments */
   .scalable-content {
     font-size: calc(1rem * var(--font-scale));
+
+    /* Override fixed pixel classes in Tailwind */
+    span, div, p, h1, h2, h3, h4, h5, h6 {
+      font-size: inherit !important;
+    }
   }
 
   html::-webkit-scrollbar,
