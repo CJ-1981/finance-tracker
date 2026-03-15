@@ -947,7 +947,7 @@ export default function CashCounterPage() {
             <button
               type="button"
               onClick={handleClearAll}
-              className="px-6 py-2 rounded-lg flex items-center justify-center text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-medium"
+              className="px-6 py-2 rounded-lg flex items-center text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-medium"
             >
               {t('cashCounter.clearAll')}
             </button>
