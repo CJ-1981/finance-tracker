@@ -5,6 +5,7 @@ import { useSupabase } from '../hooks/useSupabase'
 import { testConnection } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useTheme } from '../contexts/ThemeContext'
+import { useFontSize } from '../contexts/FontSizeContext'
 import { decodeConfigFromInvite } from '../lib/inviteConfig'
 import type { SupabaseConfig } from '../types'
 import versionInfo from '../version.json'
@@ -28,6 +29,7 @@ export default function ConfigPage() {
   const { updateConfig } = useSupabase()
   const { user, signIn, signOut } = useAuth()
   const { theme, setTheme } = useTheme()
+  const { fontSize, setFontSize } = useFontSize()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [config, setConfig] = useState<SupabaseConfig>({
@@ -431,6 +433,26 @@ export default function ConfigPage() {
                 >
                   {theme === 'light' ? '🌙 Dark Mode: Off' : theme === 'dark' ? '🌙 Dark Mode: On' : '🌙 Dark Mode: Auto'}
                 </button>
+
+                <div className="space-y-2">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 text-center px-2">
+                    Font Size
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['normal', 'large', 'extraLarge'] as const).map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => setFontSize(size)}
+                        className={`btn btn-secondary ${fontSize === size ? 'btn-primary' : ''}`}
+                      >
+                        {size === 'normal' && '🔤 Normal'}
+                        {size === 'large' && '🔤🔤 Large'}
+                        {size === 'extraLarge' && '🔤🔤🔤 XL'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <button
                   onClick={async () => {
                     // Clear redirect-after-login flag before sign out

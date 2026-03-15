@@ -15,7 +15,11 @@
     "settings": "설정",
     "settingsTooltip": "Supabase 연결 재구성",
     "logout": "로그아웃",
-    "logOut": "로그아웃"
+    "logOut": "로그아웃",
+    "fontSize": "글꼴 크기",
+    "fontSizeNormal": "보통",
+    "fontSizeLarge": "큼",
+    "fontSizeExtraLarge": "매우 큼"
   },
   "transactionModal": {
     "configureCustomFields": "사용자 정의 필드 및 카테고리 구성",

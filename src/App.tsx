@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import { useSupabase } from './hooks/useSupabase'
 import { ThemeProvider } from './contexts/ThemeContext'
+import { FontSizeProvider } from './contexts/FontSizeContext'
 import ConfigPage from './pages/ConfigPage'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
@@ -74,35 +75,39 @@ function App() {
     }
 
     return (
-      <ThemeProvider>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/config" element={<ConfigPage />} />
-          <Route path="/invite" element={<InvitePage />} />
-          <Route path="/cashcounter" element={<CashCounterPage />} />
-          {/* Redirect to login page so user can sign back in */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </ThemeProvider>
+      <FontSizeProvider>
+        <ThemeProvider>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/config" element={<ConfigPage />} />
+            <Route path="/invite" element={<InvitePage />} />
+            <Route path="/cashcounter" element={<CashCounterPage />} />
+            {/* Redirect to login page so user can sign back in */}
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </ThemeProvider>
+      </FontSizeProvider>
     )
   }
 
   // Show config page if authenticated but explicitly navigating to /config
   return (
-    <ThemeProvider>
-      <Routes>
-        <Route path="/" element={<Navigate to="/projects" replace />} />
-        <Route path="/dashboard" element={<Navigate to="/projects" replace />} />
-        <Route path="/projects" element={<ProjectsPage />} />
-        <Route path="/projects/:id" element={<ProjectDetailPage />} />
-        <Route path="/transactions/:projectId" element={<TransactionsPage />} />
-        <Route path="/invite" element={<InvitePage />} />
-        <Route path="/config" element={<ConfigPage />} />
-        <Route path="/cashcounter" element={<CashCounterPage />} />
-        <Route path="*" element={<Navigate to="/projects" replace />} />
-      </Routes>
-    </ThemeProvider>
+    <FontSizeProvider>
+      <ThemeProvider>
+        <Routes>
+          <Route path="/" element={<Navigate to="/projects" replace />} />
+          <Route path="/dashboard" element={<Navigate to="/projects" replace />} />
+          <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/projects/:id" element={<ProjectDetailPage />} />
+          <Route path="/transactions/:projectId" element={<TransactionsPage />} />
+          <Route path="/invite" element={<InvitePage />} />
+          <Route path="/config" element={<ConfigPage />} />
+          <Route path="/cashcounter" element={<CashCounterPage />} />
+          <Route path="*" element={<Navigate to="/projects" replace />} />
+        </Routes>
+      </ThemeProvider>
+    </FontSizeProvider>
   )
 }
 

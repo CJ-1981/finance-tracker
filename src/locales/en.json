@@ -15,7 +15,11 @@
     "settings": "Settings",
     "settingsTooltip": "Reconfigure Supabase connection",
     "logout": "Logout",
-    "logOut": "Log Out"
+    "logOut": "Log Out",
+    "fontSize": "Font Size",
+    "fontSizeNormal": "Normal",
+    "fontSizeLarge": "Large",
+    "fontSizeExtraLarge": "Extra Large"
   },
   "transactionModal": {
     "configureCustomFields": "Configure custom fields and categories",

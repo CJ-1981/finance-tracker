@@ -14,6 +14,13 @@
 
     /* Prevent zoom on iOS mobile browsers */
     touch-action: manipulation; /* Disable double-tap zoom */
+
+    /* Font size scaling for accessibility */
+    --font-scale: 1;
+  }
+
+  body {
+    font-size: calc(1rem * var(--font-scale));
   }
 
   html::-webkit-scrollbar,

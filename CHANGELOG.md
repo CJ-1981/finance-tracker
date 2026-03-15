@@ -17,6 +17,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Flickering Placeholder in Cash Counter Inputs**
+  - Remove placeholder="0" attribute from denomination input fields
+  - Prevents browser rendering issue where grey placeholder flickers with actual value
+  - Input field now consistently shows actual count value (empty when 0, numeric when >0)
+  - Track focused state to prevent updates during user typing
+  - Add CSS transitions for smoother value changes
+  - Only update input value from parent when not focused
+  - Reduces visual flicker when +/- buttons are pressed on empty fields
+
 - **Authentication Timeout on Public Pages**
   - Skip auth initialization on /cashcounter route to prevent unnecessary Supabase client initialization
   - Resolves "Profile fetch timed out after 10s" error on public cash counter page
