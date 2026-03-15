@@ -876,7 +876,7 @@ export default function CashCounterPage() {
         </div>
 
         {/* Grand Total & Match Status */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 reduced-scale">
           {/* Grand Total Breakdown */}
           <div className="grid grid-cols-2 gap-3 mb-6">
             <div className="bg-yellow-50 dark:bg-yellow-900/20 px-4 py-3 rounded-lg border border-yellow-200 dark:border-yellow-800/50 text-center">
@@ -943,7 +943,7 @@ export default function CashCounterPage() {
           )}
 
           {/* Action Buttons */}
-          <div className="flex justify-between items-center mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
+          <div className="flex justify-between items-center mt-6 pt-6 border-t border-slate-200 dark:border-slate-700 reduced-scale">
             <button
               type="button"
               onClick={handleClearAll}

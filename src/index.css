@@ -26,6 +26,11 @@
     font-size: 1rem !important;
   }
 
+  /* Reduced scaling for bottom summary area to prevent overflow */
+  .reduced-scale {
+    font-size: calc(1rem * var(--font-scale) * 0.85);
+  }
+
   /* Scalable content class for font size adjustments */
   .scalable-content {
     font-size: calc(1rem * var(--font-scale));
