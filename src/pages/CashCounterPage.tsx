@@ -947,22 +947,26 @@ export default function CashCounterPage() {
             <button
               type="button"
               onClick={handleClearAll}
-              className="px-6 py-2 rounded-lg flex items-center text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-medium"
+              className="min-w-[100px] px-6 py-2 rounded-lg flex items-center text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-medium text-nowrap"
             >
-              {t('cashCounter.clearAll')}
+              {t('cashCounter.clearAll').includes('모두') || t('cashCounter.clearAll').includes('All') ? (
+                <>
+                  {t('cashCounter.clearAll').split('모두')[0]}<br />{t('cashCounter.clearAll').split('모두')[1]}
+                </>
+              ) : t('cashCounter.clearAll')}
             </button>
             <button
               type="button"
               onClick={handleShare}
-              className={`px-6 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors font-medium ${copySuccess
+              className={`min-w-[100px] px-6 py-2 rounded-lg flex items-center justify-center transition-colors font-medium ${copySuccess
                   ? 'bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400'
                   : 'bg-indigo-100 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-900/30'
                 }`}
             >
               {copySuccess ? (
-                <><span>✓</span> {t('cashCounter.copied')}</>
+                <>✓ {t('cashCounter.copied')}</>
               ) : (
-                <><span>📋</span> {t('cashCounter.share')}</>
+                <>{t('cashCounter.share')}</>
               )}
             </button>
           </div>
