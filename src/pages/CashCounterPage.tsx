@@ -787,6 +787,7 @@ export default function CashCounterPage() {
                   min="0"
 
                   className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="0"
                   value={config.targetAmount === 0 ? '' : config.targetAmount}
                   onChange={(e) => {
                     const value = e.target.value.trim()
