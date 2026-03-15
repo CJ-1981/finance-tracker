@@ -669,10 +669,7 @@ export default function CashCounterPage() {
 
   function DenominationControls({ count, onChange, onInput, color, denomination }: { count: number; onChange: (delta: number) => void; onInput: (value: number) => void; color: 'teal' | 'blue'; denomination: number }) {
     // Local state for input value to prevent focus loss on each keystroke
-    const [inputValue, setInputValue] = useState(count.toString())
-
-    // Track first focus event to auto-clear "0" on initial focus
-    const firstFocusRef = useRef(true)
+    const [inputValue, setInputValue] = useState(count === 0 ? '' : count.toString())
 
     const colorClasses = {
       teal: {
@@ -697,10 +694,6 @@ export default function CashCounterPage() {
         const newValue = count === 0 ? '' : count.toString()
         setInputValue(newValue)
         prevCountRef.current = count
-        // Only reset first focus when changing TO zero, not FROM zero
-        if (prevCountRef.current !== 0 && count === 0) {
-          firstFocusRef.current = true
-        }
       }
     }, [count])
 
@@ -719,13 +712,6 @@ export default function CashCounterPage() {
             value={inputValue}
 
             onChange={(e) => setInputValue(e.target.value)}
-            onFocus={() => {
-              // Auto-clear "0" on first focus
-              if (firstFocusRef.current && count === 0) {
-                setInputValue('')
-                firstFocusRef.current = false
-              }
-            }}
             onBlur={() => onInput(parseInt(inputValue) || 0)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
