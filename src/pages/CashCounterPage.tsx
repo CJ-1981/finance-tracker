@@ -710,7 +710,7 @@ export default function CashCounterPage() {
             name={`denomination-${denomination}-${color}`}
             className={`text-center font-semibold w-full border rounded focus:outline-none focus:ring-2 py-1 px-2 ${colorClasses[color].input}`}
             value={inputValue}
-
+            placeholder="0"
             onChange={(e) => setInputValue(e.target.value)}
             onBlur={() => onInput(parseInt(inputValue) || 0)}
             onKeyDown={(e) => {
