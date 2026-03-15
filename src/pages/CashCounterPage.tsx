@@ -778,14 +778,6 @@ export default function CashCounterPage() {
               </label>
               <div className="flex gap-2 items-center">
                 <span className="text-slate-500 dark:text-slate-400">{currency}</span>
-                <button
-                  type="button"
-                  onClick={() => saveConfig(prev => ({ ...prev, targetAmount: Math.max(0, prev.targetAmount - 10) }))}
-                  className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors flex items-center justify-center font-bold text-lg"
-                  aria-label="Decrease target amount by 10"
-                >
-                  −
-                </button>
                 <input
                   id="target-amount"
                   name="target-amount"
@@ -802,14 +794,6 @@ export default function CashCounterPage() {
                     saveConfig(prev => ({ ...prev, targetAmount: isNaN(numValue) ? 0 : numValue }))
                   }}
                 />
-                <button
-                  type="button"
-                  onClick={() => saveConfig(prev => ({ ...prev, targetAmount: prev.targetAmount + 10 }))}
-                  className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors flex items-center justify-center font-bold text-lg"
-                  aria-label="Increase target amount by 10"
-                >
-                  +
-                </button>
               </div>
 
               {/* Font Size Selector */}
