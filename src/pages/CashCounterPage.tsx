@@ -947,14 +947,14 @@ export default function CashCounterPage() {
             <button
               type="button"
               onClick={handleClearAll}
-              className="px-6 py-2 rounded-lg text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-medium whitespace-nowrap"
+              className="px-6 py-2 rounded-lg flex items-center justify-center text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors font-medium"
             >
               {t('cashCounter.clearAll')}
             </button>
             <button
               type="button"
               onClick={handleShare}
-              className={`px-6 py-2 rounded-lg flex items-center gap-2 transition-colors font-medium whitespace-nowrap ${copySuccess
+              className={`px-6 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors font-medium ${copySuccess
                   ? 'bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400'
                   : 'bg-indigo-100 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-900/30'
                 }`}

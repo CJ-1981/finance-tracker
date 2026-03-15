@@ -28,7 +28,7 @@
 
   /* Reduced scaling for bottom summary area to prevent overflow */
   .reduced-scale {
-    font-size: calc(1rem * var(--font-scale) * 0.85);
+    font-size: calc(1rem * var(--font-scale) * 0.75);
   }
 
   /* Scalable content class for font size adjustments */
