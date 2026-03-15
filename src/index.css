@@ -6,9 +6,6 @@
   html {
     /* Font size scaling for accessibility - default value */
     --font-scale: 1;
-
-    /* Apply font scale to root element for Tailwind compatibility */
-    font-size: calc(1rem * var(--font-scale));
   }
 
   html, body {
@@ -22,6 +19,11 @@
 
     /* Prevent zoom on iOS mobile browsers */
     touch-action: manipulation; /* Disable double-tap zoom */
+  }
+
+  /* Scalable content class for font size adjustments */
+  .scalable-content {
+    font-size: calc(1rem * var(--font-scale));
   }
 
   html::-webkit-scrollbar,

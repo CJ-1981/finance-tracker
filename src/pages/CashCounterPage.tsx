@@ -824,7 +824,7 @@ export default function CashCounterPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="max-w-4xl mx-auto px-4 py-6 scalable-content">
         {/* Column Headers */}
         <div className="mb-4">
           <div className="grid grid-cols-[1fr_1fr] gap-2">
