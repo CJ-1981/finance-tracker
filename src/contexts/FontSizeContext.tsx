@@ -13,8 +13,8 @@ const FontSizeContext = createContext<FontSizeContextType | undefined>(undefined
 // @MX:ANCHOR Font scale multiplier mapping - central source of truth for font scaling
 const FONT_SCALE_MAP: Record<FontSize, number> = {
   normal: 1,
-  large: 1.15,
-  extraLarge: 1.3,
+  large: 1.2,
+  extraLarge: 1.5,
 }
 
 // @MX:ANCHOR FontSizeProvider - manages font size state with localStorage persistence
