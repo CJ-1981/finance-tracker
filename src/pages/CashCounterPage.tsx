@@ -697,7 +697,10 @@ export default function CashCounterPage() {
         const newValue = count === 0 ? '' : count.toString()
         setInputValue(newValue)
         prevCountRef.current = count
-        firstFocusRef.current = true // Reset first focus flag when count changes
+        // Only reset first focus when changing TO zero, not FROM zero
+        if (prevCountRef.current !== 0 && count === 0) {
+          firstFocusRef.current = true
+        }
       }
     }, [count])
 
