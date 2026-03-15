@@ -671,6 +671,9 @@ export default function CashCounterPage() {
     // Local state for input value to prevent focus loss on each keystroke
     const [inputValue, setInputValue] = useState(count.toString())
 
+    // Track first focus event to auto-clear "0" on initial focus
+    const firstFocusRef = useRef(true)
+
     const colorClasses = {
       teal: {
         minus: 'bg-red-500 hover:bg-red-600 disabled:bg-red-300',
@@ -694,6 +697,7 @@ export default function CashCounterPage() {
         const newValue = count === 0 ? '' : count.toString()
         setInputValue(newValue)
         prevCountRef.current = count
+        firstFocusRef.current = true // Reset first focus flag when count changes
       }
     }, [count])
 
@@ -710,8 +714,15 @@ export default function CashCounterPage() {
             name={`denomination-${denomination}-${color}`}
             className={`text-center font-semibold w-full border rounded focus:outline-none focus:ring-2 py-1 px-2 ${colorClasses[color].input}`}
             value={inputValue}
-            
+
             onChange={(e) => setInputValue(e.target.value)}
+            onFocus={() => {
+              // Auto-clear "0" on first focus
+              if (firstFocusRef.current && count === 0) {
+                setInputValue('')
+                firstFocusRef.current = false
+              }
+            }}
             onBlur={() => onInput(parseInt(inputValue) || 0)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
