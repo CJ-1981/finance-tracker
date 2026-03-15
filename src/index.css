@@ -89,6 +89,12 @@
       min-width: 44px;
     }
   }
+
+  /* Placeholder styling for number inputs */
+  input[type="number"]::placeholder {
+    color: #94a3b8;
+    opacity: 1;
+  }
 }
 
 @layer components {
